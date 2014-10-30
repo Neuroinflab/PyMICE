@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "NeuroinfMice.h"
+#include "PyMICE.h"
 
 //Py_TPFLAGS_BASETYPE -> type can be subclassed :-D
 
@@ -80,8 +80,8 @@ template <class T> T sumHeap(T * heap, unsigned int size)
   }
 }
 
-static PyMethodDef NeuroinfMice_module_methods[] = {
-  {"emptyStringToNone", (PyCFunction) NeuroinfMice_emptyStringToNone, METH_O, "Replace (in place) empty strings in a list with None."},
+static PyMethodDef PyMICE_module_methods[] = {
+  {"emptyStringToNone", (PyCFunction) PyMICE_emptyStringToNone, METH_O, "Replace (in place) empty strings in a list with None."},
   {NULL}  /* Sentinel */  
 };
 
@@ -108,7 +108,7 @@ void emptyStringToNone(PyObject * list)
   }
 }
 
-static PyObject * NeuroinfMice_emptyStringToNone(PyObject * self, PyObject * list)
+static PyObject * PyMICE_emptyStringToNone(PyObject * self, PyObject * list)
 {
   if (list != NULL)
   {
@@ -121,7 +121,7 @@ static PyObject * NeuroinfMice_emptyStringToNone(PyObject * self, PyObject * lis
     else
     {
       PyErr_SetString(PyExc_TypeError,
-                      "ERROR @NeuroinfMice_emptyStringToNone: List must be a list instance (not a subtype).");
+                      "ERROR @PyMICE_emptyStringToNone: List must be a list instance (not a subtype).");
     }
   }
   return NULL;
@@ -132,13 +132,13 @@ static PyObject * NeuroinfMice_emptyStringToNone(PyObject * self, PyObject * lis
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
-initNeuroinfMice(void) 
+initPyMICE_C(void) 
 {
   srand(time(NULL));
   PyObject * m;
   
   //penna_PennaType.tp_new = PyType_GenericNew;
-  m = Py_InitModule3("NeuroinfMice", NeuroinfMice_module_methods,
+  m = Py_InitModule3("PyMICE_C", PyMICE_module_methods,
                      "Experimental module for mice simulation speedup.");
 
 }

@@ -575,28 +575,11 @@ class ISQLiteDatabasedMiceData(IMiceLoader):
   def getData(self, tableName='Visits', debug=False):
     deprecated("Obsolete method getData() called.",
                PendingDeprecationWarning)
-    if tableName == 'Visits':
-      fields = ['AnimalTag', 'Start', 'End', 'ModuleName', 'Cage', 'Corner',
-                'CornerCondition', 'PlaceError', 'AntennaNumber',
-                'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
-                'VisitSolution']
-      fromClause = 'visits JOIN animals USING (aid)'
-      if debug:
-        fields += ['_line', '_path']
-        fromClause += ' JOIN source USING(_sid)'
-
-      rows = self.getMaskedSQL(fromClause,
-                               map(quoteIdentifier, fields),
-                               order='"Start"')
-      return self.TableDict.wrapRows(fields, rows)
-
-    else:
-      raise NotImplementedError('Unknown or not implemented data requested')
+    raise NotImplementedError('Unknown or not implemented data requested')
 
 
 class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
-  autoJoins = [(('visits', 'animals'), ('_aid',)),
-               (('visits', 'nosepokes'), ('_vid',))]
+  autoJoins = [(('visits', 'nosepokes'), ('_vid',))]
 
   defaultStructure = {'visits': {
 #                                 'VisitID': 'INTEGER',
@@ -636,13 +619,6 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
                               'Side': 'INTEGER',
                               'Notes': 'TEXT',
                               },
-                      'animals': {'_aid': 'INTEGER',
-                                  'name': 'TEXT',
-                                  'tag': 'INTEGER',
-                                  'sex': 'TEXT',
-#                                  'GroupName': 'TEXT',
-                                  'notes': 'TEXT',
-                                 },
                       'nosepokes': {
 #                                    'VisitID': 'INTEGER',
                                     'Start': 'REAL',
@@ -695,8 +671,8 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     # change to
     self.__animals = []
-    self.__animalsByTag = {}
     self.__animalsByName = {}
+    print "self.__animalsByName"
 
     self.__visits = []
     self.__nosepokes = [] #reserved for future use
@@ -724,8 +700,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
   def _buildCache(self):
     # build cache
-    cursor = self.db.execute('SELECT DISTINCT name, _aid FROM animals;')
-    self.__mice = dict(cursor)
+    self.__mice = dict((k, v._aid) for (k, v) in __animalsByName.items())
     self.__cages = {}
     self.__animal2cage = {}
     currentCage = None
@@ -899,7 +874,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
         if self.maskTimeEnd != None:
           mask += ('%s.start < %f' % (table, self.maskTimeEnd) ,)
 
-      if table in ('visits', 'animals'):
+      if table == 'visits':
         if len(self.maskedMice) > 0:
           animals = ('%d' % self.__mice[a] for a in self.maskedMice if a in self.__mice)
           mask += ('%s._aid NOT IN (%s)' % (table, ', '.join(animals)) ,)
@@ -948,7 +923,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     animals = set(animals)
 
-    self.maskedMice |= animals
+    self.maskedMice.update(animals)
 
     animals = animals - set(self.__mice)
     if len(animals) > 0:
@@ -1092,12 +1067,9 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     animal = self.getAnimal(animal) # XXX sanity
     group.addMember(animal)
 
-  def getAnimal(self, name = None, tag = None, aid = None):
+  def getAnimal(self, name = None, aid = None):
     if name is not None:
       return self.__animalsByName[unicode(name)]
-
-    if tag is not None:
-      return self.__animalsByTag[tag]
 
     if aid is not None:
       return self.__animals[aid]
@@ -1105,33 +1077,22 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return frozenset(self.__animalsByName)
 
   def _registerAnimal(self, animal):
-    aNode = AnimalNode(animal['Name'], animal['Tag'],
+    aNode = AnimalNode(animal['Name'], Tag=animal.get('Tag'),
                        Sex=animal.get('Sex'),
                        Notes=animal.get('Notes'))
     return self._registerAnimalNode(aNode)
 
   def _registerAnimalNode(self, aNode):
     name = aNode.Name
-    tag = aNode.Tag
     if name in self.__animalsByName:
       animal = self.__animalsByName[name]
       self._mergeAnimal(animal, **aNode)
       return animal
 
-    if tag in self.__animalsByTag:
-      raise ValueError("Tag %d already registered." % tag)
-
     aid = len(self.__animals)
     aNode._aid = aid
     self.__animals.append(aNode)
     self.__animalsByName[unicode(name)] = aNode
-    self.__animalsByTag[tag] = aNode
-
-    self.db.execute("""
-                    INSERT INTO animals(name, tag, sex, notes, _aid)
-                                VALUES (?, ?, ?, ?, ?);
-                    """, (name, tag, aNode.Sex, aNode.Notes, aid))
-    self.db.commit()
     return aNode
 
   def _getAnimalNode(self, aid):
@@ -1139,24 +1100,15 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return self.getItem(self.__animals, aid)
 
   # TODO or not TODO
-  def _unregisterAnimal(self, Name = None, Tag = None, aid = None):
+  def _unregisterAnimal(self, Name = None, aid = None):
     if Name != None:
       animal = self.__animalsByName[unicode(Name)]
-      assert Tag is None or Tag == animal['Tag']
-      Tag = animal['Tag']
-      assert aid is None or aid == animal['_aid']
-      aid = animal['_aid']
-
-    elif Tag != None:
-      animal = self.__animalsByTag[Tag]
-      Name = animal['Name']
       assert aid is None or aid == animal['_aid']
       aid = animal['_aid']
 
     else:
       animal = self.__animals[aid]
       Name = animal['Name']
-      Tag = animal['Tag']
 
     cursor = self.db.execute("SELECT _vid FROM visits WHERE _aid = %d;" % aid)
     vIds = cursor.fetchall()
@@ -1172,12 +1124,10 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     self.db.executemany("DELETE FROM nosepokes WHERE _vid = ?;", vIds)
     self.db.execute("DELETE FROM visits WHERE _aid = %d;" % aid)
-    self.db.execute("DELETE FROM animals WHERE _aid = %d;" % aid)
     self.db.commit()
 
     #del self.__animals[aid]
     self.__animals[aid] = None # TODO
-    del self.__animalsByTag[Tag]
     del self.__animalsByName[Name]
     for group in self.__name2group.values():
       group.delMember(animal)
@@ -1186,21 +1136,12 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
   def _mergeAnimal(self, animal, **updates):
     updated = animal.merge(**updates)
-    if updated != {}:
-      fields, vals = zip(*updated.items())
-      self.db.execute("""
-                      UPDATE animals
-                      SET %s
-                      WHERE _aid = ?;
-                      """ % (', '.join('%s = ?' % x.lower() for x in fields)),
-                      vals + (animal._aid,))
-      self.db.commit()
 
   def _updateAnimal(self, animal, **updates):
     if len(updates) == 0: return
     assert '_aid' not in updates
 
-    KEY_CACHE = [('Tag',  self.__animalsByTag), ('Name', self.__animalsByName)]
+    KEY_CACHE = [('Name', self.__animalsByName)]
     errors = []
     for key, cache in KEY_CACHE:
       if key in updates and updates[key] != animal[key] and updates[key] in cache:

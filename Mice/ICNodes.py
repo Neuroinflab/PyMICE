@@ -129,20 +129,38 @@ class EnvironmentNode(DataNode):
 
 class AnimalNode(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Name', 'Tag', 'Sex', 'Notes']
-  _keys = ['Name', 'Tag', 'Sex']
+  _keys = ['Name', 'Sex']
 
   def __init__(self, Name, Tag, Sex=None, Notes=None, **kwargs):
     DataNode.__init__(self, **kwargs)
     self.Name = unicode(Name)
-    self.Tag = long(Tag)
+    self.Tag = (set(Tag) if isinstance(Tag, set) else long(Tag))\
+               if Tag is not None\
+               else None
     self.Sex = unicode(Sex) if Sex is not None else None
     self.Notes = unicode(Notes) if Notes is not None else None
 
   def __repr__(self):
-    if self.Sex is None:
-      return "Animal %s (Tag: %d)" % (self.Name, self.Tag)
-      
-    return "Animal %s (%s; Tag: %d)" % (self.Name, self.Sex, self.Tag)
+    result = "Animal %s" % self.Name
+
+    if self.Sex is not None or self.Tag is not None:
+      result += "("
+      if self.Sex is not None:
+        result += self.Sex
+
+      if self.Sex is not None and self.Tag is not None:
+        result += "; "
+
+      if self.Tag is not None:
+        if isinstance(self.Tag, set):
+          result += "Tags: " + (', '.join(map(str, sorted(self.Tag))))
+
+        else:
+          result += "Tag: %d" % self.Tag
+
+      result += ")"
+
+    return result
 
   def __str__(self):
     return str(self.Name)
@@ -154,9 +172,8 @@ class AnimalNode(DataNode):
     if self.Name != other['Name']:
       return False
 
-    if self.Tag == other['Tag'] and \
-       (self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None):
-        return True
+    if self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None:
+      return True
 
     return NotImplemented
 
@@ -164,11 +181,26 @@ class AnimalNode(DataNode):
     if self.Name != other['Name']:
       return True
 
-    if self.Tag == other['Tag'] and \
-       (self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None):
-        return False
+    if self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None:
+      return False
 
     return NotImplemented
+
+  def merge(self, Tag=None, **kwargs):
+    updated = DataNode.merge(self, **kwargs)
+    if Tag is not None and self.Tag != Tag:
+      if self.Tag is None:
+        self.Tag = set(Tag) if isinstance(Tag, set) else Tag
+
+      else:
+        if not isinstance(self.Tag, set):
+          self.Tag = set([self.Tag])
+
+        if isinstance(Tag, set):
+          self.Tag.update(Tag)
+
+        else:
+          self.Tag.add(Tag)
 
 
 class VisitNode(DataNode):
@@ -305,7 +337,7 @@ class NosepokeNode(DataNode):
 
 
 class GroupNode(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Name', 'Animals', 'Notes', 'Module']
+  _baseAttrs = DataNode._baseAttrs + ['Name', 'Animals']
   _keys = ['Name']
 
   def __init__(self, Name, Animals=[], Notes=None, Module=None, **kwargs):
@@ -314,9 +346,6 @@ class GroupNode(DataNode):
     self.Animals = []
     for animal in Animals:
       self.addMember(animal)
-
-    self.Notes = unicode(Notes) if Notes is not None else None
-    self.Module = unicode(Module) if Module is not None else None
 
   def __str__(self):
     return str(self.Name)

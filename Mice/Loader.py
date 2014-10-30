@@ -26,7 +26,7 @@ import operator
 from .Data import MiceData, deprecated
 
 try:
-  from NeuroinfMice import emptyStringToNone
+  from PyMICE_C import emptyStringToNone
 
 except Exception as e:
   print type(e), e
@@ -77,9 +77,6 @@ class MiceLoader(MiceData):
                          'Group': 'GroupName',
                          'Notes': 'AnimalNotes',
                         },
-             'Groups': {'Name': 'GroupName',
-                        'Notes': 'GroupNotes',
-                       },
              'Visits': {'Animal': 'AnimalTag',
                         'ID': 'VisitID',
                         'Module': 'ModuleName',
@@ -100,14 +97,6 @@ class MiceLoader(MiceData):
                              'GroupName': 'Group',
                              'AnimalNotes': 'Notes',
                             },
-                 'Groups': {'GroupName': 'Name',
-                            'GroupNotes': 'Notes',
-                            'ModuleName': 'Module',
-                           },
-                 'IntelliCage/Groups': {'GroupName': 'Name',
-                                        'GroupNotes': 'Notes',
-                                        'ModuleName': 'Module',
-                                       },
                  'IntelliCage/Visits': {'AnimalTag': 'Tag',
                                         'Animal': 'Tag', 
                                         'ID': '_vid',
@@ -131,12 +120,6 @@ class MiceLoader(MiceData):
                              'Notes': convertStr,
                              'Sex': convertStr,
                             },
-                 'Groups': {#'Name': convertStr,
-                            'Notes': convertStr,
-                           },
-                 'IntelliCage/Groups': {#'Name': convertStr,
-                                        'Notes': convertStr,
-                                       },
                  'IntelliCage/Visits': {'Tag': int,
                                         '_vid': int,
                                         'Start': convertTime,
@@ -201,7 +184,7 @@ class MiceLoader(MiceData):
     animals = self._makeDicts(animals)
 
     animalNames = set()
-    groupMembers = {}
+    groups = {}
     tag2Animal = {}
     for group, animal in zip(animalGroup, animals):
       tag = animal['Tag']
@@ -213,37 +196,11 @@ class MiceLoader(MiceData):
 
       if group is not None:
         try:
-          groupMembers[group][name] = animal
+          groups[group]['Animals'].append(name)
 
         except KeyError:
-          groupMembers[group] = {name: animal}
-
-
-    try:
-      groups = self._fromZipCSV(zf,
-                            'IntelliCage/Groups' if legacyFormat else 'Groups')
-
-    except KeyError as e:
-      warnings.warn(str(e))
-      groups = {}
-
-    else:
-      groupNames = groups['Name']
-      groups = dict(zip(groupNames, self._makeDicts(groups)))
-
-    for group, members in groupMembers.items():
-      try:
-        groups[group]['Animals'] = members
-
-      except KeyError as e:
-        warnings.warn(str(e))
-        groups[group] = {'Name': group,
-                         'Members': members.keys()}
-
-    groups = groups.values()
-    for group in groups:
-      if 'Animals' not in group:
-        group['Animals'] = []
+          groups[group] = {'Animals': [name],
+                           'Name': group}
 
     visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
     tags = visits.pop('Tag')
@@ -279,7 +236,7 @@ class MiceLoader(MiceData):
       
     visits = self._makeDicts(visits)
     result = {'animals': animals,
-              'groups': groups,
+              'groups': groups.values(),
               'visits': visits,
               'nosepokes': orphans,
              }
@@ -630,29 +587,12 @@ class MiceLoader(MiceData):
 
     tag2aid = dict(zip(aTags, aIds))
 
-    # loading file Groups.txt
-    try:
-      if legacy_format:
-        groups = self.fromCSV(zf.open('IntelliCage/Groups.txt'))
-        groups = self._legacyUpdate(groups, 'Groups')
+    # creating groups
+    for name in set(aGroup):
+      self._registerGroup(name)
 
-      else:
-        groups = self.fromCSV(zf.open('Groups.txt'))
-
-    except KeyError:
-      pass
-
-    else:
-      gNames = groups['GroupName']
-      gNotes = groups['GroupNotes']
-      gModules = groups['ModuleName']
-
-      for name, notes, module in zip(gNames, gNotes, gModules):
-        self._registerGroup(name, notes if notes != '' else None,
-                                  module if module != '' else None)
-
-      for aid, group in zip(aIds, aGroup):
-        self._addMember(group, aid)
+    for aid, group in zip(aIds, aGroup):
+      self._addMember(group, aid)
 
     
 

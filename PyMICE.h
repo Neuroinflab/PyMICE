@@ -9,10 +9,10 @@
 //#include <list>
 #include <vector>
 
-#ifndef NEUROINFMICE_H
-#define NEUROINFMICE_H
+#ifndef PYMICE_H
+#define PYMICE_H
 
-static PyObject * NeuroinfMice_emptyStringToNone(PyObject *, PyObject *);
+static PyObject * PyMICE_emptyStringToNone(PyObject *, PyObject *);
 
 
 #endif
