@@ -672,7 +672,6 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     # change to
     self.__animals = []
     self.__animalsByName = {}
-    print "self.__animalsByName"
 
     self.__visits = []
     self.__nosepokes = [] #reserved for future use
@@ -700,7 +699,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
   def _buildCache(self):
     # build cache
-    self.__mice = dict((k, v._aid) for (k, v) in __animalsByName.items())
+    self.__mice = dict((k, v._aid) for (k, v) in self.__animalsByName.items())
     self.__cages = {}
     self.__animal2cage = {}
     currentCage = None
