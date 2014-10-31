@@ -1,0 +1,4 @@
+VisitID	VisitOrder	Animal	Tag	Sex	Group	Module	Cage	Corner	CornerCondition	PlaceError	SideErrors	TimeErrors	ConditionErrors	NosepokeNumber	NosepokeDuration	LickNumber	LickDuration	LickContactTime	StartDate	StartTime	StartTimecode	EndDate	EndTime	EndTimecode	VisitDuration	Session	IR_devnosepoke	IR_devvisit	IR_std1stnosepoke	IR_stdvisit
+30	0	Minnie	1337	Female	Disney	Test	1	1	Neutral	0	0	0	0	0	0	0	0	0	2012-12-18	12:13:14.139	696.109	2012-12-18	12:13:16.639	698.609	2.5	1	0	0	0	0
+51	1	Mickey	42	Male	Disney	Test	1	2	Correct	0	0	0	0	1	2.5	10	0.75	0.05	2012-12-18	12:18:55.421	1037.391	2012-12-18	12:19:00.421	1042.391	5	1	0	0	0	0
+73	2	Jerry	69	Male	HannaBarbera	Test	1	3	Correct	0	0	0	0	2	4.5	15	1.5	0.1	2012-12-18	12:19:55.421	1097.391	2012-12-18	12:20:10.421	1112.391	15	1	0	0	0	0

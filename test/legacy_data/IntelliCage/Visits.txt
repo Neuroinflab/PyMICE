@@ -1,0 +1,4 @@
+ID	Animal	Start	End	Module	Cage	Corner	CornerCondition	PlaceError	AntennaNumber	AntennaDuration	PresenceNumber	PresenceDuration
+2	42	2012-12-18 12:31:00.00	2012-12-18 12:41:00.5	Test	1	1	-1	1	1	3.0644064	1	2.2632544
+0	1337	2012-12-18 12:30:02.36	2012-12-18 12:40:02.36	Test	1	4	-1	1	1	5.407776	1	0
+1	69	2012-12-18 12:41:07	2012-12-18 12:41:09	Test	1	2	1	0	1	2.103024	1	1.802592

@@ -1,0 +1,1 @@
+Animal	Start	End	Cage	Corner

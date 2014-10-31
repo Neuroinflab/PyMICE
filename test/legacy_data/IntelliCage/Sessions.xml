@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Session Id="0">
+    <Interval>
+      <Start>2006-12-10T17:40:57.0211712+01:00</Start>
+      <End>2006-12-11T15:42:26.2635024+01:00</End>
+    </Interval>
+    <ExperimentFileName>Viki_Ani_MMP_APP.Session #0.experiment</ExperimentFileName>
+    <VisitDurationLimit>10</VisitDurationLimit>
+    <SoftwareVersion>2.0.2392.29019</SoftwareVersion>
+    <Hardware>
+      <TransponderType>DataMars</TransponderType>
+      <DoorSpeed>1</DoorSpeed>
+      <ReceiverTimerInterval>100</ReceiverTimerInterval>
+      <SerialPort SerialPortName="COM3" BaudRate="115200" InputBufferSize="4096" OutputBufferSize="4096" />
+      <Cages>
+        <CageConfig Id="0" SerialNumber="0" Address="1">
+          <CornerVersion>
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+          </CornerVersion>
+          <Notes />
+        </CageConfig>
+        <CageConfig Id="0" SerialNumber="0" Address="2">
+          <CornerVersion>
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+          </CornerVersion>
+          <Notes />
+        </CageConfig>
+        <CageConfig Id="0" SerialNumber="0" Address="3">
+          <CornerVersion>
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+          </CornerVersion>
+          <Notes />
+        </CageConfig>
+        <CageConfig Id="0" SerialNumber="0" Address="4">
+          <CornerVersion>
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+          </CornerVersion>
+          <Notes />
+        </CageConfig>
+      </Cages>
+    </Hardware>
+  </Session>
+</ArrayOfSession>
