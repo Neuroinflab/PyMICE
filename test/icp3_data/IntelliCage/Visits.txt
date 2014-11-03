@@ -1,0 +1,4 @@
+VisitID	AnimalTag	Start	End	ModuleName	Cage	Corner	CornerCondition	PlaceError	AntennaNumber	AntennaDuration	PresenceNumber	PresenceDuration	VisitSolution
+30	1337	2012-12-18 12:13:14.139	2012-12-18 12:13:16.639	Test	1	1	0	0	1	1,15	2	2	0
+51	42	2012-12-18 12:18:55.421	2012-12-18 12:19:00.421	Test	1	2	1	0	1	4,50001	1	2,84	0
+73	69	2012-12-18 12:19:55.421	2012-12-18 12:20:10.421	Test	1	3	1	0	1	12,265625	2	8,18	0

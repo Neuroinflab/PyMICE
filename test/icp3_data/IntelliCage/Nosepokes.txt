@@ -1,0 +1,4 @@
+VisitID	Start	End	Side	SideCondition	SideError	TimeError	ConditionError	LickNumber	LickContactTime	LickDuration	AirState	DoorState	LED1State	LED2State	LED3State
+51	2012-12-18 12:18:56.421	2012-12-18 12:18:58.921	3	1	0	0	0	10	0,05	0,75	0	0	0	0	0
+73	2012-12-18 12:19:56	2012-12-18 12:20:00	5	1	0	0	0	15	0,1	1,5	0	0	0	0	0
+73	2012-12-18 12:20:05	2012-12-18 12:20:05.5	4	0	0	0	0	0	0	0	0	0	0	0	0

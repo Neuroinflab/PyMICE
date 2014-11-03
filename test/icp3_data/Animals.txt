@@ -1,0 +1,4 @@
+AnimalName	AnimalTag	Sex	GroupName	AnimalNotes
+Minnie	1337	Female	Disney	
+Mickey	42	Male	Disney	
+Jerry	69	Male	HannaBarbera	Likes Tom
