@@ -528,8 +528,8 @@ class MiceLoader(MiceData):
 #
 #      except IOError:
 #        print "'Log.txt' not found."
-#
-#    self._buildCache()
+
+    self._buildCache()
 
 
   @staticmethod
