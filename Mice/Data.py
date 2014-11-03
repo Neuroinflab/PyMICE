@@ -1364,8 +1364,11 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
 if __name__ == '__main__':
   import doctest
-  from Mice.Loader import MiceLoader
-  testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/test'))
-  ml_a1 = MiceLoader(os.path.join(testDir, 'analyzer_data.txt'))
-  ml_l1 = MiceLoader(os.path.join(testDir, 'legacy_data.zip'))
-  doctest.testmod(extraglobs={'ml_a1': ml_a1, 'ml_l1': ml_l1})
+  try:
+    from _test import TEST_GLOBALS
+
+  except ImportError:
+    print "from _test import... failed"
+    from Mice._test import TEST_GLOBALS
+
+  doctest.testmod(extraglobs=TEST_GLOBALS)

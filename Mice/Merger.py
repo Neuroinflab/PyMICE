@@ -31,8 +31,17 @@ import warnings
 from math import exp, modf
 import itertools
 
-#from Mice.Data import MiceData, hTime
-from .Data import MiceData, hTime
+try:
+  from .Data import MiceData, hTime
+
+except ValueError:
+  try:
+    print "from .Data import... failed"
+    from Mice.Data import MiceData, hTime
+
+  except ImportError:
+    print "from Mice.Data import... failed"
+    from Data import MiceData, hTime
 
 #class HTimeFormatter(matplotlib.ticker.Formatter):
 #  
@@ -213,8 +222,11 @@ class MiceMerger(MiceData):
 
 if __name__ == '__main__':
   import doctest
-  from Mice.Loader import MiceLoader
-  testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/test'))
-  ml_a1 = MiceLoader(os.path.join(testDir, 'analyzer_data.txt'))
-  ml_l1 = MiceLoader(os.path.join(testDir, 'legacy_data.zip'))
-  doctest.testmod(extraglobs={'ml_a1': ml_a1, 'ml_l1': ml_l1})
+  try:
+    from _test import TEST_GLOBALS
+
+  except ImportError:
+    print "from _test import... failed"
+    from Mice._test import TEST_GLOBALS
+
+  doctest.testmod(extraglobs=TEST_GLOBALS)

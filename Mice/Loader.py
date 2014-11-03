@@ -23,7 +23,17 @@ import csv
 import warnings
 import operator
 
-from .Data import MiceData, deprecated
+try:
+  from .Data import MiceData, deprecated
+
+except ValueError:
+  try:
+    print "from .Data import... failed"
+    from Mice.Data import MiceData, deprecated
+
+  except ImportError:
+    print "from Mice.Data import... failed"
+    from Data import MiceData, deprecated
 
 try:
   from PyMICE_C import emptyStringToNone
@@ -415,106 +425,111 @@ class MiceLoader(MiceData):
       #             get_ag=self._get_AG,
       #             sid = sid)
 
-    else:
-      # Is that the right thing to do with directories?
-      if os.path.isdir(fname):
-        fname = os.path.join(fname, 'Visits.txt')
-
-      visits = self.fromCSV(fname, True)
-
-      startDate = visits.pop('StartDate')
-      startTime = visits.pop('StartTime')
-      #start = ['%s %s' % x for x in zip(startDate, startTime)]
-      #visits['Start'] = convertTime(start)
-      # Daylight saving time issue -_-
-
-      time0 = convertTime(startDate[0] + ' ' + startTime[0])
-      startTimecode = visits.pop('StartTimecode')
-      offset = time0 - float(startTimecode[0])
-      visits['Start'] = [offset + float(x) for x in startTimecode]
-
-      #endDate = visits.pop('EndDate')
-      #endTime = visits.pop('EndTime')
-      #end = ['%s %s' % x for x in zip(endDate, endTime)]
-      #visits['End'] = convertTime(end)
-      endTimecode = visits.pop('EndTimecode')
-      visits['End'] = [offset + float(x) for x in endTimecode]
-      del visits['EndDate']
-      del visits['EndTime']
-
-      del visits['VisitDuration'] # maybe some validation?
-      visits['ModuleName'] = visits.pop('Module')
-      animalTag = map(int, visits.pop('Tag'))
-      visits['AnimalTag'] = animalTag
-
-      ccMap = {'Neutral': 0.,
-               'Correct': 1.,
-               'Incorrect': -1.}
-
-      cc = visits['CornerCondition']
-      visits['CornerCondition'] = [(ccMap[c] if c in ccMap else convertFloat(c)) for c in cc]
-
-      aGroups = visits.pop('Group')
-      aNames = visits.pop('Animal')
-      aSexes = visits.pop('Sex')
-
-      # registering animals and groups
-      tag2aid = {}
-      for name, tag, sex in list(set(zip(aNames, animalTag, aSexes))):
-        if sex not in ('Male', 'Female', 'Unknown'):
-          print "Unknown sex: %s" % sex
-
-        aid = self._registerAnimal(name, tag,
-                                   sex if sex != 'Unknown' else None)
-        tag2aid[tag] = aid
-
-      group2gid = {}
-      for group in list(set(aGroups)):
-        self._registerGroup(group)
-
-      for tag, group in list(set(zip(animalTag, aGroups))):
-        aid = tag2aid[tag]
-        self._addMember(group, aid)
-
-      fakeNpokes = {}
-      fakeNpokes['VisitID'] = list(visits['VisitID'])
-      fakeNpokes['_line'] = list(visits['_line'])
-      fakeNpokes['SideError'] = visits.pop('SideErrors')
-      fakeNpokes['TimeError'] = visits.pop('TimeErrors')
-      fakeNpokes['ConditionError'] = visits.pop('ConditionErrors')
-      fakeNpokes['NosepokeNumber'] = visits.pop('NosepokeNumber')
-      fakeNpokes['NosepokeDuration'] = visits.pop('NosepokeDuration')
-      fakeNpokes['LickNumber'] = visits.pop('LickNumber')
-      fakeNpokes['LickDuration'] = visits.pop('LickDuration')
-      fakeNpokes['LickContactTime'] = visits.pop('LickContactTime')
-
-      vidMapping = self._insertVisits(visits, tag2aid, 'AnimalTag',
-                                      'VisitID', sid = sid)
-
-      if self._get_npokes:
-        self._insertNosepokes(fakeNpokes, vidMapping, 'VisitID', sid = sid)
-
-      try:
-        fh = open(os.path.join(os.path.dirname(fname),
-                               'Environment.txt'))
-        env = self.fromCSV(fh, True)
-        fh.close()
-
-        env['DateTime'] = convertTime(env['DateTime'])
-        self._insertDataSid(env, 'environment', sid)
-
-      except IOError:
-        print "'Environment.txt' not found."
-
-      try:
-        fh = open(os.path.join(os.path.dirname(fname),
-                               'Log.txt'))
-        self.loadLog(fh, sid=sid)
-
-      except IOError:
-        print "'Log.txt' not found."
-
-    self._buildCache()
+## Analyser data loading
+#    else:
+#      # Is that the right thing to do with directories?
+#      if os.path.isdir(fname):
+#        fname = os.path.join(fname, 'Visits.txt')
+#
+#      visits = self.fromCSV(fname, True)
+#
+#      startDate = visits.pop('StartDate')
+#      startTime = visits.pop('StartTime')
+#      #start = ['%s %s' % x for x in zip(startDate, startTime)]
+#      #visits['Start'] = convertTime(start)
+#      # Daylight saving time issue -_-
+#
+#      time0 = convertTime(startDate[0] + ' ' + startTime[0])
+#      startTimecode = visits.pop('StartTimecode')
+#      offset = time0 - float(startTimecode[0])
+#      visits['Start'] = [offset + float(x) for x in startTimecode]
+#
+#      #endDate = visits.pop('EndDate')
+#      #endTime = visits.pop('EndTime')
+#      #end = ['%s %s' % x for x in zip(endDate, endTime)]
+#      #visits['End'] = convertTime(end)
+#      endTimecode = visits.pop('EndTimecode')
+#      visits['End'] = [offset + float(x) for x in endTimecode]
+#      del visits['EndDate']
+#      del visits['EndTime']
+#
+#      del visits['VisitDuration'] # maybe some validation?
+#      visits['ModuleName'] = visits.pop('Module')
+#      animalTag = map(int, visits.pop('Tag'))
+#      visits['AnimalTag'] = animalTag
+#
+#      ccMap = {'Neutral': 0.,
+#               'Correct': 1.,
+#               'Incorrect': -1.}
+#
+#      cc = visits['CornerCondition']
+#      visits['CornerCondition'] = [(ccMap[c] if c in ccMap else convertFloat(c)) for c in cc]
+#
+#      aGroups = visits.pop('Group')
+#      aNames = visits.pop('Animal')
+#      aSexes = visits.pop('Sex')
+#
+#      # registering animals and groups
+#      tag2aid = {}
+#      for name, tag, sex in list(set(zip(aNames, animalTag, aSexes))):
+#        if sex not in ('Male', 'Female', 'Unknown'):
+#          print "Unknown sex: %s" % sex
+#
+#        animalNode = {'Name': name,
+#                      'Tag': tag}
+#        if sex != 'Unknown':
+#          animalNode['Sex'] = sex
+#
+#        aid = self._registerAnimal(animalNode)
+#        tag2aid[tag] = aid
+#
+#      group2gid = {}
+#      for group in list(set(aGroups)):
+#        self._registerGroup(group)
+#
+#      for tag, group in list(set(zip(animalTag, aGroups))):
+#        aid = tag2aid[tag]
+#        self._addMember(group, aid)
+#
+#      fakeNpokes = {}
+#      fakeNpokes['VisitID'] = list(visits['VisitID'])
+#      fakeNpokes['_line'] = list(visits['_line'])
+#      fakeNpokes['SideError'] = visits.pop('SideErrors')
+#      fakeNpokes['TimeError'] = visits.pop('TimeErrors')
+#      fakeNpokes['ConditionError'] = visits.pop('ConditionErrors')
+#      fakeNpokes['NosepokeNumber'] = visits.pop('NosepokeNumber')
+#      fakeNpokes['NosepokeDuration'] = visits.pop('NosepokeDuration')
+#      fakeNpokes['LickNumber'] = visits.pop('LickNumber')
+#      fakeNpokes['LickDuration'] = visits.pop('LickDuration')
+#      fakeNpokes['LickContactTime'] = visits.pop('LickContactTime')
+#
+#      vidMapping = self._insertVisits(visits, tag2aid, 'AnimalTag',
+#                                      'VisitID', sid = sid)
+#
+#      if self._get_npokes:
+#        self._insertNosepokes(fakeNpokes, vidMapping, 'VisitID', sid = sid)
+#
+#      try:
+#        fh = open(os.path.join(os.path.dirname(fname),
+#                               'Environment.txt'))
+#        env = self.fromCSV(fh, True)
+#        fh.close()
+#
+#        env['DateTime'] = convertTime(env['DateTime'])
+#        self._insertDataSid(env, 'environment', sid)
+#
+#      except IOError:
+#        print "'Environment.txt' not found."
+#
+#      try:
+#        fh = open(os.path.join(os.path.dirname(fname),
+#                               'Log.txt'))
+#        self.loadLog(fh, sid=sid)
+#
+#      except IOError:
+#        print "'Log.txt' not found."
+#
+#    self._buildCache()
 
 
   @staticmethod
@@ -708,7 +723,11 @@ class MiceLoader(MiceData):
 
 if __name__ == '__main__':
   import doctest
-  testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../data/test'))
-  ml_a1 = MiceLoader(os.path.join(testDir, 'analyzer_data.txt'))
-  ml_l1 = MiceLoader(os.path.join(testDir, 'legacy_data.zip'))
-  doctest.testmod(extraglobs={'ml_a1': ml_a1, 'ml_l1': ml_l1})
+  try:
+    from _test import TEST_GLOBALS
+
+  except ImportError:
+    print "from _test import... failed"
+    from Mice._test import TEST_GLOBALS
+
+  doctest.testmod(extraglobs=TEST_GLOBALS)
