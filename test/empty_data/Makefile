@@ -1,6 +1,6 @@
 COMPRESSOR = zip -9
 IC = IntelliCage/
-NAME = icp3_data.zip
+NAME = empty_data.zip
 
 all: ${NAME}
 	echo $@

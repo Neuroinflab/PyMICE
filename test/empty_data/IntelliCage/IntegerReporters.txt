@@ -1,0 +1,1 @@
+VisitID	devnosepoke	devvisit	std1stnosepoke	stdvisit	NP correct corner	NP incorrect corner	V correct corner	V incorrect corner	Licks quinine

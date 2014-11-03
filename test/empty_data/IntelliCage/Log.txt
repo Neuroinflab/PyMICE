@@ -1,0 +1,3 @@
+DateTime	LogCategory	LogType	Cage	Corner	Side	LogNotes
+2012-12-18 12:13:02.437	Info	Application				Session is started
+2012-12-18 12:13:03	Info	Application				Session is stopped

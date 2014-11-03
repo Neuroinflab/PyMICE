@@ -1,0 +1,1 @@
+VisitID	Start	End	Side	SideCondition	SideError	TimeError	ConditionError	LickNumber	LickContactTime	LickDuration	AirState	DoorState	LED1State	LED2State	LED3State
