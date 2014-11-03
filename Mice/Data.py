@@ -520,15 +520,15 @@ class ISQLiteDatabasedMiceData(IMiceLoader):
     """
     >>> ml_l1.getLocations()
     [4, 1, 2]
-    >>> ml_a1.getLocations()
+    >>> ml_icp3.getLocations()
     [1, 2, 3]
     >>> ml_l1.getLocations('Mickey')
     [1]
-    >>> ml_a1.getLocations('Jerry')
+    >>> ml_icp3.getLocations('Jerry')
     [3]
     >>> ml_l1.getLocations(['Mickey', 'Minnie'])
     [4, 1]
-    >>> ml_a1.getLocations(['Jerry', 'Minnie'])
+    >>> ml_icp3.getLocations(['Jerry', 'Minnie'])
     [1, 3]
     """
     deprecated("Obsolete method getLocations() called.",
@@ -542,7 +542,7 @@ class ISQLiteDatabasedMiceData(IMiceLoader):
 
   def getStartTimes(self, mice=None):
     """
-    >>> for t in ml_a1.getStartTimes():
+    >>> for t in ml_icp3.getStartTimes():
     ...   print hTime(t)
     2012-12-18 12:13:14.139
     2012-12-18 12:18:55.421
