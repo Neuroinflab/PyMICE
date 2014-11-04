@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-Data.py
+_Data.py
 
 Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 """
@@ -578,7 +578,7 @@ class ISQLiteDatabasedMiceData(IMiceLoader):
     raise NotImplementedError('Unknown or not implemented data requested')
 
 
-class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
+class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
   autoJoins = [(('visits', 'nosepokes'), ('_vid',))]
 
   defaultStructure = {'visits': {
@@ -826,7 +826,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
                                      aliases)
 
     else:
-      return super(MiceData, self).selectAllData(table)
+      return super(Data, self).selectAllData(table)
 
 # masking
   def unmask_data(self):
@@ -837,14 +837,14 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     """
     Remove the mask - future queries will not be clipped.
     """
-    super(MiceData, self).unmaskData()
+    super(Data, self).unmaskData()
     self.maskedMice = set()
     self.maskedCages = set()
     self.maskTimeStart = None
     self.maskTimeEnd = None
 
   def _getMask(self):
-    mask = super(MiceData, self)._getMask()
+    mask = super(Data, self)._getMask()
     if self.maskTimeStart != None:
       mask += ('visits.start >= %f' % self.maskTimeStart ,)
 
@@ -864,7 +864,7 @@ class MiceData(SQLiteDatabased, ISQLiteDatabasedMiceData):
     if isinstance(tables, basestring):
       tables = (tables,)
 
-    mask = super(MiceData, self)._getTableMask(tables)
+    mask = super(Data, self)._getTableMask(tables)
     for table in tables:
       if table in ('visits', 'nosepokes'):
         if self.maskTimeStart != None:

@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-MiceLoader.py
+_Merger.py
 
-Created by Szymon Łęski on 2012-10-11.
-
-Seriously damaged, then refactored and restored to glory by Jakub Kowalski on
-14-15.01.2013.
-
-Copyright (c) 2012-2013 Laboratory of Neuroinformatics. All rights reserved.
+Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 """
 
 import sys
@@ -32,28 +27,39 @@ from math import exp, modf
 import itertools
 
 try:
-  from .Data import MiceData, hTime
+  from ._Data import Data, hTime
 
 except ValueError:
   try:
-    print "from .Data import... failed"
-    from Mice.Data import MiceData, hTime
+    print "from ._Data import... failed"
+    from PyMICE._Data import Data, hTime
 
   except ImportError:
-    print "from Mice.Data import... failed"
-    from Data import MiceData, hTime
+    print "from PyMICE._Data import... failed"
+    from _Data import Data, hTime
 
 #class HTimeFormatter(matplotlib.ticker.Formatter):
 #  
 
-class MiceMerger(MiceData):
+class Merger(Data):
+  """
+  >>> mm = Merger(ml_icp3, ml_l1, getNpokes=True)
+  >>> for v in mm.getVisits(order='start'):
+  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
+  Minnie 0
+  Mickey 1
+  Jerry 2
+  Minnie 1
+  Mickey 1
+  Jerry 2
+  """
   #TODO: common interface, not inheritance
   def __init__(self, *loaders, **kwargs):
-    MiceData.__init__(self, verbose = kwargs.get('verbose', False),
-                      getNpokes=kwargs.get('get_npokes',
-                                           kwargs.get('getNpokes', False)),
-                      getEnv=kwargs.get('getEnv', False),
-                      getLogs=kwargs.get('getLogs'))
+    Data.__init__(self, verbose = kwargs.get('verbose', False),
+                  getNpokes=kwargs.get('get_npokes',
+                                       kwargs.get('getNpokes', False)),
+                  getEnv=kwargs.get('getEnv', False),
+                  getLogs=kwargs.get('getLogs'))
 
     self._loaders = map(str, loaders)
 

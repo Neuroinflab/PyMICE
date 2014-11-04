@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-MiceLoader.py
+_Loader.py
 
-Created by Szymon Łęski on 2012-10-11.
-
-Seriously damaged, then refactored and restored to glory by Jakub Kowalski on
-14-15.01.2013.
-
-Copyright (c) 2012-2013 Laboratory of Neuroinformatics. All rights reserved.
+Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 """
 
 import sys
@@ -24,16 +19,16 @@ import warnings
 import operator
 
 try:
-  from .Data import MiceData, deprecated
+  from ._Data import Data, deprecated
 
 except ValueError:
   try:
-    print "from .Data import... failed"
-    from Mice.Data import MiceData, deprecated
+    print "from ._Data import... failed"
+    from PyMICE._Data import Data, deprecated
 
   except ImportError:
-    print "from Mice.Data import... failed"
-    from Data import MiceData, deprecated
+    print "from PyMICE._Data import... failed"
+    from _Data import Data, deprecated
 
 try:
   from PyMICE_C import emptyStringToNone
@@ -81,7 +76,7 @@ def convertStr(x):
   return None if x == '' else x
 
 
-class MiceLoader(MiceData):
+class Loader(Data):
   _legacy = {'Animals': {'Name': 'AnimalName',
                          'Tag': 'AnimalTag',
                          'Group': 'GroupName',
@@ -283,7 +278,7 @@ class MiceLoader(MiceData):
     data = list(reader)
     fname.close()
 
-    return MiceLoader.__fromCSV(data, source, aliases, convert, oldLabels)
+    return Loader.__fromCSV(data, source, aliases, convert, oldLabels)
 
   @staticmethod
   def __fromCSV(data, source, aliases, convert, oldLabels):
@@ -327,11 +322,11 @@ class MiceLoader(MiceData):
     bin = 3600,
     verbose = False.
     """
-    MiceData.__init__(self, verbose = kwargs.get('verbose', False),
-                      getNpokes=kwargs.get('get_npokes',
-                                           kwargs.get('getNpokes', False)),
-                      getLogs=kwargs.get('getLogs'),
-                      getEnv=kwargs.get('getEnv'))
+    Data.__init__(self, verbose = kwargs.get('verbose', False),
+                  getNpokes=kwargs.get('get_npokes',
+                                       kwargs.get('getNpokes', False)),
+                  getLogs=kwargs.get('getLogs'),
+                  getEnv=kwargs.get('getEnv'))
 
     self._getHardware = kwargs.get('getHardware', False)
     self._get_SB = kwargs.get('get_SB', False)
