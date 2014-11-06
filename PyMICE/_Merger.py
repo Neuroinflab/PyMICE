@@ -45,13 +45,13 @@ class Merger(Data):
   """
   >>> mm = Merger(ml_icp3, ml_l1, getNpokes=True)
   >>> for v in mm.getVisits(order='start'):
-  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
-  Minnie 0
-  Mickey 1
-  Jerry 2
-  Minnie 1
-  Mickey 1
-  Jerry 2
+  ...   print '%s %d %d' % (str(v.Animal), len(v.Nosepokes), v.Animal.Tag)
+  Minnie 0 1337
+  Mickey 1 42
+  Jerry 2 69
+  Minnie 1 1337
+  Mickey 1 42
+  Jerry 2 69
 
   >>> mm = Merger(ml_empty, ml_l1, getNpokes=True)
   >>> for v in mm.getVisits(order='start'):
@@ -59,6 +59,26 @@ class Merger(Data):
   Minnie 1
   Mickey 1
   Jerry 2
+
+  >>> mm = Merger(ml_retagged, ml_l1, getNpokes=True)
+  >>> for v in mm.getVisits(order='start'):
+  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
+  ...   if isinstance(v.Animal.Tag, set):
+  ...     print "  %s" % (', '.join(map(str, sorted(v.Animal.Tag))))
+  ...   else:
+  ...     print "  %d" % v.Animal.Tag
+  Mickey 0
+    42, 1337
+  Minnie 1
+    42, 1337
+  Jerry 2
+    69
+  Minnie 1
+    42, 1337
+  Mickey 1
+    42, 1337
+  Jerry 2
+    69
   """
   #TODO: common interface, not inheritance
   def __init__(self, *loaders, **kwargs):
