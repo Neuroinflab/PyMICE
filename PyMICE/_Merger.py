@@ -52,6 +52,13 @@ class Merger(Data):
   Minnie 1
   Mickey 1
   Jerry 2
+
+  >>> mm = Merger(ml_empty, ml_l1, getNpokes=True)
+  >>> for v in mm.getVisits(order='start'):
+  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
+  Minnie 1
+  Mickey 1
+  Jerry 2
   """
   #TODO: common interface, not inheritance
   def __init__(self, *loaders, **kwargs):
@@ -163,10 +170,12 @@ class Merger(Data):
           print 'Overlap of IC sessions detected'
 
     # TODO: overlap issue!
-    self.icSessionStart = min(x for x in [self.icSessionStart,
-                                           loader.getStart()] if x != None)
-    self.icSessionEnd = max(x for x in [self.icSessionEnd,
-                                         loader.getEnd()] if x != None)
+    for attr in ['Start', 'End']:
+      icAttr = 'icSession' + attr
+      vals = [x for x in [getattr(self, icAttr),
+                          getattr(loader, 'get' + attr)()] if x is not None]
+      if len(vals) > 0:
+        setattr(self, icAttr, min(vals))
 
     structure = loader.structure
 
@@ -183,8 +192,15 @@ class Merger(Data):
     visits = loader.getVisits()
 
     if visits != None:
-      if min(v.Start for v in visits) < self.__topTime:
-        print "Possible temporal overlap of visits"
+      try:
+        minStart = min(v.Start for v in visits)
+
+      except ValueError:
+        pass
+
+      else:
+        if minStart < self.__topTime:
+          print "Possible temporal overlap of visits"
 
       self._insertVisits(visits)
 
@@ -210,10 +226,12 @@ class Merger(Data):
     ## XXX more data loading here
 
     if visits != None:
-      self.__topTime = max(self.__topTime, max(v.End for v in visits))
-
+      maxEnd = [self.__topTime]
+      maxEnd.extend(v.End for v in visits)
       if self._getNpokes:
-        self.__topTime = max(self.__topTime, max(np.End for v in visits if v.Nosepokes for np in v.Nosepokes))
+        maxEnd.extend(np.End for v in visits if v.Nosepokes for np in v.Nosepokes)
+
+      self.__topTime = max(maxEnd)
 
     # TODO
     #if log != None:
