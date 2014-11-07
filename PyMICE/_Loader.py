@@ -324,7 +324,8 @@ class Loader(Data):
     """
     Data.__init__(self, verbose = kwargs.get('verbose', False),
                   getNpokes=kwargs.get('get_npokes',
-                                       kwargs.get('getNpokes', False)),
+                                       kwargs.get('getNpokes', 
+                                       kwargs.get('getNosepokes',False))),
                   getLogs=kwargs.get('getLogs'),
                   getEnv=kwargs.get('getEnv'))
 

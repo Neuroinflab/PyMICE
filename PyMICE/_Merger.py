@@ -84,7 +84,8 @@ class Merger(Data):
   def __init__(self, *loaders, **kwargs):
     Data.__init__(self, verbose = kwargs.get('verbose', False),
                   getNpokes=kwargs.get('get_npokes',
-                                       kwargs.get('getNpokes', False)),
+                                       kwargs.get('getNpokes',
+                                       kwargs.get('getNosepokes',False))),
                   getEnv=kwargs.get('getEnv', False),
                   getLogs=kwargs.get('getLogs'))
 
