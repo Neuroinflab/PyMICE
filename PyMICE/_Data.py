@@ -8,16 +8,16 @@ Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 
 import sys
 import os
-import numpy as np
+import datetime
+import pytz
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
 from matplotlib import rc
-import scipy.interpolate as sip
 import time
 import zipfile
 import csv
-import collections
+import cStringIO
 import sqlite3
 import codecs
 import copy
@@ -29,6 +29,9 @@ from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode
 
 callCopy = methodcaller('copy')
+
+def timeString(x, tz=None):
+  return datetime.datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
 
 def deprecated(message, warningClass=DeprecationWarning, stacklevel=1):
   warnings.warn(message, warningClass, stacklevel=2+stacklevel)
@@ -1361,6 +1364,179 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
   def getEnvironment(self):
     return self.__filterDataTimeMask(self.__environment)
+
+  def save(self, filename, force=False):
+    if os.path.exists(filename) and not force:
+      raise ValueError("File %s already exists." % filename)
+
+    fh = zipfile.ZipFile(filename, 'w')
+
+    # Animals
+    buf = cStringIO.StringIO()
+    keys = set()
+    animals = {}
+    for animal in self.__animals:
+      keys.update(animal.keys())
+      name = unicode(animal)
+      assert name not in animals
+      animals[name] = str(len(animals))
+
+    keys.discard('_aid')
+    keys.discard('Tag')
+
+    keys = list(keys)
+    writer = csv.writer(buf, delimiter='\t')
+    writer.writerow(['_aid', 'Tag'] + keys)
+    for animal in self.__animals:
+      _aid = animals[unicode(animal)]
+      try:
+        tag = animal.Tag
+        if isinstance(tag, set):
+          tag = ','.join(str(x) for x in sorted(tag))
+
+        else:
+          tag = str(tag)
+
+      except:
+        tag = ''
+
+      row = animal.select(keys)
+      row = [str(x) if x is not None else '' for x in row]
+      writer.writerow([_aid, tag] + row)
+
+    fh.writestr('Animals.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+    buf.reset()
+    buf.truncate()
+
+    sources = set()
+    logKeys = set()
+    envKeys = set()
+    visKeys = set()
+    npKeys = set()
+    visits = {}
+
+    for visit in self.__visits:
+      visKeys.update(visit.keys())
+      sources.add(visit._source)
+      visits[id(visit)] = str(len(visits)) #vid
+
+    for nosepoke in self.__nosepokes:
+      npKeys.update(nosepoke.keys())
+      sources.add(nosepoke._source)
+
+    for log in self.__logs:
+      logKeys.update(log.keys())
+      sources.add(log._source)
+
+    for env in self.__environment:
+      envKeys.update(env.keys())
+      sources.add(env._source)
+
+
+    sources = [(str(i), src) for (i, src) in enumerate(sorted(sources))]
+    writer = csv.writer(buf, delimiter='\t')
+    writer.writerow(['_sid', '_source'])
+    writer.writerows(sources)
+    sources = dict((_source, _sid) for (_sid, _source) in sources)
+
+    fh.writestr('Sources.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+    buf.reset()
+    buf.truncate()
+
+    if visKeys:
+      visKeys.remove('Animal')
+      visKeys.remove('Start')
+      visKeys.remove('End')
+      visKeys.remove('_source')
+      visKeys.discard('Nosepokes')
+      visKeys.remove('_vid')
+      visKeys = list(visKeys)
+
+      writer = csv.writer(buf, delimiter='\t')
+      writer.writerow(['_vid', '_aid', 'Start', 'End'] + visKeys + ['_sid'])
+      for visit in self.__visits:
+        _vid = visits[id(visit)]
+        _aid = animals[unicode(visit.Animal)]
+        Start = timeString(visit.Start)
+        End = timeString(visit.End)
+        _sid = sources[visit._source]
+        row = visit.select(visKeys)
+        row = [_vid, _aid, Start, End] +\
+              [str(x) if x is not None else '' for x in row] +\
+              [_sid]
+        writer.writerow(row)
+
+      fh.writestr('IntelliCage/Visits.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+      buf.reset()
+      buf.truncate()
+
+    if npKeys:
+      npKeys.remove('_nid')
+      npKeys.remove('_source')
+      npKeys.remove('Visit')
+      npKeys.remove('Start')
+      npKeys.remove('End')
+      npKeys = list(npKeys)
+
+      writer = csv.writer(buf, delimiter='\t')
+      writer.writerow(['_vid', 'Start', 'End'] + visKeys + ['_sid'])
+      for nosepoke in self.__nosepokes:
+        try:
+          _vid = visits[id(nosepoke.Visit)]
+
+        except:
+          _vid = ''
+
+        Start = timeString(nosepoke.Start)
+        End = timeString(nosepoke.End)
+        _sid = sources[nosepoke._source]
+        row = nosepoke.select(npKeys)
+        row = [_vid, Start, End] +\
+              [str(x) if x is not None else '' for x in row] +\
+              [_sid]
+        writer.writerow(row)
+
+      fh.writestr('IntelliCage/Nosepokes.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+      buf.reset()
+      buf.truncate()
+
+    if logKeys:
+      logKeys.remove('_source')
+      logKeys.remove('DateTime')
+      logKeys = list(logKeys)
+
+      writer = csv.writer(buf, delimiter='\t')
+      writer.writerow(['DateTime'] + visKeys + ['_sid'])
+      for log in self.__logs:
+        _sid = sources[log._source]
+        DateTime = timeString(log.DateTime)
+        row = log.select(logKeys)
+        row = [DateTime] + row + [_sid]
+        writer.writerow(row)
+
+      fh.writestr('IntelliCage/Log.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+      buf.reset()
+      buf.truncate()
+
+    if envKeys:
+      envKeys.remove('_source')
+      envKeys.remove('DateTime')
+      envKeys = list(envKeys)
+
+      writer = csv.writer(buf, delimiter='\t')
+      writer.writerow(['DateTime'] + visKeys + ['_sid'])
+      for env in self.__environment:
+        _sid = sources[env._source]
+        DateTime = timeString(env.DateTime)
+        row = env.select(logKeys)
+        row = [DateTime] + row + [_sid]
+        writer.writerow(row)
+
+      fh.writestr('IntelliCage/Environment.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+      buf.reset()
+      buf.truncate()
+
+    fh.close()
 
 if __name__ == '__main__':
   import doctest

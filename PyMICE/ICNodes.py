@@ -97,6 +97,9 @@ class DataNode(object):
   #def items(self):
   #  return [(k, getattr(self, k) for k in self._attrs]
 
+  def select(self, query):
+    return map(self.__dict__.get, query)
+
 # TODO
 class LogNode(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Category', 'Type', 'Cage',
