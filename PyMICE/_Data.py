@@ -1439,7 +1439,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     writer.writerows(sources)
     sources = dict((_source, _sid) for (_sid, _source) in sources)
 
-    fh.writestr('Sources.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
+    fh.writestr('_Sources.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
     buf.reset()
     buf.truncate()
 
