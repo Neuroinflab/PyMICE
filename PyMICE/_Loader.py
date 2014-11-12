@@ -12,11 +12,14 @@ from matplotlib import rc
 import time
 
 from datetime import datetime
+import dateutil.parser
 
 import zipfile
 import csv
 import warnings
 import operator
+
+from xml.dom import minidom
 
 try:
   from ._Data import Data, deprecated
@@ -206,6 +209,44 @@ class Loader(Data):
         except KeyError:
           groups[group] = {'Animals': [name],
                            'Name': group}
+
+    try:
+      fh = zf.open('Sessions.xml')
+      dom = minidom.parse(fh)
+      aos = dom.getElementsByTagName('ArrayOfSession')[0]
+      ss = aos.getElementsByTagName('Session')
+      sessions = []
+      for session in ss:
+        offset = session.getElementsByTagName('TimeZoneOffset')[0]
+        offset = offset.childNodes[0]
+        assert offset.nodeType == offset.TEXT_NODE
+        offset = offset.nodeValue
+        interval = session.getElementsByTagName('Interval')[0]
+        start = interval.getElementsByTagName('Start')[0]
+        start = start.childNodes[0]
+        assert start.nodeType == start.TEXT_NODE
+        start = dateutil.parser.parse(start.nodeValue)
+        end = interval.getElementsByTagName('End')[0]
+        end = end.childNodes[0]
+        assert end.nodeType == end.TEXT_NODE
+        end = dateutil.parser.parse(end.nodeValue)
+        if start.tzinfo != end.tzinfo:
+          warnings.warn(UserWarning('Timezone changed!'))
+
+        for sessionStart, sessionEnd in sessions:
+          if sessionStart < start < sessionEnd or\
+             sessionStart < end < sessionEnd or\
+             (start <= sessionStart and sessionEnd <= end) or\
+             (sessionStart <= start and end <= sessionEnd):
+              warnings.warn(UserWarning('Temporal overlap of sessions!'))
+
+        sessions.append((start, end))
+
+      sessions = sorted(sessions)
+
+    except:
+      sessions = None
+      pass
 
     visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
     tags = visits.pop('Tag')
