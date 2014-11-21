@@ -9,8 +9,154 @@ import os
 import time
 import datetime
 import csv
+import re
+import collections
 
 from ._Loader import convertTime
+
+class MetadataNode(object):
+  _labels = None
+  _key = staticmethod(lambda x: x['name'])
+  _filename = None
+
+  @classmethod
+  def fromMeta(cls, meta):
+    filename = os.path.join(meta, cls._filename)
+    return cls.fromCSV(filename)
+
+  @classmethod
+  def fromCSV(cls, filename):
+    if not os.path.exists(filename):
+      return
+
+    result = {}
+    with open(filename, 'rb') as fh:
+      #return dict((cls._key(row), cls(*map(row.get, cls._labels)))\
+      #            for row in csv.DictReader(fh))
+      for row in csv.DictReader(fh):
+        key = cls._key(row)
+        byLabel = map(row.pop, cls._labels)
+        result[key] = cls(*byLabel, **row)
+
+    return result
+
+
+class Substance(MetadataNode):
+  _labels = ['name', 'molar mass', 'density']
+  _filename = 'substances.csv'
+  
+  def __init__(self, Name, MolarMass, Density):
+    self.Name = unicode(Name).lower()
+    self.MolarMass = float(MolarMass) if MolarMass != '' else None
+    self.Density = float(Density) if Density != '' else None
+
+  def __repr__(self):
+    return str(self)
+
+  def __str__(self):
+    return unicode(self).encode('utf-8')
+
+  def __unicode__(self):
+    return self.Name
+
+
+class Component(object):
+  def __init__(self, Substance, Amount=None, Unit=None):
+    self.Substance = Substance
+    self.Amount = float(Amount) if Amount is not None else None
+    self.Unit = unicode(Unit) if Amount is not None else None
+
+  def __repr__(self):
+    return str(self)
+
+  def __str__(self):
+    return unicode(self).encode('utf-8')
+
+  def __unicode__(self):
+    if self.Amount is None:
+      return unicode(self.Substance)
+
+    if self.Unit is None:
+      return u'%s %f' % (self.Substance, self.Amount)
+
+    return u'%s %f [%s]' % (self.Substance, self.Amount, self.Unit)
+
+
+class Components(object):
+  def __init__(self, components, density=None):
+    for substance, amount, unit in components:
+      pass
+
+
+class Liquid(MetadataNode):
+  _filename = 'liquids.csv'
+  _labels = ['name', 'density']
+  __parseSubstance = re.compile('^\s*(?P<substance>\S+)(?:\s+\[(?P<unit>\w+)\])?\s*$')
+
+  def __init__(self, Name, Density, substances=None, **components):
+    self.Name = unicode(Name).lower()
+    self.Density = float(Density) if Density != '' else None
+    self.Components = {}
+    self.Medium = {}
+    for key, amount in components.items():
+      key = key.lower()
+      match = self.__parseSubstance.match(key)
+      if not match:
+        continue
+
+      substance, unit = match.group('substance', 'unit')
+      amount = amount.strip().lower()
+      if amount == 'medium':
+        self.Medium[unicode(substance)] = substances.get(substance, substance) if substances else substance
+
+      else:
+        try:
+          amount = float(amount)
+
+        except:
+          continue
+
+        self.Components[unicode(substance)] = Component(substances.get(substance, substance) if substances else substance,
+                                                        amount,
+                                                        unit)
+
+  @classmethod
+  def fromCSV(cls, filename, substances=None):
+    result = {}
+    with open(filename, 'rb') as fh:
+      #return dict((cls._key(row), cls(*map(row.get, cls._labels)))\
+      #            for row in csv.DictReader(fh))
+      for row in csv.DictReader(fh):
+        key = cls._key(row)
+        byLabel = map(row.pop, cls._labels)
+        result[key] = cls(*byLabel, substances=substances, **row)
+
+    return result
+
+  @classmethod
+  def fromMeta(cls, meta):
+    filename = os.path.join(meta, cls._filename)
+    return cls.fromCSV(filename, Substance.fromMeta(meta))
+
+  def __repr__(self):
+    return str(self)
+
+  def __str__(self):
+    return unicode(self).encode('utf-8')
+
+  def __unicode__(self):
+    result = u'%s: ' % self.Name
+    if self.Components:
+      result += u', '.join(sorted(map(unicode, self.Components.values())))
+
+      if self.Medium:
+        result += u' in ' + (u', '.join(sorted(map(unicode, self.Medium.values()))))
+
+    else:
+      result += (u', '.join(sorted(map(unicode, self.Medium.values()))))
+
+    return result
+
 
 MARYSIA_META = 'meta/'
 
