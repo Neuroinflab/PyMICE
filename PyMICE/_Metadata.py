@@ -60,11 +60,11 @@ class Substance(MetadataNode):
     return self.Name
 
 
-class Component(object):
+class Concentration(object):
   def __init__(self, Substance, Amount=None, Unit=None, VolumeConcentration=None, MassFraction=None):
     self.Substance = Substance
     self.Amount = Amount
-    self.Unit = unicode(Unit) if Amount is not None else None
+    self.Unit = unicode(Unit) if Amount is not None and Unit is not None else None
     self.VolumeConcentration = VolumeConcentration
     self.MassFraction = MassFraction
 
@@ -84,11 +84,11 @@ class Component(object):
     return u'%s %f [%s]' % (self.Substance, self.Amount, self.Unit)
 
 
-class Components(object):
-  def __init__(self, components, density=None):
+class Solutes(object):
+  def __init__(self, solutes, density=None):
     self.__keys = set()
 
-    for substance, amount, unit in components:
+    for substance, amount, unit in solutes:
       massFraction = None
       volumeConcentration = None
       if unit == 'volume':
@@ -110,9 +110,21 @@ class Components(object):
       name = unicode(substance)
       self.__keys.add(name)
       setattr(self, name,
-              Component(substance, amount, unit,
+              Concentration(substance, amount, unit,
                         VolumeConcentration=volumeConcentration,
                         MassFraction=massFraction))
+
+  def __bool__(self):
+    return len(self.__keys) > 0
+
+  def __len__(self):
+    return len(self.__keys)
+
+  def keys(self):
+    return list(self.__keys)
+
+  def __getitem__(self, key):
+    return getattr(self, key)
 
   def __repr__(self):
     return str(self)
@@ -131,13 +143,13 @@ class Liquid(MetadataNode):
   _labels = ['name', 'density']
   __parseSubstance = re.compile('^\s*(?P<substance>\S+)(?:\s+\[(?P<unit>\w+)\])?\s*$')
 
-  def __init__(self, Name, Density, substances=None, **components):
+  def __init__(self, Name, Density, substances=None, **solutes):
     self.Name = unicode(Name).lower()
     self.Density = float(Density) if Density != '' else None
+    self.Solvent = None
 
-    self.Medium = {}
     tmp = []
-    for key, amount in components.items():
+    for key, amount in solutes.items():
       key = key.lower()
       match = self.__parseSubstance.match(key)
       if not match:
@@ -145,8 +157,9 @@ class Liquid(MetadataNode):
 
       substance, unit = match.group('substance', 'unit')
       amount = amount.strip().lower()
-      if amount == 'medium':
-        self.Medium[unicode(substance)] = substances.get(substance, substance) if substances else substance
+      if amount in ('medium', 'solvent'):
+        assert self.Solvent is None
+        self.Solvent  = substances.get(substance, substance) if substances else substance
 
       else:
         try:
@@ -159,7 +172,46 @@ class Liquid(MetadataNode):
                     amount,
                     unit))
 
-    self.Components = Components(tmp, density=self.Density)
+    if len(tmp) == 1. and not self.Solvent:
+      substance, amount, unit = tmp.pop()
+      self.Solvent = Concentration(substance, amount, unit,
+                                   MassFraction=1.,
+                                   VolumeConcentration=1.)
+
+    elif self.Solvent and not tmp:
+      self.Solvent = Concentration(substance,
+                                   MassFraction=1.,
+                                   VolumeConcentration=1.)
+
+    self.Solutes = Solutes(tmp, density=self.Density)
+
+    if self.Solvent:
+      massFraction = 1.
+      volumeConcentration = None
+      if self.Solutes:
+        try:
+          for solute in self.Solutes.keys():
+            massFraction -= self.Solutes[solute].MassFraction
+
+        except:
+          massFraction = None
+
+        try:
+          volumeConcentration = massFraction * self.Density / self.Solvent.Density
+
+        except:
+          pass
+
+        self.Solvent = Concentration(self.Solvent,
+                                     VolumeConcentration=volumeConcentration,
+                                     MassFraction=massFraction)
+
+      if not self.Solutes and hasattr(self.Solvent.Substance, 'Density'):
+        if self.Density is None:
+          self.Density = self.Solvent.Substance.Density
+
+        else:
+          assert self.Density == self.Solvent.Substance.Density or self.Solvent.Substance.Density is None
 
   @classmethod
   def fromCSV(cls, filename, substances=None):
@@ -187,14 +239,14 @@ class Liquid(MetadataNode):
 
   def __unicode__(self):
     result = self.Name
-    if self.Components:
-      result += u': ' + unicode(self.Components)
+    if self.Solutes:
+      result += u': %s' % self.Solutes
 
-      if self.Medium:
-        result += u' in ' + (u', '.join(sorted(map(unicode, self.Medium.values()))))
+      if self.Solvent:
+        result += u' in %s' % self.Solvent.Substance
 
     else:
-      result += (u', '.join(sorted(map(unicode, self.Medium.values()))))
+      result += u': %s' % self.Solvent.Substance
 
     return result
 
