@@ -61,10 +61,12 @@ class Substance(MetadataNode):
 
 
 class Component(object):
-  def __init__(self, Substance, Amount=None, Unit=None):
+  def __init__(self, Substance, Amount=None, Unit=None, VolumeConcentration=None, MassFraction=None):
     self.Substance = Substance
-    self.Amount = float(Amount) if Amount is not None else None
+    self.Amount = Amount
     self.Unit = unicode(Unit) if Amount is not None else None
+    self.VolumeConcentration = VolumeConcentration
+    self.MassFraction = MassFraction
 
   def __repr__(self):
     return str(self)
@@ -84,8 +86,44 @@ class Component(object):
 
 class Components(object):
   def __init__(self, components, density=None):
+    self.__keys = set()
+
     for substance, amount, unit in components:
-      pass
+      massFraction = None
+      volumeConcentration = None
+      if unit == 'volume':
+        volumeConcentration = amount
+        try:
+          massFraction = amount * substance.Density / density
+
+        except:
+          pass
+
+      if unit == 'mass':
+        massFraction = amount
+        try:
+          volumeConcentration = amount * density / substance.Density
+
+        except:
+          pass
+
+      name = unicode(substance)
+      self.__keys.add(name)
+      setattr(self, name,
+              Component(substance, amount, unit,
+                        VolumeConcentration=volumeConcentration,
+                        MassFraction=massFraction))
+
+  def __repr__(self):
+    return str(self)
+
+  def __str__(self):
+    return unicode(self).encode('utf-8')
+
+  def __unicode__(self):
+    return u', '.join(unicode(getattr(self, k)) for k in sorted(self.__keys))
+
+          
 
 
 class Liquid(MetadataNode):
@@ -96,8 +134,9 @@ class Liquid(MetadataNode):
   def __init__(self, Name, Density, substances=None, **components):
     self.Name = unicode(Name).lower()
     self.Density = float(Density) if Density != '' else None
-    self.Components = {}
+
     self.Medium = {}
+    tmp = []
     for key, amount in components.items():
       key = key.lower()
       match = self.__parseSubstance.match(key)
@@ -116,9 +155,11 @@ class Liquid(MetadataNode):
         except:
           continue
 
-        self.Components[unicode(substance)] = Component(substances.get(substance, substance) if substances else substance,
-                                                        amount,
-                                                        unit)
+        tmp.append((substances.get(substance, substance) if substances else substance,
+                    amount,
+                    unit))
+
+    self.Components = Components(tmp, density=self.Density)
 
   @classmethod
   def fromCSV(cls, filename, substances=None):
@@ -145,9 +186,9 @@ class Liquid(MetadataNode):
     return unicode(self).encode('utf-8')
 
   def __unicode__(self):
-    result = u'%s: ' % self.Name
+    result = self.Name
     if self.Components:
-      result += u', '.join(sorted(map(unicode, self.Components.values())))
+      result += u': ' + unicode(self.Components)
 
       if self.Medium:
         result += u' in ' + (u', '.join(sorted(map(unicode, self.Medium.values()))))
