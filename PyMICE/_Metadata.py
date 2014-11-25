@@ -349,7 +349,7 @@ class Phase(MetadataNode):
     for key, val in kwargs.items():
       key = key.strip().lower()
       val = val.strip().lower()
-      if key.startswith('cage'):
+      if key.startswith('cage') and val in _bottles:
         cage = int(key[4:].strip())
         self.Cages[cage] = _bottles[val]
       
