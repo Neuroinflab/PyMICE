@@ -60,7 +60,7 @@ class Substance(MetadataNode):
   _filename = 'substances.csv'
   
   def __init__(self, Name, MolarMass, Density, _next=None):
-    self.Name = unicode(Name).lower()
+    self.Name = Name.decode('utf-8').lower()
     self.MolarMass = float(MolarMass) if MolarMass != '' else None
     self.Density = float(Density) if Density != '' else None
 
@@ -69,7 +69,7 @@ class Concentration(object):
   def __init__(self, Substance, Amount=None, Unit=None, VolumeConcentration=None, MassFraction=None):
     self.Substance = Substance
     self.Amount = Amount
-    self.Unit = unicode(Unit) if Amount is not None and Unit is not None else None
+    self.Unit = Unit.decode('utf-8') if Amount is not None and Unit is not None else None
     self.VolumeConcentration = VolumeConcentration
     self.MassFraction = MassFraction
 
@@ -150,7 +150,7 @@ class Liquid(MetadataNode):
   _nextClass = Substance
 
   def __init__(self, Name, Density, _next=None, **solutes):
-    self.Name = unicode(Name).lower()
+    self.Name = Name.decode('utf-8').lower()
     self.Density = float(Density) if Density != '' else None
     self.Solvent = None
 
@@ -261,7 +261,7 @@ class Bottles(MetadataNode):
   __parseLocation = re.compile('^\s*(?P<kind>\S+)\s+(?P<number>\d+)\s*$')
 
   def __init__(self, Name, _next=None, **locations):
-    self.Name = unicode(Name).lower()
+    self.Name = Name.decode('utf-8').lower()
     self.Corners = {}
     self.Sides = {}
 
@@ -293,7 +293,7 @@ class Animal(MetadataNode):
   _labels = ['name', 'weight', 'deceased'] 
 
   def __init__(self, Name, Weight=None, Deceased=None, _next=None, _groups=None, _partitions=None, **kwargs):
-    self.Name = unicode(Name)
+    self.Name = Name.decode('utf-8')
     self.Weight = float(Weight) if Weight != '' else None
     self.Deceased = Deceased if Deceased != '' else False
     for key, value in kwargs.items():
@@ -340,11 +340,11 @@ class Phase(MetadataNode):
   def __init__(self, Start, End, Name, Type, Iteration, Partition, Comments, _partitions, _bottles, **kwargs):
     self.Start = convertTime(Start)
     self.End = convertTime(End)
-    self.Name = Name if Name != '' else None
-    self.Type = Type if Type != '' else None
+    self.Name = Name.decode('utf-8') if Name != '' else None
+    self.Type = Type.decode('utf-8') if Type != '' else None
     self.Iteration = int(Iteration) if Iteration != '' else None
     self.Mice = _partitions[Partition]
-    self.Comments = Comments if Comments != '' else None
+    self.Comments = Comments.decode('utf-8') if Comments != '' else None
     self.Cages = {}
     for key, val in kwargs.items():
       key = key.strip().lower()
