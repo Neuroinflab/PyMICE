@@ -35,7 +35,7 @@ class MetadataNode(object):
     result = {}
     with open(filename, 'rb') as fh:
       for row in csv.DictReader(fh):
-        byLabel = [row.pop(x, '').strip().lower() for x in cls._labels]
+        byLabel = [row.pop(x, '').strip() for x in cls._labels]
         for k, v in kwargs.items():
           assert k not in row
           row[k] = v
