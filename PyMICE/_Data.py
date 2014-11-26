@@ -488,7 +488,8 @@ class SQLiteDatabased(object):
 
     return cursor.fetchall()
 
-  def getMaskedSQL(self, fromClause, fields=('*',), where = (), whereData = (), order=None):
+  def getMaskedSQL(self, fromClause, fields=('*',), where = (), whereData = (),
+                   order=None, timeStart=None, timeEnd=None):
     unwrap = isinstance(fields, basestring)
 
     if unwrap:
@@ -496,7 +497,8 @@ class SQLiteDatabased(object):
 
     selectClause = ', '.join(fields)
 
-    whereClause = tuple(where) + self._getMask()
+    whereClause = tuple(where) + self._getMask(timeStart=timeStart,
+                                               timeEnd=timeEnd)
     whereClause = ' AND '.join('(%s)' % x for x in whereClause)
     if whereClause != '':
       whereClause = " WHERE %s" % whereClause
@@ -846,13 +848,19 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     self.maskTimeStart = None
     self.maskTimeEnd = None
 
-  def _getMask(self):
+  def _getMask(self, timeStart=None, timeEnd=None):
     mask = super(Data, self)._getMask()
-    if self.maskTimeStart != None:
-      mask += ('visits.start >= %f' % self.maskTimeStart ,)
+    if timeStart is None:
+      timeStart = self.maskTimeStart
 
-    if self.maskTimeEnd != None:
-      mask += ('visits.start < %f' % self.maskTimeEnd ,)
+    if timeEnd is None:
+      timeEnd = self.maskTimeEnd
+
+    if timeStart != None:
+      mask += ('visits.start >= %f' % timeStart ,)
+
+    if timeEnd != None:
+      mask += ('visits.start < %f' % timeEnd ,)
 
     if len(self.maskedMice) > 0:
       animals = ('%d' % self.__mice[a] for a in self.maskedMice if a in self.__mice)
@@ -902,6 +910,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     All future queries will be clipped to the visits starting between
     starttime and endtime.
     """
+    deprecated('time masking would not be supported in the future')
     if endtime == None:
       self.maskTimeEnd = starttime
 
@@ -1318,7 +1327,8 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     visits = self._getVisitNode(vids)
     return DataNode(Visits=visits)
 
-  def selectObj(self, kind='visits', mice=None, where = (), whereData = (), order=None):
+  def selectObj(self, kind='visits', mice=None, where = (), whereData = (), order=None,
+                timeStart = None, timeEnd=None):
     # mice -> important because of aid-s
     if isinstance(where, basestring):
       where = (where,)
@@ -1331,7 +1341,9 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     whereData = tuple(whereData)
 
     if kind == 'visits':
-      vids = self.getMaskedSQL('visits', '_vid', where, whereData, order)
+      vids = self.getMaskedSQL('visits', '_vid', where, whereData, order,
+                               timeStart=timeStart,
+                               timeEnd=timeEnd)
       return self._getVisitNode(vids)
 
     else:
