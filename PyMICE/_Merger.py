@@ -87,7 +87,8 @@ class Merger(Data):
                                        kwargs.get('getNpokes',
                                        kwargs.get('getNosepokes',False))),
                   getEnv=kwargs.get('getEnv', False),
-                  getLogs=kwargs.get('getLogs'))
+                  getLogs=kwargs.get('getLogs', False),
+                  getHw=kwargs.get('getHardware', False))
 
     self._loaders = map(str, loaders)
 

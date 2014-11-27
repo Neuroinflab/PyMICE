@@ -174,11 +174,11 @@ class Loader(Data):
                                              #'Cage': convertInt,
                                             },
                  'IntelliCage/HardwareEvents': {'DateTime': convertTime,
-                                                'Type': convertInt,
-                                                'Cage': convertInt,
-                                                'Corner': convertInt,
-                                                'Side': convertInt,
-                                                'State': convertInt,
+                                                #'Type': convertInt,
+                                                #'Cage': convertInt,
+                                                #'Corner': convertInt,
+                                                #'Side': convertInt,
+                                                #'State': convertInt,
                                                },
                 }
 
@@ -372,9 +372,9 @@ class Loader(Data):
                   getNpokes=kwargs.get('get_npokes',
                                        kwargs.get('getNpokes', 
                                        kwargs.get('getNosepokes',False))),
-                  getLogs=kwargs.get('getLogs'),
-                  getEnv=kwargs.get('getEnv'),
-                  getHw=kwargs.get('getHardware'))
+                  getLogs=kwargs.get('getLogs',False),
+                  getEnv=kwargs.get('getEnv',False),
+                  getHw=kwargs.get('getHardware',False))
 
     #self._get_SB = kwargs.get('get_SB', False) #XXX: REMOVEME
     #self._get_AG = kwargs.get('get_AG', False) #XXX: REMOVEME 

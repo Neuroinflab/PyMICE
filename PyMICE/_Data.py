@@ -683,7 +683,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     self.__nosepokes = [] #reserved for future use
     self.__logs = []
     self.__environment = []
-    self.__herdware = []
+    self.__hardware = []
 
   @property
   def _get_npokes(self):
@@ -1374,7 +1374,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
       return [x for x in data if timeStart <= x.DateTime]
 
-    if self.timeEnd is not None:
+    if timeEnd is not None:
       return [x for x in data if x.DateTime < timeEnd]
 
     return list(data)
