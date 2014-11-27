@@ -91,7 +91,7 @@ class Merger(Data):
 
     self._loaders = map(str, loaders)
 
-    self._getHardware = kwargs.get('getHardware', False)
+    #self._getHardware = kwargs.get('getHardware', False)
 
     self._initCache()
     self.__topTime = float('-inf')
@@ -224,6 +224,11 @@ class Merger(Data):
           print "Possible temporal overlap of visits"
 
       self._insertVisits(visits)
+
+    if self._getHw:
+      hardware = loader.getHardwareEvents()
+      if hardware is not None:
+        self._insertHardware(hardware)
 
     #TODO:
     #if self._getHardware:

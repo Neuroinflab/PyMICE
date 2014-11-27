@@ -131,6 +131,9 @@ class Solutes(object):
   def __getitem__(self, key):
     return getattr(self, key)
 
+  def __contains__(self, substance): 
+    return unicode(substance) in self.__keys
+
   def __repr__(self):
     return str(self)
 
@@ -221,6 +224,12 @@ class Liquid(MetadataNode):
 
         else:
           assert self.Density == self.Solvent.Substance.Density or self.Solvent.Substance.Density is None
+
+  def __contains__(self, substance):
+    if self.Solvent and unicode(self.Solvent.Substance) == unicode(substance):
+      return True
+
+    return self.Solutes and substance in self.Solutes
 
 #  @classmethod
 #  def fromCSV(cls, filename, substances=None):
@@ -345,13 +354,13 @@ class Phase(MetadataNode):
     self.Iteration = int(Iteration) if Iteration != '' else None
     self.Mice = _partitions[Partition]
     self.Comments = Comments.decode('utf-8') if Comments != '' else None
-    self.Cages = {}
+    self.Bottles = {}
     for key, val in kwargs.items():
       key = key.strip().lower()
       val = val.strip().lower()
       if key.startswith('cage') and val in _bottles:
         cage = int(key[4:].strip())
-        self.Cages[cage] = _bottles[val]
+        self.Bottles[cage] = _bottles[val]
       
   @classmethod
   def fromCSV(cls, filename, **kwargs):

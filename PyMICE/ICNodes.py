@@ -125,9 +125,28 @@ class EnvironmentNode(DataNode):
                **kwargs):
     DataNode.__init__(self, **kwargs)
     self.DateTime = float(DateTime)
-    self.Category = float(Temperature) if Temperature is not None else None
-    self.Type = int(Illumination) if Illumination is not None else None
+    self.Temperature = float(Temperature) if Temperature is not None else None
+    self.Illumination = int(Illumination) if Illumination is not None else None
     self.Cage = int(Cage) if Cage is not None else None
+
+
+class HardwareEventNode(DataNode):
+  _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Type',
+                                      'Cage', 'Corner', 'Side', 'State']
+  __typeMapping = {0: 'Air',
+                   1: 'Door',
+                   2: 'LED',
+                   }
+
+  def __init__(self, DateTime, Type=None, Cage=None, Corner=None, Side=None, State=None,
+               **kwargs):
+    DataNode.__init__(self, **kwargs)
+    self.DateTime = float(DateTime)
+    self.Type = self.__typeMapping[int(Type)] if Type is not None else None
+    self.Cage = int(Cage) if Cage is not None else None
+    self.Corner = int(Corner) if Corner is not None else None
+    self.Side = int(Side) if Side is not None else None
+    self.State = int(State) if State is not None else None
 
 
 class AnimalNode(DataNode):

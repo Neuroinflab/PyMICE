@@ -26,7 +26,7 @@ from math import exp, modf
 import itertools
 from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
-                    LogNode, EnvironmentNode
+                    LogNode, EnvironmentNode, HardwareEventNode
 
 callCopy = methodcaller('copy')
 
@@ -664,7 +664,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
                                               }
 
   def __init__(self, verbose = False, getNpokes=False, getLogs=False,
-               getEnv=False):
+               getEnv=False, getHw=False):
     structure = copy.deepcopy(self.defaultStructure)
     SQLiteDatabased.__init__(self, structure, verbose = verbose, joins = self.autoJoins)
 
@@ -673,6 +673,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     self._getNpokes = getNpokes
     self._getLogs = getLogs
     self._getEnv = getEnv
+    self._getHw = getHw
 
     # change to
     self.__animals = []
@@ -682,6 +683,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     self.__nosepokes = [] #reserved for future use
     self.__logs = []
     self.__environment = []
+    self.__herdware = []
 
   @property
   def _get_npokes(self):
@@ -976,7 +978,10 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     self.__logs.extend(self._newNodes(lNodes, LogNode)) 
 
   def _insertEnvironment(self, eNodes):
-    self.__environment.extend(self._newNodes(eNodes, EnvironmentNode)) 
+    self.__environment.extend(self._newNodes(eNodes, EnvironmentNode))
+
+  def _insertHardware(self, hNodes):
+    self.__hardware.extend(self._newNodes(hNodes, HardwareEventNode))
 
   def _insertVisits(self, vNodes):
     vAttributes = self.structure['visits'].keys()
@@ -1356,26 +1361,32 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     """
     return self.selectObj(kind='visits', *args, **kwargs)
 
-  def __filterDataTimeMask(self, data):
-    if self.maskTimeStart is not None:
-      s = self.maskTimeStart
-      if self.maskTimeEnd is not None:
-        e = self.maskTimeEnd
-        return [x for x in data if s <= x.DateTime < e]
+  def __filterDataTimeMask(self, data, timeStart=None, timeEnd=None):
+    if timeStart is None:
+      timeStart = self.maskTimeStart
 
-      return [x for x in data if s <= x.DateTime]
+    if timeEnd is None:
+      timeEnd = self.maskTimeEnd
 
-    if self.maskTimeEnd is not None:
-      e = self.maskTimeEnd
-      return [x for x in data if x.DateTime < e]
+    if timeStart is not None:
+      if timeEnd is not None:
+        return [x for x in data if timeStart <= x.DateTime < timeEnd]
+
+      return [x for x in data if timeStart <= x.DateTime]
+
+    if self.timeEnd is not None:
+      return [x for x in data if x.DateTime < timeEnd]
 
     return list(data)
 
-  def getLogs(self):
-    return self.__filterDataTimeMask(self.__logs)
+  def getLogs(self, timeStart=None, timeEnd=None):
+    return self.__filterDataTimeMask(self.__logs, timeStart=timeStart, timeEnd=timeEnd)
 
-  def getEnvironment(self):
-    return self.__filterDataTimeMask(self.__environment)
+  def getEnvironment(self, timeStart=None, timeEnd=None):
+    return self.__filterDataTimeMask(self.__environment, timeStart=timeStart, timeEnd=timeEnd)
+
+  def getHardwareEvents(self, timeStart=None, timeEnd=None):
+    return self.__filterDataTimeMask(self.__hardware, timeStart=timeStart, timeEnd=timeEnd)
 
   def save(self, filename, force=False):
     if os.path.exists(filename) and not force:

@@ -182,7 +182,8 @@ class Loader(Data):
                                                },
                 }
 
-  def _loadZip(self, fname, getNpokes=False, getLogs=False, getEnvironment=False, source=None):
+  def _loadZip(self, fname, getNpokes=False, getLogs=False, getEnvironment=False,
+               getHardware=False, source=None):
     zf = zipfile.ZipFile(fname)
     animalsLabels = set()
     animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
@@ -295,6 +296,10 @@ class Loader(Data):
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       result['environment'] = self._makeDicts(environment)
 
+    if getHardware:
+      hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
+      result['hardware'] = self._makeDicts(hardware)
+
     return result
 
   @staticmethod
@@ -368,15 +373,15 @@ class Loader(Data):
                                        kwargs.get('getNpokes', 
                                        kwargs.get('getNosepokes',False))),
                   getLogs=kwargs.get('getLogs'),
-                  getEnv=kwargs.get('getEnv'))
+                  getEnv=kwargs.get('getEnv'),
+                  getHw=kwargs.get('getHardware'))
 
-    self._getHardware = kwargs.get('getHardware', False)
-    self._get_SB = kwargs.get('get_SB', False)
-    self._get_AG = kwargs.get('get_AG', False)
+    #self._get_SB = kwargs.get('get_SB', False) #XXX: REMOVEME
+    #self._get_AG = kwargs.get('get_AG', False) #XXX: REMOVEME 
 
     self._initCache()
 
-    self.envdata = []
+    #self.envdata = [] #XXX: REMOVEME
 
     self._fnames = (fname,)
 
@@ -428,6 +433,7 @@ class Loader(Data):
                            getNpokes=self._getNpokes,
                            getLogs=self._getLogs,
                            getEnvironment=self._getEnv,
+                           getHardware=self._getHw,
                            source=fname.decode('utf-8'))
       animals = data['animals']
       groups = data['groups']
@@ -455,11 +461,10 @@ class Loader(Data):
       if self._getEnv:
         self._insertEnvironment(data['environment'])
 
+      if self._getHw:
+        self._insertHardware(data['hardware'])
+
       #self.loadZip(fname,
-      #             getNpokes=self._getNpokes,
-      #             getHardware = self._getHardware,
-      #             get_sb=self._get_SB,
-      #             get_ag=self._get_AG,
       #             sid = sid)
 
 ## Analyser data loading
@@ -610,153 +615,6 @@ class Loader(Data):
 
     return result
 
-  def loadZip(self, fname, getNpokes=False, get_sb=False, get_ag=False, sid=None,
-              getHardware = False):
-    zf = zipfile.ZipFile(fname)
-
-    # loading file Animals.txt, checking legacy format
-    animals = self.fromCSV(zf.open('Animals.txt'))
-    if 'AnimalTag' not in animals:
-      legacy_format = True
-      animals = self._legacyUpdate(animals, 'Animals')
-
-    aNames = animals['AnimalName']
-    aTags = map(int, animals['AnimalTag'])
-    aGroup = animals['GroupName']
-    aNotes = animals['AnimalNotes']
-    aSexes = animals['Sex']
-
-    # registering animals
-    aIds = []
-    for name, tag, sex, notes in zip(aNames, aTags, aSexes, aNotes):
-      if sex not in ('Male', 'Female', 'Unknown'):
-        print "Unknown sex: %s" % sex
-
-      aid = self._registerAnimal(name, tag,
-                                 sex if sex != 'Unknown' else None,
-                                 notes if notes != '' else None)
-      aIds.append(aid)
-
-    tag2aid = dict(zip(aTags, aIds))
-
-    # creating groups
-    for name in set(aGroup):
-      self._registerGroup(name)
-
-    for aid, group in zip(aIds, aGroup):
-      self._addMember(group, aid)
-
-    
-
-    visits = self.fromCSV(zf.open('IntelliCage/Visits.txt'), True)
-
-    if visits == None:
-      return
-
-    if legacy_format:
-      visits = self._legacyUpdate(visits, 'Visits')
-
-    visits['Start'] = convertTime(visits['Start'])
-    visits['End'] = convertTime(visits['End'])
-    visits['AnimalTag'] = map(int, visits['AnimalTag'])
-    vidMapping = self._insertVisits(visits, tag2aid, 'AnimalTag',
-                                    'VisitID', sid = sid)
-
-    if getNpokes:
-      npokes = self.fromCSV(zf.open('IntelliCage/Nosepokes.txt'), True)
-      if legacy_format:
-        npokes = self._legacyUpdate(npokes, 'Nosepokes')
-
-      start = convertTime(npokes['Start'])
-      end = convertTime(npokes['End'])
-      npokes['Start'] = start
-      npokes['End'] = end
-
-      # prepare redundant data just for compatibility
-      npokes['NosepokeDuration'] = [e - s for (e, s) in zip(end, start)]
-      npokes['NosepokeNumber'] = [1] * len(start)
-
-      self._insertNosepokes(npokes, vidMapping, 'VisitID', sid = sid)
-
-    if getHardware:
-      hardware = self.fromCSV(zf.open('IntelliCage/HardwareEvents.txt'))
-      if legacy_format:
-        hardware = self._legacyUpdate(hardware, 'HardwareEvents')
-
-      hardware['DateTime'] = convertTime(hardware['DateTime'])
-      self._insertDataSid(hardware, 'HardwareEvents', sid)
-
-    # TODO: take care of SB & AG
-    if get_sb:
-      data = self.fromCSV(zf.open('SocialBox/SocialBoxRegistrations.txt'), True)
-      start = convertTime(data['Start'])
-      end = convertTime(data['End'])
-      data['Start'] = start
-      data['End'] = end
-      self.insertData(data, 'socialboxregistrations')
-
-    if get_ag:
-      data = self.fromCSV(zf.open('AnimalGate/AnimalGateSessions.txt'), True)
-      start = convertTime(data['Start'])
-      end = convertTime(data['End'])
-      data['Start'] = start
-      data['End'] = end
-      self.insertData(data, 'animalgatesessions')
-    # END TODO
-
-    try:
-      env = self.fromCSV(zf.open('IntelliCage/Environment.txt'), True)
-
-    except KeyError as e:
-      print e
-
-    else:
-      env['DateTime'] = convertTime(env['DateTime'])
-      self._insertDataSid(env, 'environment', sid)
-
-    self.loadLog(zf.open('IntelliCage/Log.txt'), sid = sid)
-
-  def loadLog(self, fname, sid = None):
-    log = self.fromCSV(fname, True)
-    if log == None:
-      print 'Unable to read log'
-      return
-
-    if 'Type' in log: #legacy_format
-      log = self._legacyUpdate(log, 'Log')
-
-    #print log
-    log['DateTime'] = convertTime(log['DateTime'])
-    self._insertDataSid(log, 'log', sid)
-
-    try:
-      # TODO: Make it more intuitive
-      # Process log
-      errors = [(date, note, logtype) for date, note, category, logtype in
-            zip(log['DateTime'], log['LogNotes'], log['LogCategory'],
-            log['LogType']) if category == 'Error'
-            and logtype not in ['Lickometer', 'Nosepoke']]
-
-
-      if errors:
-        print 'Errors in %s' %fname
-        # for date, note, logtype in errors:
-        #     print date, note #, logtype
-
-
-      warnings = [(date, note, logtype) for date, note, category, logtype in
-              zip(log['DateTime'], log['LogNotes'], log['LogCategory'],
-              log['LogType']) if note.startswith('Unregistered tag')
-              or note.startswith('Presence signal')]
-
-      if warnings:
-        print '%d warnings in %s' %(len(warnings), fname)
-        notes = [note for _, note, _ in warnings]
-        for note in set(notes):
-          print "%s: %d time(s)" %(note, notes.count(note))
-
-    except KeyError:
-      print "ERROR: Invalid log"
 
 if __name__ == '__main__':
   import doctest
