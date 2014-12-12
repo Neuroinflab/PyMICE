@@ -28,9 +28,6 @@ from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode
 
-def sortedBy(data, *keys):
-  return sorted(data, key=attrgetter(*keys))
-
 callCopy = methodcaller('copy')
 
 def timeString(x, tz=None):
@@ -1177,60 +1174,54 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     visits = self._getVisitNode(vids)
     return DataNode(Visits=visits)
 
-  def selectObj(self, kind='visits', mice=None, where = (), whereData = (), order=None,
-                timeStart = None, timeEnd=None):
-    # mice -> important because of aid-s
-    if isinstance(where, basestring):
-      where = (where,)
-
-    else:
-      where = tuple(where)
-
-    where += self._getMiceClause(mice)
-
-    whereData = tuple(whereData)
-
-    if kind == 'visits':
-      vids = self.getMaskedSQL('visits', '_vid', where, whereData, order,
-                               timeStart=timeStart,
-                               timeEnd=timeEnd)
-      return self._getVisitNode(vids)
-
-    else:
-      raise NotImplementedError("Unknown kind of objects: %s" % kind)
-
-
-  def getVisits(self, *args, **kwargs):
+  def getVisits(self, mice=None, timeStart=None, timeEnd=None, timeBy='Start',
+                order='Start'):
     """
-    An alias.
-
-    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(), 'Start')]
+    >>> [v.Corner for v in ml_l1.getVisits()]
     [4, 1, 2]
-    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(), 'Start')]
+    >>> [v.Corner for v in ml_icp3.getVisits()]
     [1, 2, 3]
-    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(mice='Mickey'), 'Start')]
+    >>> [v.Corner for v in ml_l1.getVisits(mice='Mickey')]
     [1]
-    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(mice='Jerry'), 'Start')]
+    >>> [v.Corner for v in ml_icp3.getVisits(mice='Jerry')]
     [3]
-    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(mice=['Mickey', 'Minnie']), 'Start')]
+    >>> [v.Corner for v in ml_l1.getVisits(mice=['Mickey', 'Minnie'])]
     [4, 1]
-    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(mice=['Jerry', 'Minnie']), 'Start')]
+    >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'])]
     [1, 3]
 
 
-    >>> for v in sortedBy(ml_icp3.getVisits(), 'Start'):
+    >>> for v in ml_icp3.getVisits():
     ...   print hTime(v.Start)
     2012-12-18 12:13:14.139
     2012-12-18 12:18:55.421
     2012-12-18 12:19:55.421
 
-    >>> for v in sortedBy(ml_l1.getVisits(mice='Minnie'), 'Start'):
+    >>> for v in ml_l1.getVisits(mice='Minnie'):
     ...   print hTime(v.Start)
     2012-12-18 12:30:02.360
     """
-    return self.selectObj(kind='visits', *args, **kwargs)
+    visits = self.__visits
+    if mice is not None:
+      visits = self.__filterMice(visits, mice=mice)
 
-  def __filterDataTimeMask(self, data, timeStart=None, timeEnd=None):
+    if timeStart is not None or timeEnd is not None:
+      visits = self.__filterDataTime(visits, timeStart, timeEnd, attr=timeBy)
+
+    if order != None:
+      if isinstance(order, basestring):
+        return self.__sortedBy(visits, order)
+
+      return self.__sortedBy(visits, *order)
+
+    return list(visits)
+
+
+  def __sortedBy(self, data, *keys):
+    return sorted(data, key=attrgetter(*keys))
+
+  def __filterDataTime(self, data, timeStart=None, timeEnd=None, attr='DateTime'):
+    attr = attrgetter(attr)
     if timeStart is None:
       timeStart = self.maskTimeStart
 
@@ -1239,23 +1230,35 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     if timeStart is not None:
       if timeEnd is not None:
-        return [x for x in data if timeStart <= x.DateTime < timeEnd]
+        return (x for x in data if timeStart <= attr(x) < timeEnd)
 
-      return [x for x in data if timeStart <= x.DateTime]
+      return (x for x in data if timeStart <= attr(x))
 
     if timeEnd is not None:
-      return [x for x in data if x.DateTime < timeEnd]
+      return (x for x in data if attr(x) < timeEnd)
 
-    return list(data)
+    return iter(data)
+
+  def __filterMice(self, data, mice=None, field='Animal'):
+    if mice is None:
+      return data
+
+    key = attrgetter('Animal')
+    if isinstance(mice, basestring):
+      mice = unicode(mice)
+      return (x for x in data if unicode(key(x)) == mice)
+
+    mice = frozenset(map(unicode, mice))
+    return (x for x in data if unicode(key(x)) in mice)
 
   def getLogs(self, timeStart=None, timeEnd=None):
-    return self.__filterDataTimeMask(self.__logs, timeStart=timeStart, timeEnd=timeEnd)
+    return list(self.__filterDataTime(self.__logs, timeStart=timeStart, timeEnd=timeEnd))
 
   def getEnvironment(self, timeStart=None, timeEnd=None):
-    return self.__filterDataTimeMask(self.__environment, timeStart=timeStart, timeEnd=timeEnd)
+    return list(self.__filterDataTime(self.__environment, timeStart=timeStart, timeEnd=timeEnd))
 
   def getHardwareEvents(self, timeStart=None, timeEnd=None):
-    return self.__filterDataTimeMask(self.__hardware, timeStart=timeStart, timeEnd=timeEnd)
+    return list(self.__filterDataTime(self.__hardware, timeStart=timeStart, timeEnd=timeEnd))
 
   def save(self, filename, force=False):
     if os.path.exists(filename) and not force:
