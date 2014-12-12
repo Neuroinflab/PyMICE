@@ -28,6 +28,9 @@ from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode
 
+def sortedBy(data, *keys):
+  return sorted(data, key=attrgetter(*keys))
+
 callCopy = methodcaller('copy')
 
 def timeString(x, tz=None):
@@ -78,110 +81,15 @@ def quoteIdentifier(s, errors="strict"):
 
 
 class IMiceTemporal(object):
-  def getStartTimes(self, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getstarttimes(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getstarttimes() called."
-    return self.getStartTimes(*arg, **kwarg)
-
-  def getEndTimes(self, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getendtimes(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getendtimes() called."
-    return self.getEndTimes(*arg, **kwarg)
-
-  def getDurations(self, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getdurations(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getdurations() called."
-    return self.getDurations(*arg, **kwarg)
-
-  def getProperty(self, fieldName, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getproperty(self, mice, propname, astype=None):
-    print "WARNING: Deprecated method getproperty() called."
-    print "         Does not work for fields of tables other than visits."
-    if astype is None:
-      return self.getProperty(propname, mice)
-
-    if astype == 'float':
-      return map(float, self.getProperty(propname, mice))
+  pass
 
 
 class IMiceSpatiotemporal(IMiceTemporal):
-  def getLocations(self, mice=None):
-    raise NotImplementedError("Virtual method called")
+  pass
 
 
 class IMiceLoader(IMiceSpatiotemporal):
-  def getCorners(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getCorners() called."
-    return self.getLocations(*arg, **kwarg)
-
-  def getcorners(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getcorners() called."
-    return self.getCorners(*arg, **kwarg)
-
-  def getCornerConditions(self, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getcornerconditions(self, *arg, **kwarg):
-    print "WARNING: Deprecated method getcornerconditions() called."
-    return self.getCornerConditions(*arg, **kwarg)
-
-  def getCage(self, mice):
-    raise NotImplementedError("Virtual method called")
-
-  def getTag(self, mice):
-    raise NotImplementedError("Virtual method called")
-
-  def getMiceFitterData(self, mice=None):
-    raise NotImplementedError("Virtual method called")
-
-  def getSocialBoxData(self):
-    raise NotImplementedError("Virtual method called")
-
-  def getAnimalGateData(self):
-    raise NotImplementedError("Virtual method called")
-
-  def getExcludedData(self):
-    print "WARNING: Deprecated method getExcludedData() called."
-    return self.excluded
-
-  def getMice(self):
-    raise NotImplementedError("Virtual method called")
-
-  def getGroup(self, group = None):
-    raise NotImplementedError("Virtual method called")
-
-  def newGroup(self, group, mice = set()):
-    raise NotImplementedError("Virtual method called")
-
-  def __getMice(self):
-    print "WARNING: Deprecated attribute mice accessed."
-    return self.getMice()
-
-  mice = property(__getMice)
-
-  def __getGroup(self):
-    print "WARNING: Deprecated attribute groups accessed."
-    return dict((g, self.getGroup(g)) for g in self.getGroup())
-
-  groups = property(__getGroup)
-
-  def getInmates(self, cage = None):
-    raise NotImplementedError("Virtual method called")
-
-  def __getInmates(self):
-    print "WARNING: Deprecated attribute cages accessed."
-    return dict((c, self.getInmates(c)) for c in self.getInmates())
-
-  cages = property(__getInmates)
-
+  pass
 
 class SQLiteDatabased(object):
   class TableDict(dict):
@@ -518,70 +426,7 @@ class SQLiteDatabased(object):
 
 
 class ISQLiteDatabasedMiceData(IMiceLoader):
-  def getFilteredSQL(self, fields=('*',), mice=None, fromClause='visits', where = (), whereData = (), order=''):
-    raise NotImplementedError("Virtual method called")
-
-  def getLocations(self, mice=None):
-    """
-    >>> ml_l1.getLocations()
-    [4, 1, 2]
-    >>> ml_icp3.getLocations()
-    [1, 2, 3]
-    >>> ml_l1.getLocations('Mickey')
-    [1]
-    >>> ml_icp3.getLocations('Jerry')
-    [3]
-    >>> ml_l1.getLocations(['Mickey', 'Minnie'])
-    [4, 1]
-    >>> ml_icp3.getLocations(['Jerry', 'Minnie'])
-    [1, 3]
-    """
-    deprecated("Obsolete method getLocations() called.",
-               PendingDeprecationWarning)
-    return [v.Corner for v in self.getVisits(mice=mice, order='start, end')]
-
-  def getCornerConditions(self, mice=None):
-    deprecated("Obsolete method getCornerConditions() called.",
-               PendingDeprecationWarning)
-    return [v.CornerConditions for v in self.getVisits(mice=mice, order='start, end')]
-
-  def getStartTimes(self, mice=None):
-    """
-    >>> for t in ml_icp3.getStartTimes():
-    ...   print hTime(t)
-    2012-12-18 12:13:14.139
-    2012-12-18 12:18:55.421
-    2012-12-18 12:19:55.421
-
-    >>> for t in ml_l1.getStartTimes('Minnie'):
-    ...   print hTime(t)
-    2012-12-18 12:30:02.360
-    """
-    deprecated("Obsolete method getStartTimes() called.",
-               PendingDeprecationWarning)
-    return [v.Start for v in self.getVisits(mice=mice, order='start, end')]
-
-  def getEndTimes(self, mice=None):
-    deprecated("Obsolete method getEndTimes() called.",
-               PendingDeprecationWarning)
-    return [v.End for v in self.getVisits(mice=mice, order='start, end')]
-
-  def getDurations(self, mice=None):
-    deprecated("Obsolete method getDurations() called.",
-               PendingDeprecationWarning)
-    return [v.End - v.Start for v in self.getVisits(mice=mice, order='start, end')]
-
-  def getProperty(self, fieldName, mice=None):
-    deprecated("Obsolete method getProperty() called.",
-               PendingDeprecationWarning)
-    return [getattr(v, fieldName) for v in self.getVisits(mice=mice, order='start, end')]
-
-
-  def getData(self, tableName='Visits', debug=False):
-    deprecated("Obsolete method getData() called.",
-               PendingDeprecationWarning)
-    raise NotImplementedError('Unknown or not implemented data requested')
-
+  pass
 
 class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
   autoJoins = [(('visits', 'nosepokes'), ('_vid',))]
@@ -1358,6 +1203,30 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
   def getVisits(self, *args, **kwargs):
     """
     An alias.
+
+    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(), 'Start')]
+    [4, 1, 2]
+    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(), 'Start')]
+    [1, 2, 3]
+    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(mice='Mickey'), 'Start')]
+    [1]
+    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(mice='Jerry'), 'Start')]
+    [3]
+    >>> [v.Corner for v in sortedBy(ml_l1.getVisits(mice=['Mickey', 'Minnie']), 'Start')]
+    [4, 1]
+    >>> [v.Corner for v in sortedBy(ml_icp3.getVisits(mice=['Jerry', 'Minnie']), 'Start')]
+    [1, 3]
+
+
+    >>> for v in sortedBy(ml_icp3.getVisits(), 'Start'):
+    ...   print hTime(v.Start)
+    2012-12-18 12:13:14.139
+    2012-12-18 12:18:55.421
+    2012-12-18 12:19:55.421
+
+    >>> for v in sortedBy(ml_l1.getVisits(mice='Minnie'), 'Start'):
+    ...   print hTime(v.Start)
+    2012-12-18 12:30:02.360
     """
     return self.selectObj(kind='visits', *args, **kwargs)
 
