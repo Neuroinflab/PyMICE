@@ -366,9 +366,8 @@ class Loader(Data):
     """
     getNpokes = False,
     bin = 3600,
-    verbose = False.
     """
-    Data.__init__(self, verbose = kwargs.get('verbose', False),
+    Data.__init__(self,
                   getNpokes=kwargs.get('get_npokes',
                                        kwargs.get('getNpokes', 
                                        kwargs.get('getNosepokes',False))),
@@ -376,16 +375,9 @@ class Loader(Data):
                   getEnv=kwargs.get('getEnv',False),
                   getHw=kwargs.get('getHardware',False))
 
-    #self._get_SB = kwargs.get('get_SB', False) #XXX: REMOVEME
-    #self._get_AG = kwargs.get('get_AG', False) #XXX: REMOVEME 
-
     self._initCache()
 
-    #self.envdata = [] #XXX: REMOVEME
-
     self._fnames = (fname,)
-
-
 
     self.appendData(fname)
 

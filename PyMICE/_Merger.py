@@ -82,7 +82,7 @@ class Merger(Data):
   """
   #TODO: common interface, not inheritance
   def __init__(self, *loaders, **kwargs):
-    Data.__init__(self, verbose = kwargs.get('verbose', False),
+    Data.__init__(self,
                   getNpokes=kwargs.get('get_npokes',
                                        kwargs.get('getNpokes',
                                        kwargs.get('getNosepokes',False))),
@@ -91,8 +91,6 @@ class Merger(Data):
                   getHw=kwargs.get('getHardware', False))
 
     self._loaders = map(str, loaders)
-
-    #self._getHardware = kwargs.get('getHardware', False)
 
     self._initCache()
     self.__topTime = float('-inf')
@@ -198,8 +196,6 @@ class Merger(Data):
                           getattr(loader, 'get' + attr)()] if x is not None]
       if len(vals) > 0:
         setattr(self, icAttr, min(vals))
-
-    structure = loader.structure
 
     # registering animals and groups (if necessary)
     for name in loader.getAnimal():
