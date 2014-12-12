@@ -133,16 +133,12 @@ class SQLiteDatabased(object):
     rowcount = property(__getRowcount)
 
   def __init__(self, structure={}, database=':memory:', verbose=False, joins=[]):
-    # Masking - by default do not mask
-    self.unmaskData()
     self._verbose = verbose
     self.structure = structure
 
     self.db = sqlite3.connect(database)
     self.db.create_function('exp', 1, exp)
 
-    self.__mask = {}
-    self.__maskId = 0
     self.__joins = {}
 
     if len(joins) > 0:
@@ -221,8 +217,6 @@ class SQLiteDatabased(object):
 
       self.db.execute(query)
 
-      self.__mask[name] = {}
-
     self.db.commit()
 
   def selectAllDataSmart(self, tables, fields=None, aliases={}):
@@ -256,13 +250,8 @@ class SQLiteDatabased(object):
     selectClause = ', '.join(safeFields)
     fromClause = self._getFromClause(tables)
     orderClause = '' if order is None else "ORDER BY %s" % order
-    mask = self._getTableMask(tables) + where
-    if len(mask) > 0:
-      maskClause = ' AND '.join(mask)
-      query = 'SELECT %s FROM %s WHERE %s %s;' % (selectClause, fromClause, maskClause, orderClause)
 
-    else:
-      query = 'SELECT %s FROM %s %s;' % (selectClause, fromClause, orderClause)
+    query = 'SELECT %s FROM %s %s;' % (selectClause, fromClause, orderClause)
 
     #print query, whereData
 
@@ -277,28 +266,6 @@ class SQLiteDatabased(object):
       return tables[0]
 
     return self.__joins[frozenset(tables)]
-
-  # more flexible table masking
-  def _maskTable(self, table, condition, name = None):
-    if name is None:
-      name = "constraint %d" % self.__maskId
-      self.__maskId += 1
-
-    self.__mask[table][name] = condition
-    return name
-
-  def _unmaskTable(self, table, name = None):
-    if name is None:
-      self.__mask[table] = {}
-
-    else:
-      del self.__mask[table][name]
-
-  def _getTableMask(self, tables):
-    if isinstance(tables, basestring):
-      tables = (tables,)
-
-    return sum((tuple(self.__mask[table].values()) for table in tables), ())
 
   def insertData(self, data, table):
     """
@@ -354,7 +321,6 @@ class SQLiteDatabased(object):
     self.db.executemany(query, rows)
     self.db.commit()
 
-  # TODO: data masking?
   def selectAllData(self, table):
     if table not in self.structure:
       raise KeyError("Table of name %s does not exist." % table)
@@ -363,13 +329,7 @@ class SQLiteDatabased(object):
     labels = self.structure[table].keys()
     safeLabels = [quoteIdentifier(l) for l in labels]
 
-    mask =  self._getTableMask(table)
-
-    if len(mask) == 0:
-      query = "SELECT %s FROM %s;" % (', '.join(safeLabels), safeTable)
-
-    else:
-      query = "SELECT %s FROM %s WHERE %s;" % (', '.join(safeLabels), safeTable, ' AND '.join(mask))
+    query = "SELECT %s FROM %s;" % (', '.join(safeLabels), safeTable)
 
     cursor = self.db.execute(query)
     data = zip(*cursor.fetchall())
@@ -378,11 +338,6 @@ class SQLiteDatabased(object):
 
     return self.TableDict(zip(labels, data))
 
-  def unmaskData(self):
-    self.mask = []
-
-  def _getMask(self):
-    return tuple(self.mask);
 
   def getSQL(self, query, data = (), unwrap = True):
     #print query
@@ -599,7 +554,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return cages[0]
 
   def getMice(self):
-    return frozenset(self.__animalsByName) - self.maskedMice
+    return frozenset(self.__animalsByName)
 
   def getInmates(self, cage = None):
     if cage == None:
@@ -636,18 +591,16 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return miceClause
 
   def getStart(self):
-    times = [t for t in [self.maskTimeStart, self.icSessionStart] if t != None]
-    if len(times) > 0:
-      return max(times)
+    if self.icSessionStart is not None:
+      return self.icSessionStart
 
-    return self.getMaskedSQL('visits', 'MIN(start)')[0]
+    return min(map(attrgetter('Start'), self.__visits))
 
   def getEnd(self):
-    times = [t for t in [self.maskTimeEnd, self.icSessionEnd] if t != None]
-    if len(times) > 0:
-      return min(times)
+    if self.icSessionEnd is not None:
+      return self.icSessionEnd
 
-    return self.getMaskedSQL('visits', 'MAX(start)')[0]
+    return max(map(attrgetter('End'), self.__visits))
 
 
 # log analysis
@@ -665,7 +618,6 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return list(self.excluded)
 
 
-# masking
   def selectAllData(self, table):
     if table == 'nosepokes':
       fields = [('nosepokes', f) for f in self.structure['nosepokes']]
@@ -677,128 +629,8 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     else:
       return super(Data, self).selectAllData(table)
 
-# masking
-  def unmask_data(self):
-    print "WARNING: Deprecated method unmask_data() called"
-    return self.unmaskData()
 
-  def unmaskData(self):
-    """
-    Remove the mask - future queries will not be clipped.
-    """
-    super(Data, self).unmaskData()
-    self.maskedMice = set()
-    self.maskedCages = set()
-    self.maskTimeStart = None
-    self.maskTimeEnd = None
-
-  def _getMask(self, timeStart=None, timeEnd=None):
-    mask = super(Data, self)._getMask()
-    if timeStart is None:
-      timeStart = self.maskTimeStart
-
-    if timeEnd is None:
-      timeEnd = self.maskTimeEnd
-
-    if timeStart != None:
-      mask += ('visits.start >= %f' % timeStart ,)
-
-    if timeEnd != None:
-      mask += ('visits.start < %f' % timeEnd ,)
-
-    if len(self.maskedMice) > 0:
-      animals = ('%d' % self.__mice[a] for a in self.maskedMice if a in self.__mice)
-      mask += ('visits._aid NOT IN (%s)' % ', '.join(animals) ,)
-
-    if len(self.maskedCages) > 0:
-      mask += ('visits.cage NOT IN (%s)' % ', '.join(map(str, self.maskedCages)) ,)
-
-    return mask
-
-  def _getTableMask(self, tables):
-    if isinstance(tables, basestring):
-      tables = (tables,)
-
-    mask = super(Data, self)._getTableMask(tables)
-    for table in tables:
-      if table in ('visits', 'nosepokes'):
-        if self.maskTimeStart != None:
-          mask += ('%s.start >= %f' % (table, self.maskTimeStart) ,)
-
-        if self.maskTimeEnd != None:
-          mask += ('%s.start < %f' % (table, self.maskTimeEnd) ,)
-
-      if table == 'visits':
-        if len(self.maskedMice) > 0:
-          animals = ('%d' % self.__mice[a] for a in self.maskedMice if a in self.__mice)
-          mask += ('%s._aid NOT IN (%s)' % (table, ', '.join(animals)) ,)
-
-      if table in ('visits', 'environment', 'HardwareEvents', 'log' ):
-        if len(self.maskedCages) > 0:
-          mask += ('%s.cage NOT IN (%s)' % (table, ', '.join(map(str, self.maskedCages))) ,)
-
-    return mask
-
-  def mask_data(self, starttime, endtime = None):
-    print "WARNING: Deprecated method mask_data() called"
-    return self.maskTime(starttime, endtime)
-
-  def maskData(self, starttime, endtime = None):
-    print "WARNING: Deprecated method maskData() called"
-    return self.maskTime(starttime, endtime)
-
-  def maskTime(self, starttime, endtime = None):
-    """
-    maskTime(endtime) or maskTime(starttime, endtime)
-
-    All future queries will be clipped to the visits starting between
-    starttime and endtime.
-    """
-    deprecated('time masking would not be supported in the future')
-    if endtime == None:
-      self.maskTimeEnd = starttime
-
-    else:
-      self.maskTimeStart = starttime
-      self.maskTimeEnd = endtime
-
-  def maskCage(self, cage):
-    self.maskedCages.add(cage)
-
-  def unmaskCage(self, cage):
-    self.maskedCages.remove(cage)
-
-  def removeVisits(self, condition="False"):
-    self.db.execute('DELETE FROM visits WHERE %s;' % condition)
-    self.db.commit()
-
-  def maskAnimal(self, animals=()):
-    if isinstance(animals, basestring):
-      animals = (animals,)
-
-    animals = set(animals)
-
-    self.maskedMice.update(animals)
-
-    animals = animals - set(self.__mice)
-    if len(animals) > 0:
-      print 'WARNING, following animals not present in data:'
-      for mouse in animals:
-        print ' ' + mouse
-
-  def unmaskAnimal(self, animals=()):
-    if isinstance(animals, basestring):
-      animals = (animals,)
-
-    animals = set(animals)
-
-    self.maskedMice -= set(animals)
-
-    animals = animals - set(self.__mice)
-    if len(animals) > 0:
-      print 'WARNING, following animals not present in data:'
-      for mouse in animals:
-        print ' ' + mouse
+#  def removeVisits(self, condition="False"):
 
 # data management
   def _insertDataSid(self, data, table, sid = None):
@@ -1098,7 +930,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     #plt.legend()
 
-  def plotChannel(self, top=1., bottom=0.):
+  def plotChannel(self, top=1., bottom=0., startM=None, endM=None):
     #TODO!!!!
     h = top - bottom
     data = self.getSQL("""
@@ -1108,8 +940,6 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     startD, endD = data[0]
     startR = self.icSessionStart
     endR = self.icSessionEnd
-    startM = self.maskTimeStart
-    endM = self.maskTimeEnd
 
     ax = plt.gca()
 
@@ -1216,17 +1046,11 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     return list(visits)
 
-
   def __sortedBy(self, data, *keys):
     return sorted(data, key=attrgetter(*keys))
 
   def __filterDataTime(self, data, timeStart=None, timeEnd=None, attr='DateTime'):
     attr = attrgetter(attr)
-    if timeStart is None:
-      timeStart = self.maskTimeStart
-
-    if timeEnd is None:
-      timeEnd = self.maskTimeEnd
 
     if timeStart is not None:
       if timeEnd is not None:
