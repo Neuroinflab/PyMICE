@@ -461,23 +461,23 @@ class Data(object):
     return DataNode(Visits=list(visits))
 
   def getVisits(self, mice=None, timeStart=None, timeEnd=None, timeBy='Start',
-                order='Start'):
+                order=None):
     """
-    >>> [v.Corner for v in ml_l1.getVisits()]
+    >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
-    >>> [v.Corner for v in ml_icp3.getVisits()]
+    >>> [v.Corner for v in ml_icp3.getVisits(order='Start')]
     [1, 2, 3]
     >>> [v.Corner for v in ml_l1.getVisits(mice='Mickey')]
     [1]
-    >>> [v.Corner for v in ml_icp3.getVisits(mice='Jerry')]
+    >>> [v.Corner for v in ml_icp3.getVisits(mice='Jerry', order='Start')]
     [3]
-    >>> [v.Corner for v in ml_l1.getVisits(mice=['Mickey', 'Minnie'])]
+    >>> [v.Corner for v in ml_l1.getVisits(mice=['Mickey', 'Minnie'], order='Start')]
     [4, 1]
-    >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'])]
+    >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'], order='Start')]
     [1, 3]
 
 
-    >>> for v in ml_icp3.getVisits():
+    >>> for v in ml_icp3.getVisits(order='Start'):
     ...   print hTime(v.Start)
     2012-12-18 12:13:14.139
     2012-12-18 12:18:55.421
@@ -489,12 +489,43 @@ class Data(object):
     """
     visits = self.__visits
     if mice is not None:
-      visits = self.__filterUnicode(visits, 'Animal', select=mice)
+      if timeStart is not None or timeEnd is not None:
+        key = attrgetter('Start', 'Animal')
+        if isinstance(mice, basestring):
+          mice = unicode(mice)
+          if timeStart is not None:
+            if timeEnd is not None:
+              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                        if timeStart <= s < timeEnd and unicode(a) == mice)
+            else:
+              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                        if timeStart <= s and unicode(a) == mice)
 
-    if timeStart is not None or timeEnd is not None:
+          else:
+            visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                      if s < timeEnd and unicode(a) == mice)
+
+        else:
+          mice = frozenset(map(unicode, mice))
+          if timeStart is not None:
+            if timeEnd is not None:
+              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                        if timeStart <= s < timeEnd and unicode(a) in mice)
+            else:
+              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                        if timeStart <= s and unicode(a) in mice)
+
+          else:
+            visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
+                      if s < timeEnd and unicode(a) in mice)
+
+      else:
+        visits = self.__filterUnicode(visits, 'Animal', select=mice)
+
+    elif timeStart is not None or timeEnd is not None:
       visits = self.__filterDataTime(visits, timeStart, timeEnd, attr=timeBy)
 
-    if order != None:
+    if order is not None:
       if isinstance(order, basestring):
         return self.__sortedBy(visits, order)
 
