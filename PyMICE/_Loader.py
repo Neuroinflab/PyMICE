@@ -389,21 +389,18 @@ class Loader(Data):
 
     self.appendData(fname)
 
-    for t, msg in self.getSQL("""
-                              SELECT "DateTime", "LogNotes"
-                              FROM log
-                              WHERE "LogCategory" = 'Info' AND "LogType" = 'Application';
-                              """, unwrap=False):
-      if msg == 'Session is started':
-        self.icSessionStart = t
+    for log in self.getLogs():
+      if log.Category != 'Info' or log.Type != 'Application':
+        continue
 
-      elif msg == 'Session is stopped':
-        self.icSessionEnd = t
+      if log.Notes == 'Session is started':
+        self.icSessionStart = log.DateTime
+
+      elif log.Notes == 'Session is stopped':
+        self.icSessionEnd = log.DateTime
 
       else:
         print 'unknown Info/Application message: %s' % msg
-
-
 
 
     self._logAnalysis(kwargs.get('loganalyzers', []))

@@ -44,7 +44,7 @@ except ValueError:
 class Merger(Data):
   """
   >>> mm = Merger(ml_icp3, ml_l1, getNpokes=True)
-  >>> for v in mm.getVisits(order='start'):
+  >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d %d' % (str(v.Animal), len(v.Nosepokes), v.Animal.Tag)
   Minnie 0 1337
   Mickey 1 42
@@ -54,14 +54,14 @@ class Merger(Data):
   Jerry 2 69
 
   >>> mm = Merger(ml_empty, ml_l1, getNpokes=True)
-  >>> for v in mm.getVisits(order='start'):
+  >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
   Minnie 1
   Mickey 1
   Jerry 2
 
   >>> mm = Merger(ml_retagged, ml_l1, getNpokes=True)
-  >>> for v in mm.getVisits(order='start'):
+  >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
   ...   if isinstance(v.Animal.Tag, set):
   ...     print "  %s" % (', '.join(map(str, sorted(v.Animal.Tag))))
@@ -231,15 +231,6 @@ class Merger(Data):
       if hardware is not None:
         self._insertHardware(hardware)
 
-    #TODO:
-    #if self._getHardware:
-    #  assert 'HardwareEvents' in structure, "HardwareEvents table not found in loader"
-    #  hardware = loader.selectAllData('HardwareEvents')
-    #  if hardware != None:
-    #    if min(hardware['DateTime']) < self.__topTime:
-    #      print "Possible temporal overlap of HardwareEvents"
-
-    #    self._insertDataSid(hardware, 'HardwareEvents', sidMapping)
 
     ##logs goes here
     #assert 'log' in structure, "Log table not found in loader."

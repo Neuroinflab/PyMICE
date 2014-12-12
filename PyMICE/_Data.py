@@ -219,53 +219,6 @@ class SQLiteDatabased(object):
 
     self.db.commit()
 
-  def selectAllDataSmart(self, tables, fields=None, aliases={}):
-    if isinstance(tables, basestring):
-      tables = (tables,)
-
-    if isinstance(fields, basestring):
-      fields = (fields,)
-
-    elif fields is None:
-      if len(tables) == 1:
-        fields = list(self.structure[tables[0]])
-
-      else:
-        fields = [(table, f) for f in self.structure[table] for table in tables]
-
-    safeFields = map(quoteIdentifier, fields)
-    data = zip(*self.getMaskedSQLSmart(safeFields, tables))
-
-    if len(data) == 0:
-      return None
-
-    labels = [aliases.get(f, f) for f in fields]
-    return self.TableDict(zip(labels, data))
-
-  def getMaskedSQLSmart(self, safeFields, tables, where=(), whereData=(), order=None):
-    unwrap = isinstance(safeFields, basestring)
-    if unwrap:
-      safeFields = (safeFields,)
-
-    selectClause = ', '.join(safeFields)
-    fromClause = self._getFromClause(tables)
-    orderClause = '' if order is None else "ORDER BY %s" % order
-
-    query = 'SELECT %s FROM %s %s;' % (selectClause, fromClause, orderClause)
-
-    #print query, whereData
-
-    return self.getSQL(query, whereData, unwrap)
-
-
-  def _getFromClause(self, tables):
-    if isinstance(tables, basestring):
-      return tables
-
-    if len(tables) == 0:
-      return tables[0]
-
-    return self.__joins[frozenset(tables)]
 
   def insertData(self, data, table):
     """
@@ -321,60 +274,8 @@ class SQLiteDatabased(object):
     self.db.executemany(query, rows)
     self.db.commit()
 
-  def selectAllData(self, table):
-    if table not in self.structure:
-      raise KeyError("Table of name %s does not exist." % table)
-
-    safeTable = quoteIdentifier(table)
-    labels = self.structure[table].keys()
-    safeLabels = [quoteIdentifier(l) for l in labels]
-
-    query = "SELECT %s FROM %s;" % (', '.join(safeLabels), safeTable)
-
-    cursor = self.db.execute(query)
-    data = zip(*cursor.fetchall())
-    if len(data) == 0:
-      return None
-
-    return self.TableDict(zip(labels, data))
 
 
-  def getSQL(self, query, data = (), unwrap = True):
-    #print query
-    cursor = self.db.execute(query, data)
-
-    if unwrap:
-      return [x[0] for x in cursor]
-
-    return cursor.fetchall()
-
-  def getMaskedSQL(self, fromClause, fields=('*',), where = (), whereData = (),
-                   order=None, timeStart=None, timeEnd=None):
-    unwrap = isinstance(fields, basestring)
-
-    if unwrap:
-      fields = (fields,)
-
-    selectClause = ', '.join(fields)
-
-    whereClause = tuple(where) + self._getMask(timeStart=timeStart,
-                                               timeEnd=timeEnd)
-    whereClause = ' AND '.join('(%s)' % x for x in whereClause)
-    if whereClause != '':
-      whereClause = " WHERE %s" % whereClause
-
-    orderClause = '' if order == None else "ORDER BY %s" % order
-
-    query = """
-            SELECT %s
-            FROM %s
-            %s
-            %s;
-            """ % (selectClause, fromClause, whereClause, orderClause)
-    #print query
-    #print whereData
-
-    return self.getSQL(query, sum(whereData, ()), unwrap)
 
 
 class ISQLiteDatabasedMiceData(IMiceLoader):
@@ -562,19 +463,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     return self.__cages[cage] # is a frozenset already
 
-  def getFirstLick(self, corners = (), mice=()):
-    where = self._getMiceClause(mice) + ('licknumber > 0',)
-    if isinstance(corners, (int, long)):
-      corners = (corners,)
-
-    if len(corners) > 0:
-      where += ('visits.corner IN (%s)' % ', '.join(map(str, corners)),)
-
-    res = self.getMaskedSQLSmart('MIN(nosepokes.start)',
-                                 ['visits', 'nosepokes'],
-                                 where)
-    if len(res) == 1:
-      return res[0]
+#  def getFirstLick(self, corners = (), mice=()):
 
   def _getMiceClause(self, mice=None):
     if mice is None or len(mice) == 0:
@@ -594,13 +483,23 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     if self.icSessionStart is not None:
       return self.icSessionStart
 
-    return min(map(attrgetter('Start'), self.__visits))
+    times = map(attrgetter('Start'), self.__visits)
+    try:
+      return min(times)
+
+    except ValueError:
+      return None
 
   def getEnd(self):
     if self.icSessionEnd is not None:
       return self.icSessionEnd
 
-    return max(map(attrgetter('End'), self.__visits))
+    times = map(attrgetter('End'), self.__visits)
+    try:
+      return max(times)
+
+    except ValueError:
+      return None
 
 
 # log analysis
@@ -616,18 +515,6 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
   def getExcluded(self):
     return list(self.excluded)
-
-
-  def selectAllData(self, table):
-    if table == 'nosepokes':
-      fields = [('nosepokes', f) for f in self.structure['nosepokes']]
-      aliases = dict(((t, f), f) for (t, f) in fields)
-      return self.selectAllDataSmart(('visits', 'nosepokes'),
-                                     fields,
-                                     aliases)
-
-    else:
-      return super(Data, self).selectAllData(table)
 
 
 #  def removeVisits(self, condition="False"):
@@ -869,45 +756,22 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     tag = self.getAnimal(mouse)
     return tag.Tag
 
-  def getFilteredSQL(self, fields=('*',), mice=None, fromClause='visits', where = (), whereData = (), order=None):
-    deprecated("Obsolete method getFilteredSQL() called.",
-               PendingDeprecationWarning)
-    miceClause = self._getMiceClause(mice)
-
-    if isinstance(where, basestring):
-      where = (where,)
-
-    whereData = tuple(whereData)
-    whereClause = tuple(where) + miceClause
-
-    return self.getMaskedSQL(fromClause, fields,
-                             where = whereClause,
-                             whereData = whereData,
-                             order = order)
-
-  def getMiceFitterData(self, mice=None):
-    deprecated("Obsolete method getMiceFitterData() called.",
-               PendingDeprecationWarning)
-    return [(v.Animal.Name, v.Start, v.End, v.Corner, v.CornerCondition)\
-            for v in self.getVisits(mice=mice, order='start, end')]
-
   def plotMiceCage(self):
-    aids = self.getSQL("""SELECT DISTINCT _aid FROM visits;""")
-    for aid in aids:
-      mouse = self.__animals[aid].name
+    visits = {}
+    for v in self.getVisits():
+      try:
+        visits[unicode(v.Animal)].append((v.Start, int(v.Cage)))
+
+      except KeyError:
+        visits[unicode(v.Animal)] = [(v.Start, int(v.Cage))]
+
+    for mouse, data in visits.items():
       cages = []
       times = []
-      data = self.getSQL("""
-                         SELECT cage, start
-                         FROM visits
-                         WHERE _aid = ?
-                         ORDER BY start;
-                         """,
-                         (aid,),
-                         unwrap=False)
+      data.sort()
       lastC, lastT = None, None
       many = False
-      for c, t in data:
+      for t, c in data:
         if c != lastC:
           if many:
             cages.append(lastC)
@@ -933,11 +797,9 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
   def plotChannel(self, top=1., bottom=0., startM=None, endM=None):
     #TODO!!!!
     h = top - bottom
-    data = self.getSQL("""
-                       SELECT MIN(start), MAX(end)
-                       FROM visits;
-                       """, unwrap=False)
-    startD, endD = data[0]
+    data = self.getVisits()
+    startD = min(map(attrgetter('Start'), data))
+    endD = max(map(attrgetter('End'), data))
     startR = self.icSessionStart
     endR = self.icSessionEnd
 
@@ -989,20 +851,14 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     return self.plotChannel(top=top, bottom=bottom)
 
   def getChannel(self, mice=None, corner=None):
-    where = self._getMiceClause(mice)
-    whereData = ()
+    visits = self.__visits
+    if mice is not None:
+      visits = self.__filterUnicode(visits, 'Animal', mice)
+
     if corner is not None:
-      if isinstance(corner, (int, long)):
-        whereData += ((corner,),)
-        where += ('corner = ?',)
+      visits = self.__filterInt(visits, 'Corner', corner)
 
-      else:
-        whereData += (tuple(corner),)
-        where += ('corner IN (%s)' % (', '.join('?' for c in corner)),)
-
-    vids = self.getMaskedSQL('visits', '_vid', where, whereData, 'start, end')
-    visits = self._getVisitNode(vids)
-    return DataNode(Visits=visits)
+    return DataNode(Visits=list(visits))
 
   def getVisits(self, mice=None, timeStart=None, timeEnd=None, timeBy='Start',
                 order='Start'):
@@ -1033,7 +889,7 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
     """
     visits = self.__visits
     if mice is not None:
-      visits = self.__filterMice(visits, mice=mice)
+      visits = self.__filterUnicode(visits, 'Animal', select=mice)
 
     if timeStart is not None or timeEnd is not None:
       visits = self.__filterDataTime(visits, timeStart, timeEnd, attr=timeBy)
@@ -1063,17 +919,29 @@ class Data(SQLiteDatabased, ISQLiteDatabasedMiceData):
 
     return iter(data)
 
-  def __filterMice(self, data, mice=None, field='Animal'):
-    if mice is None:
+  def __filterUnicode(self, data, field, select=None):
+    if select is None:
       return data
 
-    key = attrgetter('Animal')
-    if isinstance(mice, basestring):
-      mice = unicode(mice)
-      return (x for x in data if unicode(key(x)) == mice)
+    key = attrgetter(field)
+    if isinstance(select, basestring):
+      select = unicode(select)
+      return (x for x in data if unicode(key(x)) == select)
 
-    mice = frozenset(map(unicode, mice))
-    return (x for x in data if unicode(key(x)) in mice)
+    select = frozenset(map(unicode, select))
+    return (x for x in data if unicode(key(x)) in select)
+
+  def __filterInt(self, data, field, select=None):
+    if select is None:
+      return data
+
+    key = attrgetter(field)
+    if not isinstance(select, (tuple, list, set, frozenset)):
+      select = int(select)
+      return (x for x in data if int(key(x)) == select)
+
+    select = frozenset(map(int, select))
+    return (x for x in data if int(key(x)) in select)
 
   def getLogs(self, timeStart=None, timeEnd=None):
     return list(self.__filterDataTime(self.__logs, timeStart=timeStart, timeEnd=timeEnd))
