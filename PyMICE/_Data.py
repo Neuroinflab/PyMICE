@@ -23,6 +23,7 @@ import copy
 import warnings
 from math import exp, modf
 import itertools
+import numpy as np
 from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode
@@ -97,6 +98,8 @@ class Data(object):
     self.__mice = {}
     self.__cages = {}
     self.__animal2cage = {}
+    self.__animalVisits = {}
+    self.__visitsStart = None
 
   def _buildCache(self):
     # build cache
@@ -135,6 +138,12 @@ class Data(object):
     for animal in self.getMice():
       if animal not in self.__animal2cage:
         self.__animal2cage[animal] = []
+
+    animals = map(unicode, map(attrgetter('Animal'), self.__visits))
+    self.__animalVisits = dict((m, np.array([a == m for a in animals],
+                                   dtype=bool)) for m in self.getMice())
+    self.__visitsStart = np.array(map(float, map(attrgetter('Start'),
+                                                 self.__visits)))
 
   def getCage(self, mouse):
     cages = self.__animal2cage[mouse]
@@ -236,7 +245,7 @@ class Data(object):
       else:
         vNode.Nosepokes = None
 
-    self.__visits.extend(vNodes)
+    self.__visits = np.append(self.__visits, vNodes)
   
   @staticmethod
   def getItem(collection, key):
@@ -487,43 +496,23 @@ class Data(object):
     ...   print hTime(v.Start)
     2012-12-18 12:30:02.360
     """
-    visits = self.__visits
+    mask = None
     if mice is not None:
-      if timeStart is not None or timeEnd is not None:
-        key = attrgetter('Start', 'Animal')
-        if isinstance(mice, basestring):
-          mice = unicode(mice)
-          if timeStart is not None:
-            if timeEnd is not None:
-              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                        if timeStart <= s < timeEnd and unicode(a) == mice)
-            else:
-              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                        if timeStart <= s and unicode(a) == mice)
+      try:
+        mask = self.__animalVisits[mice]
+        
+      except (KeyError, TypeError): #unhashable type: list
+        mask = sum((self.__animalVisits[m] for m in mice), False)
 
-          else:
-            visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                      if s < timeEnd and unicode(a) == mice)
+    if timeStart is not None:
+      timeMask = self.__visitsStart >= timeStart
+      mask = timeMask if mask is None else mask * timeMask
+        
+    if timeEnd is not None:
+      timeMask = self.__visitsStart < timeEnd
+      mask = timeMask if mask is None else mask * timeMask
 
-        else:
-          mice = frozenset(map(unicode, mice))
-          if timeStart is not None:
-            if timeEnd is not None:
-              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                        if timeStart <= s < timeEnd and unicode(a) in mice)
-            else:
-              visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                        if timeStart <= s and unicode(a) in mice)
-
-          else:
-            visits = (x for (x, (s, a)) in ((v, key(v)) for v in visits)\
-                      if s < timeEnd and unicode(a) in mice)
-
-      else:
-        visits = self.__filterUnicode(visits, 'Animal', select=mice)
-
-    elif timeStart is not None or timeEnd is not None:
-      visits = self.__filterDataTime(visits, timeStart, timeEnd, attr=timeBy)
+    visits = list(self.__visits if mask is None else self.__visits[mask])
 
     if order is not None:
       if isinstance(order, basestring):
@@ -531,7 +520,7 @@ class Data(object):
 
       return self.__sortedBy(visits, *order)
 
-    return list(visits)
+    return visits
 
   def __sortedBy(self, data, *keys):
     return sorted(data, key=attrgetter(*keys))
@@ -763,6 +752,6 @@ if __name__ == '__main__':
 
   except ImportError:
     print "from _test import... failed"
-    from Mice._test import TEST_GLOBALS
+    from PyMICE._test import TEST_GLOBALS
 
   doctest.testmod(extraglobs=TEST_GLOBALS)

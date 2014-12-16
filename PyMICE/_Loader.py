@@ -612,6 +612,6 @@ if __name__ == '__main__':
 
   except ImportError:
     print "from _test import... failed"
-    from Mice._test import TEST_GLOBALS
+    from PyMICE._test import TEST_GLOBALS
 
   doctest.testmod(extraglobs=TEST_GLOBALS)
