@@ -100,6 +100,10 @@ class Data(object):
     self.__animal2cage = {}
     self.__animalVisits = {}
     self.__visitsStart = None
+    self.__logDateTime = None
+    self.__envDateTime = None
+    self.__hwDateTime = None
+
 
   def _buildCache(self):
     # build cache
@@ -144,6 +148,18 @@ class Data(object):
                                    dtype=bool)) for m in self.getMice())
     self.__visitsStart = np.array(map(float, map(attrgetter('Start'),
                                                  self.__visits)))
+
+    if self._getLogs:
+      self.__logDateTime = np.array(map(float, map(attrgetter('DateTime'),
+                                                   self.__logs)))
+
+    if self._getEnv:
+      self.__envDateTime = np.array(map(float, map(attrgetter('DateTime'),
+                                                   self.__environment)))
+
+    if self._getHw:
+      self.__hwDateTime = np.array(map(float, map(attrgetter('DateTime'),
+                                                   self.__hardware)))
 
   def getCage(self, mouse):
     cages = self.__animal2cage[mouse]
@@ -216,13 +232,13 @@ class Data(object):
     return map(cls.fromDict, nodes)
 
   def _insertLogs(self, lNodes):
-    self.__logs.extend(self._newNodes(lNodes, LogNode)) 
+    self.__logs = np.append(self.__logs, self._newNodes(lNodes, LogNode))
 
   def _insertEnvironment(self, eNodes):
-    self.__environment.extend(self._newNodes(eNodes, EnvironmentNode))
+    self.__environment = np.append(self.__environment, self._newNodes(eNodes, EnvironmentNode))
 
   def _insertHardware(self, hNodes):
-    self.__hardware.extend(self._newNodes(hNodes, HardwareEventNode))
+    self.__hardware = np.append(self.__hardware, self._newNodes(hNodes, HardwareEventNode))
 
   def _insertVisits(self, vNodes):
     vNodes = self._newNodes(vNodes, VisitNode) # callCopy might be faster but requires vNodes to be VisitNode-s
@@ -469,8 +485,19 @@ class Data(object):
 
     return DataNode(Visits=list(visits))
 
-  def getVisits(self, mice=None, timeStart=None, timeEnd=None, timeBy='Start',
-                order=None):
+  @staticmethod
+  def _getTimeMask(time, timeStart=None, timeEnd=None):
+    mask = None
+    if timeStart is not None:
+      mask = timeStart <= time
+
+    if timeEnd is not None:
+      timeMask = timeEnd > time
+      mask = timeMask if mask is None else mask * timeMask
+
+    return mask
+
+  def getVisits(self, mice=None, timeStart=None, timeEnd=None, order=None):
     """
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
@@ -504,40 +531,12 @@ class Data(object):
       except (KeyError, TypeError): #unhashable type: list
         mask = sum((self.__animalVisits[m] for m in mice), False)
 
-    if timeStart is not None:
-      timeMask = self.__visitsStart >= timeStart
-      mask = timeMask if mask is None else mask * timeMask
-        
-    if timeEnd is not None:
-      timeMask = self.__visitsStart < timeEnd
+    timeMask = self._getTimeMask(self.__visitsStart, timeStart, timeEnd)
+    if timeMask is not None:
       mask = timeMask if mask is None else mask * timeMask
 
-    visits = list(self.__visits if mask is None else self.__visits[mask])
-
-    if order is not None:
-      if isinstance(order, basestring):
-        return self.__sortedBy(visits, order)
-
-      return self.__sortedBy(visits, *order)
-
-    return visits
-
-  def __sortedBy(self, data, *keys):
-    return sorted(data, key=attrgetter(*keys))
-
-  def __filterDataTime(self, data, timeStart=None, timeEnd=None, attr='DateTime'):
-    attr = attrgetter(attr)
-
-    if timeStart is not None:
-      if timeEnd is not None:
-        return (x for x in data if timeStart <= attr(x) < timeEnd)
-
-      return (x for x in data if timeStart <= attr(x))
-
-    if timeEnd is not None:
-      return (x for x in data if attr(x) < timeEnd)
-
-    return iter(data)
+    visits = self.__visits if mask is None else self.__visits[mask]
+    return self.__orderBy(visits, order)
 
   def __filterUnicode(self, data, field, select=None):
     if select is None:
@@ -563,14 +562,56 @@ class Data(object):
     select = frozenset(map(int, select))
     return (x for x in data if int(key(x)) in select)
 
-  def getLogs(self, timeStart=None, timeEnd=None):
-    return list(self.__filterDataTime(self.__logs, timeStart=timeStart, timeEnd=timeEnd))
+  @staticmethod
+  def __orderBy(data, order):
+    if order is None:
+      return list(data)
 
-  def getEnvironment(self, timeStart=None, timeEnd=None):
-    return list(self.__filterDataTime(self.__environment, timeStart=timeStart, timeEnd=timeEnd))
+    key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
+    return sorted(data, key=key)
 
-  def getHardwareEvents(self, timeStart=None, timeEnd=None):
-    return list(self.__filterDataTime(self.__hardware, timeStart=timeStart, timeEnd=timeEnd))
+  def getLogs(self, timeStart=None, timeEnd=None, order=None):
+    """
+    >>> for log in ml_icp3.getLogs(order='DateTime'):
+    ...   print log.Notes
+    Session is started
+    Session is stopped
+    """
+    mask = self._getTimeMask(self.__logDateTime, timeStart, timeEnd)
+    logs = self.__logs if mask is None else self.__logs[mask]
+    return self.__orderBy(logs, order)
+
+  def getEnvironment(self, timeStart=None, timeEnd=None, order=None):
+    """
+    >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
+    ...   print "%.1f" %env.Temperature
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    22.0
+    23.6
+    """
+    mask = self._getTimeMask(self.__envDateTime, timeStart, timeEnd)
+    env = list(self.__environment if mask is None else self.__environment[mask])
+    return self.__orderBy(env, order)
+
+  def getHardwareEvents(self, timeStart=None, timeEnd=None, order=None):
+    """
+    """
+    mask = self._getTimeMask(self.__hwDateTime, timeStart, timeEnd)
+    hw = list(self.__hardware if mask is None else self.__hardware[mask])
+    return self.__orderBy(hw, order)
 
   def save(self, filename, force=False):
     if os.path.exists(filename) and not force:
