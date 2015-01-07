@@ -95,7 +95,7 @@ class Data(object):
   def _initCache(self):
     self.icSessionStart = None
     self.icSessionEnd = None
-    self.__mice = {}
+    #self.__mice = {}
     self.__cages = {}
     self.__animal2cage = {}
     self.__animalVisits = {}
@@ -107,7 +107,7 @@ class Data(object):
 
   def _buildCache(self):
     # build cache
-    self.__mice = dict((k, v._aid) for (k, v) in self.__animalsByName.items())
+    #self.__mice = dict((k, v._aid) for (k, v) in self.__animalsByName.items())
     self.__cages = {}
     self.__animal2cage = {}
     currentCage = None
@@ -115,7 +115,7 @@ class Data(object):
     cursor = sorted(set((int(v.Cage), unicode(v.Animal)) for v in self.__visits))
 
     for cage, animal in cursor:
-      animal = self.__animalsByName[animal]
+      #animal = self.__animalsByName[animal]
       if animal not in self.__animal2cage:
         self.__animal2cage[animal] = [cage]
 
@@ -124,6 +124,8 @@ class Data(object):
         print "WARNING: Animal %s found in multiple cages (%s)." %\
               (animal, ', '.join(map(str, self.__animal2cage[animal])))
 
+      # unsure if should be object instead of unicode
+      animal = self.__animalsByName[animal]
       if cage != currentCage:
         if currentCage != None:
           self.__cages[currentCage] = frozenset(animals)
