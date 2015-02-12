@@ -534,8 +534,54 @@ class Data(object):
 
     return mask
 
+  def __filterUnicode(self, data, field, select=None):
+    if select is None:
+      return data
+
+    key = attrgetter(field)
+    if isinstance(select, basestring):
+      select = unicode(select)
+      return (x for x in data if unicode(key(x)) == select)
+
+    select = frozenset(map(unicode, select))
+    return (x for x in data if unicode(key(x)) in select)
+
+  def __filterInt(self, data, field, select=None):
+    if select is None:
+      return data
+
+    key = attrgetter(field)
+    if not isinstance(select, (tuple, list, set, frozenset)):
+      select = int(select)
+      return (x for x in data if int(key(x)) == select)
+
+    select = frozenset(map(int, select))
+    return (x for x in data if int(key(x)) in select)
+
+  @staticmethod
+  def __orderBy(data, order):
+    if order is None:
+      return list(data)
+
+    key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
+    return sorted(data, key=key)
+
   def getVisits(self, mice=None, startTime=None, endTime=None, order=None):
     """
+    @param startTime: a lower bound of the visit Start attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the visit Start attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: visits.
+    @rtype: [VisitNode]
+
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
     >>> [v.Corner for v in ml_icp3.getVisits(order='Start')]
@@ -575,38 +621,6 @@ class Data(object):
     visits = self.__visits if mask is None else self.__visits[mask]
     return self.__orderBy(visits, order)
 
-  def __filterUnicode(self, data, field, select=None):
-    if select is None:
-      return data
-
-    key = attrgetter(field)
-    if isinstance(select, basestring):
-      select = unicode(select)
-      return (x for x in data if unicode(key(x)) == select)
-
-    select = frozenset(map(unicode, select))
-    return (x for x in data if unicode(key(x)) in select)
-
-  def __filterInt(self, data, field, select=None):
-    if select is None:
-      return data
-
-    key = attrgetter(field)
-    if not isinstance(select, (tuple, list, set, frozenset)):
-      select = int(select)
-      return (x for x in data if int(key(x)) == select)
-
-    select = frozenset(map(int, select))
-    return (x for x in data if int(key(x)) in select)
-
-  @staticmethod
-  def __orderBy(data, order):
-    if order is None:
-      return list(data)
-
-    key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
-    return sorted(data, key=key)
-
   def getLogs(self, *args, **kwargs):
     deprecated("Obsolete method getLogs accessed.")
     return self.getLog(*args, **kwargs)
@@ -624,8 +638,8 @@ class Data(object):
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
-    @return: a list of log entries.
-    @rtype: LogNode
+    @return: log entries.
+    @rtype: [LogNode, ...]
 
     >>> log = ml_icp3.getLog(order='DateTime')
     >>> for entry in log:
@@ -650,8 +664,8 @@ class Data(object):
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
-    @return: a list of sampled environment conditions.
-    @rtype: EnvironmentNode
+    @return: sampled environment conditions.
+    @rtype: [EnvironmentNode, ...]
 
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print "%.1f" %env.Temperature
@@ -689,8 +703,8 @@ class Data(object):
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
-    @return: a list of hardware events.
-    @rtype: EnvironmentNode
+    @return: hardware events.
+    @rtype: [HardwareEventNode, ...]
     """
     mask = self._getTimeMask(self.__hwDateTime, startTime, endTime)
     hw = list(self.__hardware if mask is None else self.__hardware[mask])
