@@ -12,6 +12,7 @@ from ._Data import hTime
 from ._Merger import Merger
 from ._Loader import Loader, convertTime
 from ._Metadata import Phase
+from ._Results import ResultsCSV
 __ID__ = 'nlx_158570'
 __version__ = __ID__ + ' 0'
 __all__ = []
