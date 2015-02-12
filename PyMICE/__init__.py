@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-Mice package
+PyMICE package
 
 A collection of tools to access IntelliCage data.
 
-Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
+Copyright (c) 2012-2015 Laboratory of Neuroinformatics. All rights reserved.
 """
+
 from ._Data import hTime
 from ._Merger import Merger
 from ._Loader import Loader, convertTime

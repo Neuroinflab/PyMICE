@@ -8,7 +8,6 @@ Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 
 import sys
 import os
-from matplotlib import rc
 import time
 
 from datetime import datetime
@@ -182,8 +181,76 @@ class Loader(Data):
                                                },
                 }
 
-  def _loadZip(self, fname, getNpokes=False, getLogs=False, getEnvironment=False,
-               getHardware=False, source=None):
+  def __init__(self, fname, getNp=False, getLog=False, getEnv=False, getHw=False,
+               logAnalyzers=(), **kwargs):
+    """
+    @param fname: a path to the data file.
+    @type fname: basestring
+
+    @param getNp: whether to load nosepoke data.
+    @type getNp: bool
+
+    @param getLog: whether to load log.
+    @type getLog: bool
+
+    @param getEnv: whether to load environmental data.
+    @type getEnv: bool
+
+    @param getHw: whether to load hardware data.
+    @type getHw: bool
+
+    @param logAnalyzers: a collection of log analysers (to be implemented)
+    """
+    for key, value in kwargs.items():
+      if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
+        deprecated("Obsolete argument %s given." % key)
+        getNp = value
+
+      elif key == 'getLogs':
+        deprecated("Obsolete argument %s given." % key)
+        getLog = value
+
+      elif key == 'getEnvironment':
+        deprecated("Obsolete argument %s given." % key)
+        getEnv = value
+
+      elif key in ('getHardware', 'getHardwareEvents'):
+        deprecated("Obsolete argument %s given." % key)
+        getHw = value
+
+      elif key == 'loganalyzers':
+        logAnalyzers = value
+
+      else:
+        warnings.warn("Unknown argument: %s" % key, stacklevel=2)
+
+    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
+
+    self._initCache()
+
+    self._fnames = (fname,)
+
+    self.appendData(fname)
+
+    for log in self.getLog():
+      if log.Category != 'Info' or log.Type != 'Application':
+        continue
+
+      if log.Notes == 'Session is started':
+        self.icSessionStart = log.DateTime
+
+      elif log.Notes == 'Session is stopped':
+        self.icSessionEnd = log.DateTime
+
+      else:
+        print 'unknown Info/Application message: %s' % msg
+
+    self._logAnalysis(logAnalyzers)
+
+
+
+  def _loadZip(self, fname, getNp=False, getLog=False, getEnv=False,
+               getHw=False, source=None):
     zf = zipfile.ZipFile(fname)
     animalsLabels = set()
     animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
@@ -256,7 +323,7 @@ class Loader(Data):
     visits['Animal'] = [tag2Animal[tag] for tag in tags]
 
     orphans = []
-    if getNpokes:
+    if getNp:
       visitNosepokes = [[] for vid in vids]
       vid2nps = dict(zip(vids, visitNosepokes))
 
@@ -288,15 +355,15 @@ class Loader(Data):
               'nosepokes': orphans,
              }
 
-    if getLogs:
+    if getLog:
       logs = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       result['logs'] = self._makeDicts(logs)
 
-    if getEnvironment:
+    if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       result['environment'] = self._makeDicts(environment)
 
-    if getHardware:
+    if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
       result['hardware'] = self._makeDicts(hardware)
 
@@ -362,44 +429,6 @@ class Loader(Data):
 
     return data
 
-  def __init__(self, fname, **kwargs):
-    """
-    getNpokes = False,
-    bin = 3600,
-    """
-    Data.__init__(self,
-                  getNpokes=kwargs.get('get_npokes',
-                                       kwargs.get('getNpokes', 
-                                       kwargs.get('getNosepokes',False))),
-                  getLogs=kwargs.get('getLogs',False),
-                  getEnv=kwargs.get('getEnv',False),
-                  getHw=kwargs.get('getHardware',False))
-
-    self._initCache()
-
-    self._fnames = (fname,)
-
-    self.appendData(fname)
-
-    for log in self.getLogs():
-      if log.Category != 'Info' or log.Type != 'Application':
-        continue
-
-      if log.Notes == 'Session is started':
-        self.icSessionStart = log.DateTime
-
-      elif log.Notes == 'Session is stopped':
-        self.icSessionEnd = log.DateTime
-
-      else:
-        print 'unknown Info/Application message: %s' % msg
-
-
-    self._logAnalysis(kwargs.get('loganalyzers', []))
-
-    rc('mathtext', fontset='stixsans')
-
-
 
   def __repr__ (self):
     """
@@ -419,10 +448,10 @@ class Loader(Data):
 
     if fname.endswith('.zip'):
       data = self._loadZip(fname,
-                           getNpokes=self._getNpokes,
-                           getLogs=self._getLogs,
-                           getEnvironment=self._getEnv,
-                           getHardware=self._getHw,
+                           getNp=self._getNp,
+                           getLog=self._getLog,
+                           getEnv=self._getEnv,
+                           getHw=self._getHw,
                            source=fname.decode('utf-8'))
       animals = data['animals']
       groups = data['groups']
@@ -444,8 +473,8 @@ class Loader(Data):
 
       self._insertVisits(visits)
 
-      if self._getLogs:
-        self._insertLogs(data['logs'])
+      if self._getLog:
+        self._insertLog(data['logs'])
 
       if self._getEnv:
         self._insertEnvironment(data['environment'])

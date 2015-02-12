@@ -13,7 +13,6 @@ import pytz
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
-from matplotlib import rc
 import time
 import zipfile
 import csv
@@ -33,40 +32,69 @@ callCopy = methodcaller('copy')
 def timeString(x, tz=None):
   return datetime.datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
 
+
 def deprecated(message, warningClass=DeprecationWarning, stacklevel=1):
-  warnings.warn(message, warningClass, stacklevel=2+stacklevel)
+  warnings.warn(message, warningClass, stacklevel=stacklevel + 2)
+
 
 def ensureFloat(x):
-  if isinstance(x, (str, unicode)):
+  """
+  Convert x to float if possible.
+
+  Accept ',' used as a decimal mark.
+
+  Convert '' to None.
+  """
+  if isinstance(x, basestring):
     if x == '':
       return None
 
     return float(x.replace(',', '.'))
 
-  if x != None:
+  if x is not None:
     return float(x)
 
+
 def ensureInt(x):
-  if x == '' or x == None:
+  """
+  Convert x to int if possible.
+
+  Convert '' to None.
+  """
+  if x == '' or x is None:
     return None
 
-  if x != None:
-    return int(x)
+  return int(x)
+
 
 def hTime(t):
+  """
+  Convert timestamp t to a human-readible string.
+  """
   dec, integer = modf(t)
   return time.strftime("%Y-%m-%d %H:%M:%S" + ('%01.3f' % dec)[1:],
                        time.localtime(integer))
 
 
 class Data(object):
-  def __init__(self, getNpokes=False, getLogs=False,
+  """
+  A base class for objects containing behavioural data.
+  """
+  def __init__(self, getNp=False, getLog=False,
                getEnv=False, getHw=False):
+    """
+    @param getNp: whether to load nosepoke data.
 
+    @param getLog: whether to load log.
+
+    @param getEnv: whether to load environmental data.
+
+    @param getHw: whether to load hardware data.
+    """
     self.__name2group = {}
 
-    self._getNpokes = getNpokes
-    self._getLogs = getLogs
+    self._getNp = getNp
+    self._getLog = getLog
     self._getEnv = getEnv
     self._getHw = getHw
 
@@ -76,26 +104,34 @@ class Data(object):
 
     self.__visits = []
     self.__nosepokes = [] #reserved for future use
-    self.__logs = []
+    self.__log = []
     self.__environment = []
     self.__hardware = []
 
   @property
   def _get_npokes(self):
     deprecated("Obsolete attribute _get_npokes accessed.")
-    return self._getNpokes
+    return self._getNp
+
+  @property
+  def _getNpokes(self):
+    deprecated("Obsolete attribute _getNpokes accessed.")
+    return self._getNp
+
+  @property
+  def _getLogs(self):
+    deprecated("Obsolete attribute _getLog accessed.")
+    return self._getLog
 
   def __del__(self):
     for vNode in self.__visits:
       if vNode:
         vNode._del_()
 
-
 # caching data
   def _initCache(self):
     self.icSessionStart = None
     self.icSessionEnd = None
-    #self.__mice = {}
     self.__cages = {}
     self.__animal2cage = {}
     self.__animalVisits = {}
@@ -104,10 +140,8 @@ class Data(object):
     self.__envDateTime = None
     self.__hwDateTime = None
 
-
   def _buildCache(self):
     # build cache
-    #self.__mice = dict((k, v._aid) for (k, v) in self.__animalsByName.items())
     self.__cages = {}
     self.__animal2cage = {}
     currentCage = None
@@ -115,7 +149,6 @@ class Data(object):
     cursor = sorted(set((int(v.Cage), unicode(v.Animal)) for v in self.__visits))
 
     for cage, animal in cursor:
-      #animal = self.__animalsByName[animal]
       if animal not in self.__animal2cage:
         self.__animal2cage[animal] = [cage]
 
@@ -151,9 +184,9 @@ class Data(object):
     self.__visitsStart = np.array(map(float, map(attrgetter('Start'),
                                                  self.__visits)))
 
-    if self._getLogs:
+    if self._getLog:
       self.__logDateTime = np.array(map(float, map(attrgetter('DateTime'),
-                                                   self.__logs)))
+                                                   self.__log)))
 
     if self._getEnv:
       self.__envDateTime = np.array(map(float, map(attrgetter('DateTime'),
@@ -164,6 +197,8 @@ class Data(object):
                                                    self.__hardware)))
 
   def getCage(self, mouse):
+    """
+    """
     cages = self.__animal2cage[mouse]
     if len(cages) != 1:
       if len(cages) == 0:
@@ -233,8 +268,8 @@ class Data(object):
   def _newNodes(nodes, cls=None):
     return map(cls.fromDict, nodes)
 
-  def _insertLogs(self, lNodes):
-    self.__logs = np.append(self.__logs, self._newNodes(lNodes, LogNode))
+  def _insertLog(self, lNodes):
+    self.__log = np.append(self.__log, self._newNodes(lNodes, LogNode))
 
   def _insertEnvironment(self, eNodes):
     self.__environment = np.append(self.__environment, self._newNodes(eNodes, EnvironmentNode))
@@ -251,7 +286,7 @@ class Data(object):
       vNode.Animal = animal
 
       nosepokes = vNode.pop('Nosepokes', None)
-      if self._getNpokes and nosepokes is not None:
+      if self._getNp and nosepokes is not None:
         nosepokes = tuple(self._newNodes(nosepokes, NosepokeNode))
         vNode.Nosepokes = nosepokes
         for nid, npNode in enumerate(nosepokes, start=len(self.__nosepokes)):
@@ -488,18 +523,18 @@ class Data(object):
     return DataNode(Visits=list(visits))
 
   @staticmethod
-  def _getTimeMask(time, timeStart=None, timeEnd=None):
+  def _getTimeMask(time, startTime=None, endTime=None):
     mask = None
-    if timeStart is not None:
-      mask = timeStart <= time
+    if startTime is not None:
+      mask = startTime <= time
 
-    if timeEnd is not None:
-      timeMask = timeEnd > time
+    if endTime is not None:
+      timeMask = endTime > time
       mask = timeMask if mask is None else mask * timeMask
 
     return mask
 
-  def getVisits(self, mice=None, timeStart=None, timeEnd=None, order=None):
+  def getVisits(self, mice=None, startTime=None, endTime=None, order=None):
     """
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
@@ -533,7 +568,7 @@ class Data(object):
       except (KeyError, TypeError): #unhashable type: list
         mask = sum((self.__animalVisits[m] for m in mice), False)
 
-    timeMask = self._getTimeMask(self.__visitsStart, timeStart, timeEnd)
+    timeMask = self._getTimeMask(self.__visitsStart, startTime, endTime)
     if timeMask is not None:
       mask = timeMask if mask is None else mask * timeMask
 
@@ -572,19 +607,52 @@ class Data(object):
     key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
     return sorted(data, key=key)
 
-  def getLogs(self, timeStart=None, timeEnd=None, order=None):
+  def getLogs(self, *args, **kwargs):
+    deprecated("Obsolete method getLogs accessed.")
+    return self.getLog(*args, **kwargs)
+
+  def getLog(self, startTime=None, endTime=None, order=None):
     """
-    >>> for log in ml_icp3.getLogs(order='DateTime'):
-    ...   print log.Notes
+    @param startTime: a lower bound of the log entries DateTime attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the log entries DateTime attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: a list of log entries.
+    @rtype: LogNode
+
+    >>> log = ml_icp3.getLog(order='DateTime')
+    >>> for entry in log:
+    ...   print entry.Notes
     Session is started
     Session is stopped
     """
-    mask = self._getTimeMask(self.__logDateTime, timeStart, timeEnd)
-    logs = self.__logs if mask is None else self.__logs[mask]
-    return self.__orderBy(logs, order)
+    mask = self._getTimeMask(self.__logDateTime, startTime, endTime)
+    log = self.__log if mask is None else self.__log[mask]
+    return self.__orderBy(log, order)
 
-  def getEnvironment(self, timeStart=None, timeEnd=None, order=None):
+  def getEnvironment(self, startTime=None, endTime=None, order=None):
     """
+    @param startTime: a lower bound of the sample DateTime attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the sample DateTime attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: a list of sampled environment conditions.
+    @rtype: EnvironmentNode
+
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print "%.1f" %env.Temperature
     22.0
@@ -604,18 +672,44 @@ class Data(object):
     22.0
     23.6
     """
-    mask = self._getTimeMask(self.__envDateTime, timeStart, timeEnd)
+    mask = self._getTimeMask(self.__envDateTime, startTime, endTime)
     env = list(self.__environment if mask is None else self.__environment[mask])
     return self.__orderBy(env, order)
 
-  def getHardwareEvents(self, timeStart=None, timeEnd=None, order=None):
+  def getHardwareEvents(self, startTime=None, endTime=None, order=None):
     """
+    @param startTime: a lower bound of the event DateTime attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the event DateTime attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: a list of hardware events.
+    @rtype: EnvironmentNode
     """
-    mask = self._getTimeMask(self.__hwDateTime, timeStart, timeEnd)
+    mask = self._getTimeMask(self.__hwDateTime, startTime, endTime)
     hw = list(self.__hardware if mask is None else self.__hardware[mask])
     return self.__orderBy(hw, order)
 
   def save(self, filename, force=False):
+    """
+    An experimental method for saving the data.
+
+    @param filename: path to the file data has to be saved to; if filename does
+                     not end with '.zip', the suffix is being appended.
+    @type filename: basestring
+
+    @param force: whether to overwrite an existing file
+    @type force: bool
+    """
+    if not filename.lower().endswith('.zip'):
+      filename += '.zip'
+
     if os.path.exists(filename) and not force:
       raise ValueError("File %s already exists." % filename)
 
@@ -674,7 +768,7 @@ class Data(object):
       npKeys.update(nosepoke.keys())
       sources.add(nosepoke._source)
 
-    for log in self.__logs:
+    for log in self.__log:
       logKeys.update(log.keys())
       sources.add(log._source)
 
@@ -757,7 +851,7 @@ class Data(object):
 
       writer = csv.writer(buf, delimiter='\t')
       writer.writerow(['DateTime'] + visKeys + ['_sid'])
-      for log in self.__logs:
+      for log in self.__log:
         _sid = sources[log._source]
         DateTime = timeString(log.DateTime)
         row = log.select(logKeys)
