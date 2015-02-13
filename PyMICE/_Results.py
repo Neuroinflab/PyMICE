@@ -41,6 +41,7 @@ class ResultsCSV(object):
       writer.writerow(line)
 
     self.__fh.close()
+    self.__fh = None
 
   def addRow(self, id=None):
     if id is None:
