@@ -20,7 +20,7 @@ class ResultsCSV(object):
     self.__fh = open(filename, 'wb')
 
   def __enter__(self):
-    pass
+    return self
 
   def __exit__(self, type, value, traceback):
     self.close()
