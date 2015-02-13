@@ -338,7 +338,17 @@ class Data(object):
     animal = self.getAnimal(animal) # XXX sanity
     group.addMember(animal)
 
-  def getAnimal(self, name = None, aid = None):
+  def getAnimal(self, name=None, aid=None):
+    """
+    @param name: name of the animal
+    @type name: basestring
+
+    @param aid: internal ID of the animal
+    @type aid: int
+
+    @return: animal data if name or aid given else names of animals
+    @rtype: AnimalNode if name or aid given else frozenset([unicode, ...])
+    """
     if name is not None:
       return self.__animalsByName[unicode(name)]
 
@@ -568,20 +578,6 @@ class Data(object):
 
   def getVisits(self, mice=None, startTime=None, endTime=None, order=None):
     """
-    @param startTime: a lower bound of the visit Start attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
-
-    @param endTime: an upper bound of the visit Start attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
-
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
-
-    @return: visits.
-    @rtype: [VisitNode]
-
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
     >>> [v.Corner for v in ml_icp3.getVisits(order='Start')]
@@ -605,6 +601,20 @@ class Data(object):
     >>> for v in ml_l1.getVisits(mice='Minnie'):
     ...   print hTime(v.Start)
     2012-12-18 12:30:02.360
+
+    @param startTime: a lower bound of the visit Start attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the visit Start attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: visits.
+    @rtype: [VisitNode]
     """
     mask = None
     if mice is not None:
@@ -622,11 +632,20 @@ class Data(object):
     return self.__orderBy(visits, order)
 
   def getLogs(self, *args, **kwargs):
+    """
+    @deprecated: use L{getLog} instead.
+    """
     deprecated("Obsolete method getLogs accessed.")
     return self.getLog(*args, **kwargs)
 
   def getLog(self, startTime=None, endTime=None, order=None):
     """
+    >>> log = ml_icp3.getLog(order='DateTime')
+    >>> for entry in log:
+    ...   print entry.Notes
+    Session is started
+    Session is stopped
+
     @param startTime: a lower bound of the log entries DateTime attribute given
                       as a timestamp (epoch).
     @type startTime: float
@@ -640,12 +659,6 @@ class Data(object):
 
     @return: log entries.
     @rtype: [LogNode, ...]
-
-    >>> log = ml_icp3.getLog(order='DateTime')
-    >>> for entry in log:
-    ...   print entry.Notes
-    Session is started
-    Session is stopped
     """
     mask = self._getTimeMask(self.__logDateTime, startTime, endTime)
     log = self.__log if mask is None else self.__log[mask]
@@ -653,20 +666,6 @@ class Data(object):
 
   def getEnvironment(self, startTime=None, endTime=None, order=None):
     """
-    @param startTime: a lower bound of the sample DateTime attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
-
-    @param endTime: an upper bound of the sample DateTime attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
-
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
-
-    @return: sampled environment conditions.
-    @rtype: [EnvironmentNode, ...]
-
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print "%.1f" %env.Temperature
     22.0
@@ -685,6 +684,20 @@ class Data(object):
     23.6
     22.0
     23.6
+
+    @param startTime: a lower bound of the sample DateTime attribute given
+                      as a timestamp (epoch).
+    @type startTime: float
+
+    @param endTime: an upper bound of the sample DateTime attribute given
+                    as a timestamp (epoch).
+    @type endTime: float
+
+    @param order: attributes that the returned list is ordered by
+    @type order: str or (str, ...)
+
+    @return: sampled environment conditions.
+    @rtype: [EnvironmentNode, ...]
     """
     mask = self._getTimeMask(self.__envDateTime, startTime, endTime)
     env = list(self.__environment if mask is None else self.__environment[mask])
