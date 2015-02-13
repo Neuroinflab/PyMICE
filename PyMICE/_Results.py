@@ -37,7 +37,7 @@ class ResultsCSV(object):
 
     writer.writerow([f.encode('utf-8') for f in fields])
     for row in self.__rows.values():
-      line = [unicode(x.get(f, '')).encode('utf-8') for f in fields]
+      line = [unicode(f.get(f, '')).encode('utf-8') for f in fields]
       writer.writerow(line)
 
     self.__fh.close()
