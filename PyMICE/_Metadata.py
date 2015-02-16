@@ -462,6 +462,10 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     self.read(os.path.join(path, self.fname)) 
       
   def gettime(self, sec): 
+    deprecated('Deprecated method gettime() called; use getTime() instead.')
+    return self.getTime(sec)
+
+  def getTime(self, sec): 
     """
     Convert start and end time and date read from section sec (might be a list)
     of the config file to a tuple of times from epoch.
@@ -531,7 +535,11 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
 
     plt.draw()
   
-  def plot_nights(self, sections, ax=None):
+  def plot_nights(self, *args, **kwargs):
+    deprecated('Deprecated method plot_nights() called; use plotNights() instead.')
+    return self.plotNights(*args, **kwargs)
+
+  def plotNights(self, sections, ax=None):
     """Plot night from sections"""
     if ax is None:
       ax = plt.gca()
@@ -551,6 +559,10 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     plt.draw()
   
   def plot_sections(self):
+    deprecated('Deprecated method plot_sections() called; use plotSections() instead.')
+    return self.plotSections()
+
+  def plotSections(self):
     """Diagnostic plot of sections defined in the config file."""
     figg = plt.figure()                         
     for idx, sec in enumerate(self.sections()):
