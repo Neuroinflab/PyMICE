@@ -18,8 +18,7 @@ import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
-from ._Date import deprecated
-from ._Loader import convertTime
+from ._Tools import deprecated, convertTime
 
 
 
