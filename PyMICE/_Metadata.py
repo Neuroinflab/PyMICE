@@ -477,25 +477,21 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           value = self.get(sec, option)
 
         except NoOptionError:
-          value = self.get(sec, option + 'date') + self.get(sec, option + 'time')
+          value = self.get(sec, option + 'date') + ' ' + self.get(sec, option + 'time')
+
+          deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
+                     (option, option, option))
           try:
-            if len(value) == 15:
-              ts = time.strptime(value, '%d.%m.%Y%H:%M')
+            ts = time.strptime(value, '%d.%m.%Y %H:%M:%S')
 
-            elif len(value) == 18:
-              ts = time.strptime(value, '%d.%m.%Y%H:%M:%S')
+          except ValueError:
+            try:  
+              ts = time.strptime(value, '%d.%m.%Y %H:%M')
 
-            else:
-              raise ValueError('Wrong date format in %s' % self.fname)
+            except ValueError:
+              raise ValueError('Wrong date format in %s: %s' % (self.fname, value))
 
-            t = time.mktime(ts)
-
-          except ValueError as e:
-            raise ValueError('Wrong date format in %s: %s' % (self.fname, e.message))
-
-          finally:
-            deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
-                       (option, option, option))
+          t = time.mktime(ts)
 
         else:
           t = convertTime(value)
