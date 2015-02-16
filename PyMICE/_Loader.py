@@ -35,7 +35,7 @@ except ValueError:
     from _Tools import deprecated, convertTime
 
 try:
-  from PyMICE_C import emptyStringToNone
+  from PyMICE._C import emptyStringToNone
 
 except Exception as e:
   print type(e), e

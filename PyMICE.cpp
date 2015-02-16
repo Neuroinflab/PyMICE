@@ -132,14 +132,14 @@ static PyObject * PyMICE_emptyStringToNone(PyObject * self, PyObject * list)
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
-initPyMICE_C(void) 
+init_C(void) 
 {
   srand(time(NULL));
   PyObject * m;
   
   //penna_PennaType.tp_new = PyType_GenericNew;
-  m = Py_InitModule3("PyMICE_C", PyMICE_module_methods,
-                     "Experimental module for mice simulation speedup.");
+  m = Py_InitModule3("_C", PyMICE_module_methods,
+                     "Experimental module for PyMICE module speedup.");
 
 }
 
