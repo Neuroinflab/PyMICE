@@ -10,7 +10,6 @@ import sys
 import os
 import time
 
-from datetime import datetime
 import dateutil.parser
 
 import zipfile
@@ -21,16 +20,19 @@ import operator
 from xml.dom import minidom
 
 try:
-  from ._Data import Data, deprecated
+  from ._Data import Data
+  from ._Tools import deprecated, convertTime
 
 except ValueError:
   try:
-    print "from ._Data import... failed"
-    from PyMICE._Data import Data, deprecated
+    print "from .<XXX> import... failed"
+    from PyMICE._Data import Data
+    from PyMICE._Tools import deprecated, convertTime
 
   except ImportError:
-    print "from PyMICE._Data import... failed"
-    from _Data import Data, deprecated
+    print "from PyMICE.<XXX> import... failed"
+    from _Data import Data
+    from _Tools import deprecated, convertTime
 
 try:
   from PyMICE_C import emptyStringToNone
@@ -49,21 +51,6 @@ except Exception as e:
     return l
 
 
-EPOCH = datetime(1970,1,1)
-UTC_OFFSET = time.mktime(EPOCH.timetuple())
-
-def convertTime(tStr):
-  tSplit = tStr.replace('-', ' ').replace(':', ' ').split()
-  subSec = float(tSplit[5]) if len(tSplit) == 6 else 0.
-  return (datetime(*map(int, tSplit[:5])) - EPOCH).total_seconds() + subSec + UTC_OFFSET # a hook for backward compatibility
-
-  #try:
-  #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M:%S'))\
-  #         + subSec
-
-  #except ValueError:
-  #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M'))\
-  #         + subSec
 
 #def convertFloat(x):
 #  return None if x == '' else float(x.replace(',', '.'))

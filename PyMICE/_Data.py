@@ -8,72 +8,21 @@ Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 
 import sys
 import os
-import datetime
-import pytz
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
-import time
 import zipfile
 import csv
 import cStringIO
-import codecs
 import copy
-import warnings
-from math import exp, modf
-import itertools
 import numpy as np
 from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode
 
+from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime
+
 callCopy = methodcaller('copy')
-
-def timeString(x, tz=None):
-  return datetime.datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
-
-
-def deprecated(message, warningClass=DeprecationWarning, stacklevel=1):
-  warnings.warn(message, warningClass, stacklevel=stacklevel + 2)
-
-
-def ensureFloat(x):
-  """
-  Convert x to float if possible.
-
-  Accept ',' used as a decimal mark.
-
-  Convert '' to None.
-  """
-  if isinstance(x, basestring):
-    if x == '':
-      return None
-
-    return float(x.replace(',', '.'))
-
-  if x is not None:
-    return float(x)
-
-
-def ensureInt(x):
-  """
-  Convert x to int if possible.
-
-  Convert '' to None.
-  """
-  if x == '' or x is None:
-    return None
-
-  return int(x)
-
-
-def hTime(t):
-  """
-  Convert timestamp t to a human-readible string.
-  """
-  dec, integer = modf(t)
-  return time.strftime("%Y-%m-%d %H:%M:%S" + ('%01.3f' % dec)[1:],
-                       time.localtime(integer))
 
 
 class Data(object):

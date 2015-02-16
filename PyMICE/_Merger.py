@@ -26,16 +26,19 @@ from math import exp, modf
 import itertools
 
 try:
-  from ._Data import Data, hTime, deprecated
+  from ._Data import Data
+  from ._Tools import hTime, deprecated
 
 except ValueError:
   try:
-    print "from ._Data import... failed"
-    from PyMICE._Data import Data, hTime, deprecated
+    print "from .<XXX> import... failed"
+    from PyMICE._Data import Data
+    from PyMICE._Tools import hTime, deprecated
 
   except ImportError:
-    print "from PyMICE._Data import... failed"
-    from _Data import Data, hTime, deprecated
+    print "from PyMICE.<XXX> import... failed"
+    from _Data import Data
+    from _Tools import hTime, deprecated
 
 #class HTimeFormatter(matplotlib.ticker.Formatter):
 #  
