@@ -444,7 +444,7 @@ class Phase(MetadataNode):
 
 class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
   def __init__(self, path, fname=None, tzone=None): 
-    self.tzone = pytz.timezone('CET') tzone is None else tzone
+    self.tzone = pytz.timezone('CET') if tzone is None else tzone
 
     RawConfigParser.__init__(self)
     self.path = path               
