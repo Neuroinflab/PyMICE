@@ -11,13 +11,14 @@ import csv
 import re
 import collections
 
-from ConfigParser import RawConfigParser, NoSectionError
+from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
 import pytz  
 import numpy as np                                           
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
+from ._Date import deprecated
 from ._Loader import convertTime
 
 
@@ -443,7 +444,7 @@ class Phase(MetadataNode):
 
 class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
   def __init__(self, path, fname=None, tzone=None): 
-    self.__tzone = pytz.timezone('CET') tzone is None else tzone
+    self.tzone = pytz.timezone('CET') tzone is None else tzone
 
     RawConfigParser.__init__(self)
     self.path = path               
@@ -466,7 +467,37 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     of the config file to a tuple of times from epoch.
     """
 
-    if type(sec) == list:
+    if isinstance(sec, basestring):
+      times = []
+      for option in ('start', 'end'):
+        try:
+          value = self.get(sec, option)
+
+        except NoOptionError:
+          value = self.get(sec, option + 'date') + self.get(sec, option + 'time')
+          try:
+            if len(value) == 15:
+              t = time.strptime(value, '%d.%m.%Y%H:%M')
+
+            elif len(value) == 18:
+              t = time.strptime(value, '%d.%m.%Y%H:%M:%S')
+
+            else:
+              raise ValueError('Wrong date format in %s' % self.fname)
+
+          except ValueError as e:
+            raise ValueError('Wrong date format in %s: %s' % (self.fname, e.message))
+
+          finally:
+            deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
+                       (option, option, option))
+
+        else:
+          t = convertTime(value)
+
+        times.append(t)
+        
+    else:
       starts = []
       ends = []
       for ss in sec:
@@ -549,8 +580,8 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
 
     ax = plt.gca()
     ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
-                                               tz=self.__tzone)) 
-    ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.__tzone))
+                                               tz=self.tzone)) 
+    ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
     ax.autoscale_view()
     ax.get_figure().autofmt_xdate()
     plt.title(self.path) 
