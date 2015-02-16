@@ -109,23 +109,23 @@ class Merger(Data):
 
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
-        deprecated("Obsolete argument %s given." % key)
+        deprecated("Obsolete argument %s given for Merger constructor." % key)
         getNp = value
 
       elif key == 'getLogs':
-        deprecated("Obsolete argument %s given." % key)
+        deprecated("Obsolete argument %s given for Merger constructor." % key)
         getLog = value
 
       elif key == 'getEnvironment':
-        deprecated("Obsolete argument %s given." % key)
+        deprecated("Obsolete argument %s given for Merger constructor." % key)
         getEnv = value
 
       elif key in ('getHardware', 'getHardwareEvents'):
-        deprecated("Obsolete argument %s given." % key)
+        deprecated("Obsolete argument %s given for Merger constructor." % key)
         getHw = value
 
       else:
-        warnings.warn("Unknown argument: %s" % key, stacklevel=2)
+        warnings.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
 
