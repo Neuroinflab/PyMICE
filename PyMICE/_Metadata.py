@@ -477,13 +477,15 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           value = self.get(sec, option + 'date') + self.get(sec, option + 'time')
           try:
             if len(value) == 15:
-              t = time.strptime(value, '%d.%m.%Y%H:%M')
+              ts = time.strptime(value, '%d.%m.%Y%H:%M')
 
             elif len(value) == 18:
-              t = time.strptime(value, '%d.%m.%Y%H:%M:%S')
+              ts = time.strptime(value, '%d.%m.%Y%H:%M:%S')
 
             else:
               raise ValueError('Wrong date format in %s' % self.fname)
+
+            t = time.mktime(ts)
 
           except ValueError as e:
             raise ValueError('Wrong date format in %s: %s' % (self.fname, e.message))
@@ -496,6 +498,8 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           t = convertTime(value)
 
         times.append(t)
+
+      return tuple(times)
         
     else:
       starts = []
@@ -506,29 +510,6 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
         ends.append(et)
 
       return min(starts), max(ends)
-
-    else:
-      tstr1 = self.get(sec, 'startdate') + self.get(sec, 'starttime')
-      tstr2 = self.get(sec, 'enddate') + self.get(sec, 'endtime')
-      if len(tstr1) == 15:
-        t1 = time.strptime(tstr1, '%d.%m.%Y%H:%M')
-
-      elif len(tstr1) == 18:                        
-        t1 = time.strptime(tstr1, '%d.%m.%Y%H:%M:%S')
-
-      else: 
-        raise Exception('Wrong date format in %s' %self.fname)
-
-      if len(tstr2) == 15:
-        t2 = time.strptime(tstr2, '%d.%m.%Y%H:%M')
-
-      elif len(tstr2) == 18:                        
-        t2 = time.strptime(tstr2, '%d.%m.%Y%H:%M:%S')
-
-      else: 
-        raise Exception('Wrong date format in %s' %self.fname)
-
-      return time.mktime(t1), time.mktime(t2)
 
   def __call__(self, x, pos=0):
     x = mpd.num2epoch(x)
