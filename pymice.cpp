@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "PyMICE.h"
+#include "pymice.h"
 
 //Py_TPFLAGS_BASETYPE -> type can be subclassed :-D
 
@@ -80,8 +80,8 @@ template <class T> T sumHeap(T * heap, unsigned int size)
   }
 }
 
-static PyMethodDef PyMICE_module_methods[] = {
-  {"emptyStringToNone", (PyCFunction) PyMICE_emptyStringToNone, METH_O, "Replace (in place) empty strings in a list with None."},
+static PyMethodDef pymice_module_methods[] = {
+  {"emptyStringToNone", (PyCFunction) pymice_emptyStringToNone, METH_O, "Replace (in place) empty strings in a list with None."},
   {NULL}  /* Sentinel */  
 };
 
@@ -108,7 +108,7 @@ void emptyStringToNone(PyObject * list)
   }
 }
 
-static PyObject * PyMICE_emptyStringToNone(PyObject * self, PyObject * list)
+static PyObject * pymice_emptyStringToNone(PyObject * self, PyObject * list)
 {
   if (list != NULL)
   {
@@ -121,7 +121,7 @@ static PyObject * PyMICE_emptyStringToNone(PyObject * self, PyObject * list)
     else
     {
       PyErr_SetString(PyExc_TypeError,
-                      "ERROR @PyMICE_emptyStringToNone: List must be a list instance (not a subtype).");
+                      "ERROR @pymice_emptyStringToNone: List must be a list instance (not a subtype).");
     }
   }
   return NULL;
@@ -138,8 +138,8 @@ init_C(void)
   PyObject * m;
   
   //penna_PennaType.tp_new = PyType_GenericNew;
-  m = Py_InitModule3("_C", PyMICE_module_methods,
-                     "Experimental module for PyMICE module speedup.");
+  m = Py_InitModule3("_C", pymice_module_methods,
+                     "Experimental module for pymice module speedup.");
 
 }
 

@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from distutils.core import setup, Extension
-cPyMICE = Extension('PyMICE._C', sources = ['PyMICE.cpp'])
-setup(name = 'PyMICE',
+cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
+setup(name = 'pymice',
       version = '0.1',
-      description = 'PyMICE',
-      ext_modules = [cPyMICE],
-      packages = ['PyMICE'])
+      description = 'pymice',
+      ext_modules = [cPymice],
+      packages = ['pymice'])

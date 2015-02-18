@@ -110,8 +110,9 @@ class Data(object):
 
       else:
         self.__animal2cage[animal].append(cage)
-        print "WARNING: Animal %s found in multiple cages (%s)." %\
-              (animal, ', '.join(map(str, self.__animal2cage[animal])))
+        warnings.warn("Animal %s found in multiple cages (%s)." %\
+                  (animal, ', '.join(map(str, self.__animal2cage[animal]))))
+                  #, stacklevel=4)
 
       # unsure if should be object instead of unicode
       animal = self.__animalsByName[animal]
@@ -868,7 +869,7 @@ class Data(object):
 
 
 try:
-  from PyMICE._C import emptyStringToNone
+  from pymice._C import emptyStringToNone
 
 except Exception as e:
   print type(e), e

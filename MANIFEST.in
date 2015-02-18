@@ -1,2 +1,2 @@
 include Makefile
-include PyMICE.h
+include pymice.h

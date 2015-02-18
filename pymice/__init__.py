@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-PyMICE package
+pymice package
 
 A collection of tools to access IntelliCage data.
 

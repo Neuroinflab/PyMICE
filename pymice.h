@@ -12,7 +12,7 @@
 #ifndef PYMICE_H
 #define PYMICE_H
 
-static PyObject * PyMICE_emptyStringToNone(PyObject *, PyObject *);
+static PyObject * pymice_emptyStringToNone(PyObject *, PyObject *);
 
 
 #endif
