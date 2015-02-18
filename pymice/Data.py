@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-_Data.py
+Data.py
 
-Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
+Copyright (c) 2012-2015 Laboratory of Neuroinformatics. All rights reserved.
 """
 
 import sys
@@ -155,23 +155,36 @@ class Data(object):
 
   def getCage(self, mouse):
     """
+    @return: cage(s) mouse presence has been detected
+    @rtype: convertable to int or (convertable to int, ...)
     """
     cages = self.__animal2cage[mouse]
     if len(cages) != 1:
       if len(cages) == 0:
-        print "WARNING: Mouse not found in any cage."
+        warnings.warn("Mouse %s not found in any cage." % mouse, stacklevel=2)
         return None
 
-      print "WARNING: Animal %s found in multiple cages: %s."\
-            % (mouse, ', '.join(map(str,cages)))
-      return cages
+      warnings.warn("Mouse %s found in multiple cages: %s."\
+                    % (mouse, ', '.join(map(str,cages))), stacklevel=2)
+      return tuple(cages)
 
     return cages[0]
 
   def getMice(self):
+    """
+    @return: names of registered animals
+    @rtype: frozenset(unicode, ...)
+    """
     return frozenset(self.__animalsByName)
 
-  def getInmates(self, cage = None):
+  def getInmates(self, cage=None):
+    """
+    @param cage: number of the cage
+    @type cage: int
+
+    @return: cages available in data if cage is C{None} animals detected in the cage otherwise
+    @rtype: frozenset(int, ...) if cage is C{None} C{frozenset(L{AnimalNode}, ...)} otherwise
+    """
     if cage == None:
       return frozenset(self.__cages)
 
@@ -180,6 +193,10 @@ class Data(object):
 #  def getFirstLick(self, corners = (), mice=()):
 
   def getStart(self):
+    """
+    @return: timestamp of the earliest visit registration
+    @rtype: convertable to float
+    """
     if self.icSessionStart is not None:
       return self.icSessionStart
 
@@ -191,6 +208,10 @@ class Data(object):
       return None
 
   def getEnd(self):
+    """
+    @return: timestamp of the latest visit registration
+    @rtype: convertable to float
+    """
     if self.icSessionEnd is not None:
       return self.icSessionEnd
 
@@ -210,7 +231,7 @@ class Data(object):
       self.excluded.extend(loganalyzer(self))
 
   def getExcludedData(self):
-    print "WARNING: deprecated method getExcludedData() called."
+    deprecated("Deprecated method getExcludedData() called; use getExcluded() instead.")
     return self.getExcluded()
 
   def getExcluded(self):
