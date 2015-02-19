@@ -178,6 +178,8 @@ class OldLogAnalyzer(ILogAnalyzer):
       notes = collections.Counter(l.Notes for l in warnings)
       for note, n in sorted(notes.items()):
         print "%s: %d time(s)" % (note, n)
+
+    return () #dummy return to keep _logAnalysis happy 
       
 
 class PresenceLogAnalyzer(ILogAnalyzer):
