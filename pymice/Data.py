@@ -1063,6 +1063,9 @@ class Loader(Data):
       else:
         warnings.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
 
+    if len(logAnalyzers) > 0:
+      getLog = True
+
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
 
     self._initCache()
@@ -1534,7 +1537,7 @@ class Merger(Data):
     getLog = kwargs.pop('getLog', False)
     getEnv = kwargs.pop('getEnv', False)
     getHw = kwargs.pop('getHw', False)
-    logAnalyzers = kwargs.pop('loganalyzers', [])
+    logAnalyzers = kwargs.pop('logAnalyzers', [])
 
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
@@ -1553,8 +1556,15 @@ class Merger(Data):
         deprecated("Obsolete argument %s given for Merger constructor." % key)
         getHw = value
 
+      elif key == 'loganalyzers':
+        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        logAnalyzers = value
+
       else:
         warnings.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
+
+    if len(logAnalyzers) > 0:
+      getLog = True
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
 
