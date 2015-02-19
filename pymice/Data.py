@@ -180,7 +180,7 @@ class Data(object):
   def getInmates(self, cage=None):
     """
     @param cage: number of the cage
-    @type cage: int
+    @type cage: convertable to int
 
     @return: cages available in data if cage is C{None} animals detected in the cage otherwise
     @rtype: frozenset(int, ...) if cage is C{None} C{frozenset(L{AnimalNode}, ...)} otherwise
@@ -188,7 +188,7 @@ class Data(object):
     if cage == None:
       return frozenset(self.__cages)
 
-    return self.__cages[cage] # is a frozenset already
+    return self.__cages[int(cage)] # is a frozenset already
 
 #  def getFirstLick(self, corners = (), mice=()):
 
