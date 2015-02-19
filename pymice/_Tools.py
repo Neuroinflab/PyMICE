@@ -157,7 +157,7 @@ class LickometerLogAnalyzer(ILogAnalyzer):
               results.append(ExcludeMouseData(startTime=tstart,
                       endTime=tstop, logType='Lickometer',
                       cage=cage, side=side,
-                      notes=str(sum(med_hist[tstartidx:tstopidx])) 
+                      notes=str(sum(medHist[tstartidx:tstopidx])) 
                       + ' cases. ' + self.notes))
 
     return results 
