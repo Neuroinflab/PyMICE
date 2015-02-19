@@ -96,7 +96,7 @@ class ExcludeMouseData(object):
     for key in ['cage', 'corner', 'side']:
       self.location[key] = kwargs.pop(key, None)
 
-    self.location.extend(kwargs)
+    self.location.update(kwargs)
           
   def __repr__(self):
     ss = '\n'.join(['Exclude %s from %s to %s' %(self.logType, 
