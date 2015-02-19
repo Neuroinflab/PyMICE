@@ -1,0 +1,155 @@
+[SA 1 dark]
+startdate = 12.03.2013
+starttime = 13:00
+enddate = 12.03.2013
+endtime = 23:59
+
+[SA 1 light]
+startdate = 13.03.2013
+starttime = 00:00
+enddate = 13.03.2013
+endtime = 12:00
+
+[SA 2 dark]
+startdate = 13.03.2013
+starttime = 12:00
+enddate = 13.03.2013
+endtime = 23:59
+
+[SA 2 light]
+startdate = 14.03.2013
+starttime = 00:00
+enddate = 14.03.2013
+endtime = 12:00
+
+[SA 3 dark]
+startdate = 14.03.2013
+starttime = 12:00
+enddate = 14.03.2013
+endtime = 23:59
+
+[SA 3 light]
+startdate = 15.03.2013
+starttime = 00:00
+enddate = 15.03.2013
+endtime = 12:00
+
+[NPA 1 dark]
+startdate = 15.03.2013
+starttime = 12:00
+enddate = 15.03.2013
+endtime = 23:59
+
+[NPA 1 light]
+startdate = 16.03.2013
+starttime = 00:00
+enddate = 16.03.2013
+endtime = 12:00
+
+[NPA 2 dark]
+startdate = 16.03.2013
+starttime = 12:00
+enddate = 16.03.2013
+endtime = 23:59
+
+[NPA 2 light]
+startdate = 17.03.2013
+starttime = 00:00
+enddate = 17.03.2013
+endtime = 12:00
+
+[NPA 3 dark]
+startdate = 17.03.2013
+starttime = 12:00
+enddate = 17.03.2013
+endtime = 23:59
+
+[NPA 3 light]
+startdate = 18.03.2013
+starttime = 00:00
+enddate = 18.03.2013
+endtime = 12:00
+
+[Place Pref 1 dark]
+startdate = 18.03.2013
+starttime = 12:00
+enddate = 18.03.2013
+endtime = 23:59
+
+[Place Pref 1 light]
+startdate = 19.03.2013
+starttime = 00:00
+enddate = 19.03.2013
+endtime = 12:00
+
+[Place Pref 2 dark]
+startdate = 19.03.2013
+starttime = 12:00
+enddate = 19.03.2013
+endtime = 23:59
+
+[Place Pref 2 light]
+startdate = 20.03.2013
+starttime = 00:00
+enddate = 20.03.2013
+endtime = 12:00
+
+[Place Pref 3 dark]
+startdate = 20.03.2013
+starttime = 12:00
+enddate = 20.03.2013
+endtime = 23:59
+
+[Place Pref 3 light]
+startdate = 21.03.2013
+starttime = 00:00
+enddate = 21.03.2013
+endtime = 12:00
+
+[Rev Learning 1 dark]
+startdate = 21.03.2013
+starttime = 12:00
+enddate = 21.03.2013
+endtime = 23:59
+
+[Rev Learning 1 light]
+startdate = 22.03.2013
+starttime = 00:00
+enddate = 22.03.2013
+endtime = 12:00
+
+[Rev Learning 2 dark]
+startdate = 22.03.2013
+starttime = 12:00
+enddate = 22.03.2013
+endtime = 23:59
+
+[Rev Learning 2 light]
+startdate = 23.03.2013
+starttime = 00:00
+enddate = 23.03.2013
+endtime = 12:00
+
+[Rev Learning 3 dark]
+startdate = 23.03.2013
+starttime = 12:00
+enddate = 23.03.2013
+endtime = 23:59
+
+[Rev Learning 3 light]
+startdate = 24.03.2013
+starttime = 00:00
+enddate = 24.03.2013
+endtime = 12:00
+
+[Rev Learning 4 dark]
+startdate = 24.03.2013
+starttime = 12:00
+enddate = 24.03.2013
+endtime = 23:59
+
+[Rev Learning 4 light]
+startdate = 25.03.2013
+starttime = 00:00
+enddate = 25.03.2013
+endtime = 12:00
