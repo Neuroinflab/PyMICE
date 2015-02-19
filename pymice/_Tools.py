@@ -166,7 +166,7 @@ class OldLogAnalyzer(ILogAnalyzer):
   """Moved here from miceloader2, just prints warnings and errors"""
   def __call__(self, md):
     log = md.getLog()
-    errors = [l for l in log if log.Category  == 'Error' and l.Type not in ('Lickometer', 'Nosepoke')]
+    errors = [l for l in log if l.Category  == 'Error' and l.Type not in ('Lickometer', 'Nosepoke')]
 
     if len(errors) > 0:
       print '%d errors' % len(errors)
