@@ -192,7 +192,7 @@ class PresenceLogAnalyzer(ILogAnalyzer):
     for cage in md.getInmates():
       for corner in range(1, 5):
         tt = np.array([float(l.DateTime) for l in log \
-                       if l.Cage == cage and l.Corner == corner and log.Notes.startswith('Presence signal')])
+                       if l.Cage == cage and l.Corner == corner and l.Notes.startswith('Presence signal')])
         if len(tt) > 0:
           # print cage, corner, len(events)
           ttOrig = tt.copy()
