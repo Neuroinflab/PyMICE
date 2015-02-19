@@ -139,7 +139,7 @@ class LickometerLogAnalyzer(ILogAnalyzer):
         if len(tt) > 0:
           ttMin = tt.min()
           span = tt.max() - ttMin
-          nBins = np.ceil(span / self.med_bin)
+          nBins = np.ceil(span / self.medBin)
           medBins = np.linspace(ttMin, ttMin + nBins * self.medBin, int(nBins) + 1)
           medHist, _ = np.histogram(tt, bins=medBins)
           # short_bins = np.arange(tt.min(), tt.max() 
