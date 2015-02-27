@@ -357,6 +357,10 @@ class NosepokeNode(DataNode):
   def Duration(self):
     return self.End - self.Start
 
+  @property
+  def Door(self):
+    return 'left' if self.Side % 2 == 1 else 'right'
+
 
 class GroupNode(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Name', 'Animals']
