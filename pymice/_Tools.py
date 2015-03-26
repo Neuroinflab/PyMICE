@@ -58,12 +58,15 @@ def hTime(t):
                        time.localtime(integer))
 
 EPOCH = datetime(1970,1,1)
-UTC_OFFSET = time.mktime(EPOCH.timetuple())
+#UTC_OFFSET = time.mktime(EPOCH.timetuple())
 
 def convertTime(tStr):
+  """
+  Converts UTC time to local timestamp
+  """
   tSplit = tStr.replace('-', ' ').replace(':', ' ').split()
   subSec = float(tSplit[5]) if len(tSplit) == 6 else 0.
-  return (datetime(*map(int, tSplit[:5])) - EPOCH).total_seconds() + subSec + UTC_OFFSET # a hook for backward compatibility
+  return (datetime(*map(int, tSplit[:5])) - EPOCH).total_seconds() + subSec # a hook for backward compatibility
 
   #try:
   #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M:%S'))\

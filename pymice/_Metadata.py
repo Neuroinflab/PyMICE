@@ -5,7 +5,6 @@ ggg
 """
 
 import os 
-import time
 import datetime
 import csv
 import re
@@ -18,7 +17,7 @@ import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
-from ._Tools import deprecated, convertTime
+from ._Tools import deprecated, convertTime, EPOCH
 
 
 
@@ -477,21 +476,13 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           value = self.get(sec, option)
 
         except NoOptionError:
-          value = self.get(sec, option + 'date') + ' ' + self.get(sec, option + 'time')
+          day, month, year = self.get(sec, option + 'date').split('.')
+          time = self.get(sec, option + 'time').split(':')
+          ts = map(int, [year, month, day] + time)
+          t = (datetime(*ts) - EPOCH).total_seconds()
 
           deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
                      (option, option, option))
-          try:
-            ts = time.strptime(value, '%d.%m.%Y %H:%M:%S')
-
-          except ValueError:
-            try:  
-              ts = time.strptime(value, '%d.%m.%Y %H:%M')
-
-            except ValueError:
-              raise ValueError('Wrong date format in %s: %s' % (self.fname, value))
-
-          t = time.mktime(ts)
 
         else:
           t = convertTime(value)
