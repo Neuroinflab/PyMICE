@@ -5,7 +5,7 @@ ggg
 """
 
 import os 
-import datetime
+from datetime import datetime
 import csv
 import re
 import collections
