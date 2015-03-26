@@ -1,191 +1,191 @@
 [SA 1 dark]
 startdate = 28.08.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 29.08.2012
-endtime = 02:00
+endtime = 01:00
 
 [SA 1 light]
 startdate = 29.08.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 29.08.2012
-endtime = 14:00
+endtime = 13:00
 
 [SA 2 dark]
 startdate = 29.08.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 30.08.2012
-endtime = 02:00
+endtime = 01:00
 
 [SA 2 light]
 startdate = 30.08.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 30.08.2012
-endtime = 14:00
+endtime = 13:00
 
 [SA 3 dark]
 startdate = 30.08.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 31.08.2012
-endtime = 02:00
+endtime = 01:00
 
 [SA 3 light]
 startdate = 31.08.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 31.08.2012
-endtime = 14:00
+endtime = 13:00
 
 [SA 4 dark]
 startdate = 31.08.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 01.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [SA 4 light]
 startdate = 01.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 01.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [SA 5 dark]
 startdate = 01.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 02.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [SA 5 light]
 startdate = 02.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 02.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [NPA 1 dark]
 startdate = 02.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 03.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [NPA 1 light]
 startdate = 03.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 03.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [NPA 2 dark]
 startdate = 03.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 04.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [NPA 2 light]
 startdate = 04.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 04.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Place Pref 1 dark]
 startdate = 04.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 05.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Place Pref 1 light]
 startdate = 05.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 05.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Place Pref 2 dark]
 startdate = 05.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 06.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Place Pref 2 light]
 startdate = 06.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 06.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Place Pref 3 dark]
 startdate = 06.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 07.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Place Pref 3 light]
 startdate = 07.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 07.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Rev Learning 1 dark]
 startdate = 07.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 08.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Rev Learning 1 light]
 startdate = 08.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 08.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Rev Learning 2 dark]
 startdate = 08.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 09.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Rev Learning 2 light]
 startdate = 09.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 09.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Rev Learning 3 dark]
 startdate = 09.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 10.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Rev Learning 3 light]
 startdate = 10.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 10.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Extinction 1 dark]
 startdate = 10.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 11.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Extinction 1 light]
 startdate = 11.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 11.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Extinction 2 dark]
 startdate = 11.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 12.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Extinction 2 light]
 startdate = 12.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 12.09.2012
-endtime = 14:00
+endtime = 13:00
 
 [Extinction 3 dark]
 startdate = 12.09.2012
-starttime = 14:00
+starttime = 13:00
 enddate = 13.09.2012
-endtime = 02:00
+endtime = 01:00
 
 [Extinction 3 light]
 startdate = 13.09.2012
-starttime = 02:00
+starttime = 01:00
 enddate = 13.09.2012
-endtime = 14:00
+endtime = 13:00
