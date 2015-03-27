@@ -52,11 +52,11 @@ def ensureInt(x):
 
 def hTime(t):
   """
-  Convert timestamp t to a human-readible string.
+  Convert timestamp t to a human-readible UTC string.
   """
   dec, integer = modf(t)
   return time.strftime("%Y-%m-%d %H:%M:%S" + ('%01.3f' % dec)[1:],
-                       time.localtime(integer))
+                       time.gmtime(integer))
 
 EPOCH = datetime(1970,1,1)
 #UTC_OFFSET = time.mktime(EPOCH.timetuple())

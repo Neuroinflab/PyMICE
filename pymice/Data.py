@@ -574,9 +574,9 @@ class Data(object):
 
     >>> for v in ml_icp3.getVisits(order='Start'):
     ...   print hTime(v.Start)
-    2012-12-18 12:13:14.139
-    2012-12-18 12:18:55.421
-    2012-12-18 12:19:55.421
+    2012-12-18 11:13:14.139
+    2012-12-18 11:18:55.421
+    2012-12-18 11:19:55.421
 
     >>> for v in ml_l1.getVisits(mice='Minnie'):
     ...   print hTime(v.Start)
@@ -949,7 +949,7 @@ def fixSessions(data, keys, sessions=[], tzinfo=None):
           if any(row[k] <= end for k in keys):
             warnings.warn(UserWarning('Row partially after session!'))
 
-          if len(session) == 0:
+          if len(sessions) == 0:
             warnings.warn(UserWarning('No session left!'))
 
           row = None
@@ -1803,6 +1803,7 @@ if __name__ == '__main__':
   import doctest
   testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../test'))
   TEST_GLOBALS = {
+    #XXX: ml_l1 - not sure if data formad is valid
     'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip'), getNpokes=True),
     #'ml_a1': Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
     'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'), getNpokes=True,
