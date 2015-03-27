@@ -17,7 +17,7 @@ import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
-from ._Tools import deprecated, convertTime, EPOCH
+from ._Tools import deprecated, convertTime, EPOCH, floatDateTime
 
 
 
@@ -441,8 +441,9 @@ class Phase(MetadataNode):
 
 
 class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
-  def __init__(self, path, fname=None, tzone=None): 
+  def __init__(self, path, fname=None, tzone=None, tzinfo=None): 
     self.tzone = pytz.timezone('CET') if tzone is None else tzone
+    self.tzinfo = tzinfo
 
     RawConfigParser.__init__(self)
     self.path = path               
@@ -470,6 +471,12 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     """
 
     if isinstance(sec, basestring):
+      try:
+        tzinfo = pytz.timezone(self.get(sec, 'tzinfo'))
+
+      except NoOptionError, pytz.UnknownTimeZoneError:
+        tzinfo = self.tzinfo
+
       times = []
       for option in ('start', 'end'):
         try:
@@ -479,13 +486,13 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           day, month, year = self.get(sec, option + 'date').split('.')
           time = self.get(sec, option + 'time').split(':')
           ts = map(int, [year, month, day] + time)
-          t = (datetime(*ts) - EPOCH).total_seconds()
+          t = floatDateTime(*ts, **{'tzinfo': tzinfo})
 
           deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
                      (option, option, option))
 
         else:
-          t = convertTime(value)
+          t = convertTime(value, tzinfo)
 
         times.append(t)
 

@@ -25,7 +25,7 @@ from xml.dom import minidom
 
 from operator import itemgetter, methodcaller, attrgetter
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
-                    LogNode, EnvironmentNode, HardwareEventNode
+                    LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
 from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime, convertTime
 
@@ -89,6 +89,7 @@ class Data(object):
     self.icSessionStart = None
     self.icSessionEnd = None
     self.__sessions = np.array([], dtype=object)
+    self.__sessionsStarts = np.array([])
     self.__cages = {}
     self.__animal2cage = {}
     self.__animalVisits = {}
@@ -515,10 +516,10 @@ class Data(object):
   def _getTimeMask(time, startTime=None, endTime=None):
     mask = None
     if startTime is not None:
-      mask = startTime <= time
+      mask = float(startTime) <= time
 
     if endTime is not None:
-      timeMask = endTime > time
+      timeMask = float(endTime) > time
       mask = timeMask if mask is None else mask * timeMask
 
     return mask
@@ -918,6 +919,47 @@ def convertStr(x):
   return None if x == '' else x
 
 
+def fixSessions(data, keys, sessions=[], tzinfo=None):
+  sessions = list(sessions)
+  data = list(data)
+  while len(sessions) > 0 and len(data) > 0:
+    session = sessions.pop(0)
+    if session.Start.tzinfo != session.End.tzinfo: # XXX
+      warnings.warn(UserWarning('Timezone changed within a session!'))
+      #TODO - something to cope with it
+
+    start = session.Start.replace(tzinfo=None)
+    end = session.End.replace(tzinfo=None)
+    if end < start:
+      warnings.warn(UserWarning('Session is inverted!'))
+
+    row = data[0]
+    while row is not None:#all(row[k] <= end for k in keys):
+      if any(row[k] < start for k in keys):
+        warnings.warn(UserWarning('Row (at least partially) before session!'))
+
+      for k in keys:
+        row[k] = row[k].replace(tzinfo=session.Start.tzinfo)
+
+      data.pop(0)
+      if len(data) > 0:
+        row = data[0]
+        if any(row[k] > end for k in keys):
+          # next session
+          if any(row[k] <= end for k in keys):
+            warnings.warn(UserWarning('Row partially after session!'))
+
+          if len(session) == 0:
+            warnings.warn(UserWarning('No session left!'))
+
+          row = None
+
+      else:
+        row = None
+
+    
+
+
 class Loader(Data):
   _legacy = {'Animals': {'Name': 'AnimalName',
                          'Tag': 'AnimalTag',
@@ -1132,15 +1174,18 @@ class Loader(Data):
         offset = offset.childNodes[0]
         assert offset.nodeType == offset.TEXT_NODE
         offset = offset.nodeValue
+
         interval = session.getElementsByTagName('Interval')[0]
         start = interval.getElementsByTagName('Start')[0]
         start = start.childNodes[0]
         assert start.nodeType == start.TEXT_NODE
         start = dateutil.parser.parse(start.nodeValue)
+
         end = interval.getElementsByTagName('End')[0]
         end = end.childNodes[0]
         assert end.nodeType == end.TEXT_NODE
         end = dateutil.parser.parse(end.nodeValue)
+
         if start.tzinfo != end.tzinfo:
           warnings.warn(UserWarning('Timezone changed!'))
 
@@ -1151,9 +1196,9 @@ class Loader(Data):
              (sessionStart <= start and end <= sessionEnd):
               warnings.warn(UserWarning('Temporal overlap of sessions!'))
 
-        sessions.append((start, end))
+        sessions.append(SessionNode(Start=start, End=end))
 
-      sessions = sorted(sessions)
+      sessions = sorted(sessions, key=attrgetter('Start'))
 
     except:
       sessions = None
@@ -1171,9 +1216,13 @@ class Loader(Data):
       vid2nps = dict(zip(vids, visitNosepokes))
 
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
+
       npVids = nosepokes.pop('_vid')
 
       nosepokes = self._makeDicts(nosepokes)
+      if sessions is not None:
+        fixSessions(nosepokes, ['Start', 'End'], sessions)
+
       for vid, nosepoke in zip(npVids, nosepokes):
         try:
           vid2nps[vid].append(nosepoke)
@@ -1191,6 +1240,9 @@ class Loader(Data):
       visits['Nosepokes'] = [None] * len(tags)
       
     visits = self._makeDicts(visits)
+    if sessions is not None:
+      fixSessions(visits, ['Start', 'End'], sessions)
+
     result = {'animals': animals,
               'groups': groups.values(),
               'visits': visits,
@@ -1198,16 +1250,28 @@ class Loader(Data):
              }
 
     if getLog:
-      logs = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
-      result['logs'] = self._makeDicts(logs)
+      log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
+      log = self._makeDicts(log)
+      if sessions is not None:
+        fixSessions(log, ['DateTime'], sessions)
+
+      result['logs'] = log
 
     if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
-      result['environment'] = self._makeDicts(environment)
+      environment = self._makeDicts(environment)
+      if sessions is not None:
+        fixSessions(environment, ['DateTime'], sessions)
+
+      result['environment'] = environment
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
-      result['hardware'] = self._makeDicts(hardware)
+      hardware = self._makeDicts(hardware)
+      if sessions is not None:
+        fixSessions(hardware, ['DateTime'], sessions)
+
+      result['hardware'] = hardware
 
     return result
 

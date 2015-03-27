@@ -135,12 +135,37 @@ class floatDateTime(datetime):
                          tmp.hour, tmp.minute, tmp.second,
                          tmp.microsecond, tmp.tzinfo)
 
+  def replace(self, year=None, month=None, day=None, hour=None, minute=None, second=None,
+                    microsecond=None, *args, **kwargs):
+    tzinfoPresent = ('tzinfo' in kwargs) ^ (len(args) == 1)
+    if tzinfoPresent:
+      tzinfo = kwargs['tzinfo'] if 'tzinfo' in kwargs else args[0]
+
+    return floatDateTime(self.year if year is None else year,
+                         self.month if month is None else month,
+                         self.day if day is None else day,
+                         self.hour if hour is None else hour,
+                         self.minute if minute is None else minute,
+                         self.second if second is None else second,
+                         self.microsecond if microsecond is None else microsecond,
+                         tzinfo if tzinfoPresent else self.tzinfo)
+
+#astimezone
+#fromtimestamp
+#utcfromtimestamp
+#fromordinal
+#combine
+#strptime
+#today
+#now
+#utcnow
+
 
 def toFloatDt(tmp):
   if tmp is None or isinstance(tmp, floatDateTime):
     return tmp
 
-  if not isinstance(tmp, datatime):
+  if not isinstance(tmp, datetime):
     tmp = datetime.fromtimestamp(float(tmp))
 
   return floatDateTime(tmp.year, tmp.month, tmp.day,

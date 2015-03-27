@@ -101,6 +101,16 @@ class DataNode(object):
   def select(self, query):
     return map(self.__dict__.get, query)
 
+
+class SessionNode(DataNode):
+  _baseAttrs = DataNode._baseAttrs + ['Start', 'End']
+
+  def __init__(self, Start, End, **kwargs):
+    DataNode.__init__(self, **kwargs)
+    self.Start = toFloatDt(Start)
+    self.End = toFloatDt(End)
+
+
 # TODO
 class LogNode(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Category', 'Type', 'Cage',
