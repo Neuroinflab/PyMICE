@@ -5,7 +5,8 @@ _Tools.py
 
 Copyright (c) 2012-2015 Laboratory of Neuroinformatics. All rights reserved.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 import time
 import warnings
 from math import modf
@@ -60,13 +61,200 @@ def hTime(t):
 EPOCH = datetime(1970,1,1)
 #UTC_OFFSET = time.mktime(EPOCH.timetuple())
 
-def convertTime(tStr):
+EPOCH_UTC = datetime(1970, 1, 1, tzinfo=pytz.UTC)
+
+class floatDateTime(datetime):
+  def __init__(self, *args, **kwargs):
+    if len(args) == 1 and isinstance(args[0], datetime):
+      tmp = args[0]
+      datetime.__init__(self, tmp.year, tmp.month, tmp.day,
+                        tmp.hour, tmp.minute, tmp.second,
+                        tmp.microsecond, tmp.tzinfo)
+      if isinstance(tmp, floatDateTime):
+        self.__timestamp = float(tmp)
+        return
+
+    else:
+      datetime.__init__(self, *args, **kwargs)
+
+    self.__timestamp = datetime.__sub__(self, EPOCH if self.tzinfo is None else EPOCH_UTC).total_seconds()
+
+  def __float__(self):
+    return self.__timestamp
+
+  def __int__(self):
+    return int(self.__timestamp)
+
+  def __long__(self):
+    return long(self.__timestamp)
+
+  def __add__(self, x):
+    if isinstance(x, timedelta):
+      dt = x.total_seconds()
+
+    elif isinstance(x, (float, int, long)):
+      dt = x
+
+    else:
+      raise TypeError("unsupported operand type(s) for +: 'floatDateTime' and '%s'" %\
+                      x.__class__.__name__)
+
+    tmp = datetime.fromtimestamp(self.__timestamp + dt, self.tzinfo)
+    return floatTimeDelta(tmp.year, tmp.month, tmp.day,
+                          tmp.hour, tmp.minute, tmp.second,
+                          tmp.microsecond, tmp.tzinfo)
+
+  def __radd__(self, x):
+    try:
+      return self + x
+
+    except TypeError:
+       raise TypeError("unsupported operand type(s) for +: '%s' and 'floatDateTime'" %\
+                       x.__class__.__name__)
+
+  def __sub__(self, x):
+    if isinstance(x, floatDateTime):
+      return floatTimeDelta(seconds=self.__timestamp - float(x))
+
+    if isinstance(x, datetime):
+      timestamp = (x - (EPOCH if self.tzinfo is None else EPOCH_UTC)).total_seconds()
+      return floatTimeDelta(seconds=self.__timestamp - timestamp)
+
+    if isinstance(x, timedelta):
+      dt = x.total_seconds()
+
+    elif isinstance(x, (float, int, long)):
+      dt = x
+      
+    else:
+      raise TypeError("unsupported operand type(s) for -: 'floatDateTime' and '%s'" %\
+                      x.__class__.__name__)
+
+    tmp = datetime.fromtimestamp(self.__timestamp - dt, self.tzinfo)
+    return floatDateTime(tmp.year, tmp.month, tmp.day,
+                         tmp.hour, tmp.minute, tmp.second,
+                         tmp.microsecond, tmp.tzinfo)
+
+
+def toFloatDt(tmp):
+  if tmp is None or isinstance(tmp, floatDateTime):
+    return tmp
+
+  if not isinstance(tmp, datatime):
+    tmp = datetime.fromtimestamp(float(tmp))
+
+  return floatDateTime(tmp.year, tmp.month, tmp.day,
+                       tmp.hour, tmp.minute, tmp.second,
+                       tmp.microsecond, tmp.tzinfo)
+
+
+class floatTimeDelta(timedelta):
+  def __float__(self):
+    return self.total_seconds()
+
+  def __int__(self):
+    return int(self.total_seconds())
+
+  def __long__(self):
+    return long(self.total_seconds())
+
+  def __add__(self, x):
+    if isinstance(x, timedelta):
+      return floatTimeDelta(seconds=self.total_seconds() + x.total_seconds())
+
+    if isinstance(x, (float, int, long)):
+      return floatTimeDelta(seconds=self.total_seconds() + x)
+
+    if isinstance(x, floatDateTime):
+      timestamp = float(x)
+
+    elif isinstance(x, datetime):
+      timestamp = (x - EPOCH if self.tzinfo is None else EPOCH_UTC).total_seconds()
+    
+    else:
+      raise TypeError("unsupported operand type(s) for +: 'floatTimeDelta' and '%s'" %\
+                      x.__class__.__name__)
+
+    tmp = datetime.fromtimestamp(self.total_seconds() + timestamp, x.tzinfo)
+    return floatDateTime(tmp.year, tmp.month, tmp.day,
+                         tmp.hour, tmp.minute, tmp.second,
+                         tmp.microsecond, tmp.tzinfo)
+
+  def __radd__(self, x):
+    try:
+      return self + x
+
+    except TypeError:
+      raise TypeError("unsupported operand type(s) for +: '%s' and 'floatTimeDelta'" %\
+                      x.__class__.__name__)
+
+  def __sub__(self, x):
+    if isinstance(x, timedelta):
+      return floatTimeDelta(seconds=self.total_seconds() - x.total_seconds())
+
+    elif isinstance(x, (float, int, long)):
+      return floatTimeDelta(seconds=self.total_seconds() - x)
+
+    raise TypeError("unsupported operand type(s) for -: 'floatTimeDelta' and '%s'" %\
+                    x.__class__.__name__)
+
+  def __rsub__(self, x):
+    if isinstance(x, floatDateTime):
+      timestamp = float(x)
+
+    elif isinstance(x, datetime):
+      timestamp = (x - (EPOCH if self.tzinfo is None else EPOCH_UTC)).total_seconds()
+
+    else:
+      if isinstance(x, timedelta):
+        dt = x.total_seconds()
+
+      elif isinstance(x, (float, int, long)):
+        dt = x
+      
+      else:
+        raise TypeError("unsupported operand type(s) for -: '%s' and 'floatDateTime'" %\
+                        x.__class__.__name__)
+
+      return floatTimeDelta(seconds=dt - self.total_seconds())
+        
+    tmp = datetime.fromtimestamp(timestamp - self.total_seconds(), x.tzinfo)
+    return floatDateTime(tmp.year, tmp.month, tmp.day,
+                         tmp.hour, tmp.minute, tmp.second,
+                         tmp.microsecond, tmp.tzinfo)
+
+  def __mul__(self, x):
+    if isinstance(x, (float, int, long)):
+      return floatTimeDelta(seconds=self.total_seconds() * x)
+
+    raise TypeError("unsupported operand type(s) for *: 'floatTimeDelta' and '%s'" %\
+                    x.__class__.__name__)
+
+  def __rmul__(self, x):
+    try:
+      return self * x
+
+    except TypeError:
+      raise TypeError("unsupported operand type(s) for *: '%s' and 'floatTimeDelta'" %\
+                       x.__class__.__name__)
+
+  def __div__(self, x):
+    if isinstance(x, (float, int, long)):
+      return floatTimeDelta(seconds=self.total_seconds() / x)
+
+    raise TypeError("unsupported operand type(s) for /: 'floatTimeDelta' and '%s'" %\
+                    x.__class__.__name__)
+
+
+def convertTime(tStr, tzinfo=None):
   """
-  Converts UTC time to local timestamp
+  Converts time to timestamp - no timezones assumed.
   """
   tSplit = tStr.replace('-', ' ').replace(':', ' ').split()
-  subSec = float(tSplit[5]) if len(tSplit) == 6 else 0.
-  return (datetime(*map(int, tSplit[:5])) - EPOCH).total_seconds() + subSec # a hook for backward compatibility
+  args = map(int, tSplit[:5])
+  secs = int(float(tSplit[5]) * 1000000) if len(tSplit) == 6 else 0
+  args.extend((secs / 1000000, secs % 1000000, tzinfo))
+  return floatDateTime(*args)
 
   #try:
   #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M:%S'))\

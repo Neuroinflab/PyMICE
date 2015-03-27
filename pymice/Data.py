@@ -88,6 +88,7 @@ class Data(object):
   def _initCache(self):
     self.icSessionStart = None
     self.icSessionEnd = None
+    self.__sessions = np.array([], dtype=object)
     self.__cages = {}
     self.__animal2cage = {}
     self.__animalVisits = {}
@@ -1695,7 +1696,7 @@ class Merger(Data):
         pass
 
       else:
-        if minStart < self.__topTime:
+        if float(minStart) < self.__topTime:
           print "Possible temporal overlap of visits"
 
       self._insertVisits(visits)
@@ -1714,17 +1715,17 @@ class Merger(Data):
 
     if visits != None:
       maxEnd = [self.__topTime]
-      maxEnd.extend(v.End for v in visits)
+      maxEnd.extend(float(v.End) for v in visits)
       if self._getNp:
-        maxEnd.extend(np.End for v in visits if v.Nosepokes for np in v.Nosepokes)
+        maxEnd.extend(float(np.End) for v in visits if v.Nosepokes for np in v.Nosepokes)
 
       self.__topTime = max(maxEnd)
 
     if self._getHw and hardware:
-      self.__topTime = max(self.__topTime, max(hw.DateTime for hw in hardware))
+      self.__topTime = max(self.__topTime, float(max(hw.DateTime for hw in hardware)))
 
     if self._getLog and log:
-      self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
+      self.__topTime = max(self.__topTime, float(max(l.DateTime for l in log)))
 
     self._buildCache()
 
