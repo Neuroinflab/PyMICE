@@ -11,6 +11,11 @@ import time
 import warnings
 from math import modf
 
+from numbers import Number
+import numpy as np
+if not issubclass(np.floating, Number):
+  Number.register(np.floating)
+
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
@@ -88,6 +93,42 @@ class floatDateTime(datetime):
   def __long__(self):
     return long(self.__timestamp)
 
+  def __eq__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp == x
+
+    return datetime.__eq__(self, x)
+
+  def __le__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp <= x
+
+    return datetime.__le__(self, x)
+
+  def __ge__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp >= x
+
+    return datetime.__ge__(self, x)
+
+  def __ne__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp != x
+
+    return datetime.__ne__(self, x)
+
+  def __lt__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp < x
+
+    return datetime.__lt__(self, x)
+
+  def __gt__(self, x):
+    if isinstance(x, Number):
+      return self.__timestamp > x
+
+    return datetime.__gt__(self, x)
+
   def __add__(self, x):
     if isinstance(x, timedelta):
       dt = x.total_seconds()
@@ -164,6 +205,12 @@ class floatDateTime(datetime):
 def toFloatDt(tmp):
   if tmp is None or isinstance(tmp, floatDateTime):
     return tmp
+
+  if isinstance(tmp, (tuple, list)):
+    return floatDateTime(*tmp)
+
+  if isinstance(tmp, dict):
+    return floatDateTime(**tmp)
 
   if not isinstance(tmp, datetime):
     tmp = datetime.fromtimestamp(float(tmp))

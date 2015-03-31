@@ -15,6 +15,7 @@ import copy
 
 import warnings
 import dateutil.parser
+import pytz
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -1064,7 +1065,7 @@ class Loader(Data):
                 }
 
   def __init__(self, fname, getNp=False, getLog=False, getEnv=False, getHw=False,
-               logAnalyzers=(), **kwargs):
+               logAnalyzers=(), tzinfo=pytz.UTC, **kwargs):
     """
     @param fname: a path to the data file.
     @type fname: basestring
