@@ -25,10 +25,13 @@ import numpy as np
 from xml.dom import minidom
 
 from operator import itemgetter, methodcaller, attrgetter
+from itertools import izip, repeat
+from datetime import datetime, timedelta 
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
-from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime, convertTime
+from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime,\
+                   convertTime, timeToList, floatDateTime, timeListQueue
 
 callCopy = methodcaller('copy')
 
@@ -920,45 +923,100 @@ def convertStr(x):
   return None if x == '' else x
 
 
-def fixSessions(data, keys, sessions=[], tzinfo=None):
-  sessions = list(sessions)
-  data = list(data)
-  while len(sessions) > 0 and len(data) > 0:
-    session = sessions.pop(0)
-    if session.Start.tzinfo != session.End.tzinfo: # XXX
-      warnings.warn(UserWarning('Timezone changed within a session!'))
-      #TODO - something to cope with it
+def fixSessions(data, sessions=[]):
+  intervals = []
+  end = None
+  for session in sessions:
+    start = session.Start
+    if end is None:
+      intervals.append((start, True))
 
-    start = session.Start.replace(tzinfo=None)
-    end = session.End.replace(tzinfo=None)
-    if end < start:
-      warnings.warn(UserWarning('Session is inverted!'))
-
-    row = data[0]
-    while row is not None:#all(row[k] <= end for k in keys):
-      if any(row[k] < start for k in keys):
-        warnings.warn(UserWarning('Row (at least partially) before session!'))
-
-      for k in keys:
-        row[k] = row[k].replace(tzinfo=session.Start.tzinfo)
-
-      data.pop(0)
-      if len(data) > 0:
-        row = data[0]
-        if any(row[k] > end for k in keys):
-          # next session
-          if any(row[k] <= end for k in keys):
-            warnings.warn(UserWarning('Row partially after session!'))
-
-          if len(sessions) == 0:
-            warnings.warn(UserWarning('No session left!'))
-
-          row = None
+    else:
+      if end != start:
+        intervals.append((end, False))
+        intervals.append((start, True))
 
       else:
-        row = None
+        intervals.append((start, True))
 
-    
+      if start < end:
+        warnings.warn('Session overlap detected!')
+
+      if start + start.utcoffset() <= end + end.utcoffset():
+        warnings.warn('Session representations overlap, there is no hope. :-(')
+
+    end = session.End
+    if end < start:
+      warnings.warn("Negative session duration detected. Are you jocking, aren't you?")
+
+  if end is not None:
+    intervals.append((end, False))
+
+  intervals = [([t.year, t.month, t.day,
+                 t.hour, t.minute, t.second,
+                 t.microsecond], t.tzinfo, t.utcoffset(), s) for t, s in intervals]
+  intervals.append(None)
+  lastTz = intervals[0][1]
+  lastTo = intervals[0][2]
+
+  dataQueue = timeListQueue(data)
+  try:
+    timepoint = dataQueue.next()
+    lastTimepoint = timepoint
+    tpDT = datetime(*timepoint)
+    lastTpDt = tpDT
+    delta = tpDT - lastTpDt
+    zeroTd = delta
+    hourTd = timedelta(seconds=3600)
+    inSession = False
+    for interval in intervals:
+      if interval is not None:
+        sentinel, tz, to, nextSession = interval
+
+      offsetChange = to - lastTo
+      tzChanged = offsetChange != zeroTd
+      while timepoint <= sentinel or interval is None:
+        if not inSession:
+          warnings.warn('Timepoints out of session!')
+
+        if tzChanged:
+          if lastTpDt > tpDT:
+            if offsetChange > zeroTd:
+              warnings.warn('Another candidate for tzchange')
+
+            else:
+              warnings.warn('Time not monotonic!')
+
+          if offsetChange < zeroTd and delta > -offsetChange: #instead of abs
+            warnings.warn('Another candidate for tzchange')
+
+          timepoint.append(tz)
+
+          # no check if there are other possibilities of change
+
+        elif offsetChange > zeroTd and lastTpDt > tpDT:
+          tzChanged = True
+          timepoint.append(tz)
+
+        elif offsetChange < zeroTd and delta > -offsetChange: #instead of abs
+          tzChanged = True
+          timepoint.append(tz)
+
+        else:
+          timepoint.append(lastTz)
+
+        lastTimepoint = timepoint
+        lastTpDt = tpDT
+        timepoint = dataQueue.next()
+        tpDT = datetime(*timepoint)
+        delta = tpDT - lastTpDt
+
+      lastTz = tz
+      lastTo = to
+      inSession = nextSession
+
+  except StopIteration:
+    pass
 
 
 class Loader(Data):
@@ -1012,8 +1070,8 @@ class Loader(Data):
                             },
                  'IntelliCage/Visits': {'Tag': int,
                                         '_vid': int,
-                                        'Start': convertTime,
-                                        'End': convertTime,
+                                        'Start': timeToList,
+                                        'End': timeToList,
                                         #'ModuleName': convertStr,
                                         #'Cage': int,
                                         #'Corner': int,
@@ -1026,8 +1084,8 @@ class Loader(Data):
                                         #'VisitSolution': convertInt,
                                        },
                  'IntelliCage/Nosepokes': {'_vid': int,
-                                           'Start': convertTime,
-                                           'End': convertTime,
+                                           'Start': timeToList,
+                                           'End': timeToList,
                                            #'Side': int,
                                            #'LickNumber': int,
                                            'LickContactTime': convertFloat,
@@ -1042,7 +1100,7 @@ class Loader(Data):
                                            #'LED2State': convertInt,
                                            #'LED3State': convertInt,
                                           },
-                 'IntelliCage/Log': {'DateTime': convertTime,
+                 'IntelliCage/Log': {'DateTime': timeToList,
                                      #'Category': convertStr,
                                      #'Type': convertStr,
                                      #'Cage': convertInt,
@@ -1050,12 +1108,12 @@ class Loader(Data):
                                      #'Side': convertInt,
                                      #'Notes': convertStr,
                                     },
-                 'IntelliCage/Environment': {'DateTime': convertTime,
+                 'IntelliCage/Environment': {'DateTime': timeToList,
                                              'Temperature': convertFloat,
                                              #'Illumination': convertInt,
                                              #'Cage': convertInt,
                                             },
-                 'IntelliCage/HardwareEvents': {'DateTime': convertTime,
+                 'IntelliCage/HardwareEvents': {'DateTime': timeToList,
                                                 #'Type': convertInt,
                                                 #'Cage': convertInt,
                                                 #'Corner': convertInt,
@@ -1185,16 +1243,20 @@ class Loader(Data):
         end = interval.getElementsByTagName('End')[0]
         end = end.childNodes[0]
         assert end.nodeType == end.TEXT_NODE
-        end = dateutil.parser.parse(end.nodeValue)
+        end = end.nodeValue
+        end = None if end.startswith('0001') else dateutil.parser.parse(end)
 
-        if start.tzinfo != end.tzinfo:
+        if end is not None and start.tzinfo != end.tzinfo:
           warnings.warn(UserWarning('Timezone changed!'))
 
         for sessionStart, sessionEnd in sessions:
+          if sessionEnd is None:
+            continue
+
           if sessionStart < start < sessionEnd or\
-             sessionStart < end < sessionEnd or\
-             (start <= sessionStart and sessionEnd <= end) or\
-             (sessionStart <= start and end <= sessionEnd):
+             end is not None and sessionStart < end < sessionEnd or\
+             (end is not None and start <= sessionStart and sessionEnd <= end) or\
+             (end is not None and sessionStart <= start and end <= sessionEnd):
               warnings.warn(UserWarning('Temporal overlap of sessions!'))
 
         sessions.append(SessionNode(Start=start, End=end))
@@ -1205,24 +1267,42 @@ class Loader(Data):
       sessions = None
       pass
 
+    # timeToFix = []
+
     visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
     tags = visits.pop('Tag')
     vids = visits.pop('_vid')
 
-    visits['Animal'] = [tag2Animal[tag] for tag in tags]
+    vEnds = map(list, izip(visits['End'], repeat(True), repeat(None)))
+    vStarts = map(list, izip(visits['Start'], repeat(False), vEnds)) # start blocks end
+    timeToFix = [vEnds]
+    visitStartOrder = np.argsort(vids)
+    timeToFix.append(np.array(vStarts + [None], dtype=object)[visitStartOrder])
+
+    visits['Animal'] = map(tag2Animal.__getitem__, tags)
+                     #[tag2Animal[tag] for tag in tags]
 
     orphans = []
     if getNp:
       visitNosepokes = [[] for vid in vids]
       vid2nps = dict(zip(vids, visitNosepokes))
+      vid2tag = dict(zip(vids, tags))
 
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
 
       npVids = nosepokes.pop('_vid')
+      npEnds = map(list, izip(nosepokes['End'], repeat(True), repeat(None)))
+      npStarts = map(list, izip(nosepokes['Start'], repeat(False), npEnds))
+      npStarts = np.array(npStarts + [None], dtype=object)
+      npTags = np.array(map(vid2tag.__getitem__, npVids))
+
+      timeToFix.append(npEnds)
+      for tag in tag2Animal:
+        timeToFix.append(npStarts[npTags == tag])
 
       nosepokes = self._makeDicts(nosepokes)
-      if sessions is not None:
-        fixSessions(nosepokes, ['Start', 'End'], sessions)
+      #if sessions is not None:
+      #  fixSessions(nosepokes, ['Start', 'End'], sessions)
 
       for vid, nosepoke in zip(npVids, nosepokes):
         try:
@@ -1232,8 +1312,9 @@ class Loader(Data):
           nosepoke['VisitID'] = vid
           orphans.append(nosepoke)
 
-      map(methodcaller('sort', key=itemgetter('Start', 'End')),
-          visitNosepokes)
+      # XXX!!!
+      #map(methodcaller('sort', key=itemgetter('Start', 'End')),
+      #    visitNosepokes)
       visits['Nosepokes'] = visitNosepokes
 
 
@@ -1241,8 +1322,10 @@ class Loader(Data):
       visits['Nosepokes'] = [None] * len(tags)
       
     visits = self._makeDicts(visits)
-    if sessions is not None:
-      fixSessions(visits, ['Start', 'End'], sessions)
+
+    # XXX!!!
+    #if sessions is not None:
+    #  fixSessions(visits, ['Start', 'End'], sessions)
 
     result = {'animals': animals,
               'groups': groups.values(),
@@ -1252,28 +1335,35 @@ class Loader(Data):
 
     if getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
+      timeToFix.append(map(list, izip(log['DateTime'], repeat(False), repeat(None))))
+
       log = self._makeDicts(log)
-      if sessions is not None:
-        fixSessions(log, ['DateTime'], sessions)
+
+      #if sessions is not None:
+      #  fixSessions(log, ['DateTime'], sessions)
 
       result['logs'] = log
 
     if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
+      timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
       environment = self._makeDicts(environment)
-      if sessions is not None:
-        fixSessions(environment, ['DateTime'], sessions)
+      #if sessions is not None:
+      #  fixSessions(environment, ['DateTime'], sessions)
 
       result['environment'] = environment
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
+      timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
       hardware = self._makeDicts(hardware)
-      if sessions is not None:
-        fixSessions(hardware, ['DateTime'], sessions)
+      #if sessions is not None:
+      #  fixSessions(hardware, ['DateTime'], sessions)
 
       result['hardware'] = hardware
 
+    #XXX important only when timezone changes!
+    fixSessions(timeToFix, sessions)
     return result
 
   @staticmethod
@@ -1498,11 +1588,6 @@ class Loader(Data):
 
     self._buildCache()
 
-
-  @staticmethod
-  def convert_time(ll):
-    deprecated('Deprecated method convert_time() called; use convertTime() function instead.')
-    return convertTime(ll)
 
   @staticmethod
   def fromCSV(fname, lines = False):

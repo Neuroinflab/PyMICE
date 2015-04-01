@@ -16,6 +16,8 @@ import numpy as np
 if not issubclass(np.floating, Number):
   Number.register(np.floating)
 
+import heapq
+
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
@@ -317,6 +319,12 @@ class floatTimeDelta(timedelta):
     raise TypeError("unsupported operand type(s) for /: 'floatTimeDelta' and '%s'" %\
                     x.__class__.__name__)
 
+  def __neg__(self):
+    return floatTimeDelta(seconds=-self.total_seconds())
+
+  def __abs__(self):
+    return floatTimeDelta(seconds=abs(self.total_seconds()))
+
 
 def convertTime(tStr, tzinfo=None):
   """
@@ -327,6 +335,87 @@ def convertTime(tStr, tzinfo=None):
   secs = int(float(tSplit[5]) * 1000000) if len(tSplit) == 6 else 0
   args.extend((secs / 1000000, secs % 1000000, tzinfo))
   return floatDateTime(*args)
+
+def timeToList(tStr):
+  date, time = tStr.split()
+  tokens = date.split('-') + time.split(':')
+
+  if len(tokens) == 5:
+    return map(int, tokens) + [0, 0]
+
+  decimal, seconds = modf(float(tokens[5]))
+  return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
+
+class timeListList(list):
+  def __eq__(self, x):
+    return self[0] == x[0]
+
+  def __le__(self, x):
+    return self[0] <= x[0]
+
+  def __ge__(self, x):
+    return self[0] >= x[0]
+
+  def __ne__(self, x):
+    return self[0] != x[0]
+
+  def __lt__(self, x):
+    return self[0] < x[0]
+
+  def __gt__(self, x):
+    return self[0] > x[0]
+
+
+class timeListQueue(object):
+  # soo dirty...
+  def __init__(self, lists):
+    # list item: [[time list], locked, unlocks]
+    tmpLists = filter(None, map(timeListList, lists))
+    self.__heap = []
+    self.__locked = []
+    #self.__seen = set()
+    for item in tmpLists:
+      if item[0][1]:
+        self.__locked.append(item)
+
+      else:
+        self.__heap.append(item)
+
+    heapq.heapify(self.__heap)
+
+  def top(self):
+    try:
+      return self.__heap[0][0][0]
+
+    except IndexError:
+      raise StopIteration
+
+  def next(self):
+    try:
+      head = heapq.heappop(self.__heap)
+
+    except IndexError:
+      raise StopIteration
+
+    top, _, unlock = head.pop(0)
+
+    if unlock is not None:
+      unlock[1] = False
+      for i, locked in list(enumerate(self.__locked)):
+        if not locked[0][1]: #found!
+          heapq.heappush(self.__heap, locked)
+          self.__locked[i:] = self.__locked[i+1:] # -_-
+          break
+
+    if head:
+      if head[0][1]:
+        self.__locked.append(head)
+
+      else:
+        heapq.heappush(self.__heap, head)
+
+    return top
+
 
   #try:
   #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M:%S'))\
