@@ -1273,11 +1273,15 @@ class Loader(Data):
     tags = visits.pop('Tag')
     vids = visits.pop('_vid')
 
-    vEnds = map(list, izip(visits['End'], repeat(True), repeat(None)))
-    vStarts = map(list, izip(visits['Start'], repeat(False), vEnds)) # start blocks end
-    timeToFix = [vEnds]
-    visitStartOrder = np.argsort(vids)
-    timeToFix.append(np.array(vStarts + [None], dtype=object)[visitStartOrder])
+    if sessions is not None:
+      vEnds = map(list, izip(visits['End'], repeat(True), repeat(None)))
+      vStarts = map(list, izip(visits['Start'], repeat(False), vEnds)) # start blocks end
+      timeToFix = [vEnds]
+      visitStartOrder = np.argsort(vids)
+      timeToFix.append(np.array(vStarts + [None], dtype=object)[visitStartOrder])
+
+    else:
+      timeToFix = visits['End'] + visits['Start'] 
 
     visits['Animal'] = map(tag2Animal.__getitem__, tags)
                      #[tag2Animal[tag] for tag in tags]
@@ -1291,14 +1295,20 @@ class Loader(Data):
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
 
       npVids = nosepokes.pop('_vid')
-      npEnds = map(list, izip(nosepokes['End'], repeat(True), repeat(None)))
-      npStarts = map(list, izip(nosepokes['Start'], repeat(False), npEnds))
-      npStarts = np.array(npStarts + [None], dtype=object)
-      npTags = np.array(map(vid2tag.__getitem__, npVids))
 
-      timeToFix.append(npEnds)
-      for tag in tag2Animal:
-        timeToFix.append(npStarts[npTags == tag])
+      if sessions is not None:
+        npEnds = map(list, izip(nosepokes['End'], repeat(True), repeat(None)))
+        npStarts = map(list, izip(nosepokes['Start'], repeat(False), npEnds))
+        npStarts = np.array(npStarts + [None], dtype=object)
+        npTags = np.array(map(vid2tag.__getitem__, npVids))
+
+        timeToFix.append(npEnds)
+        for tag in tag2Animal:
+          timeToFix.append(npStarts[npTags == tag])
+
+      else:
+        timeToFix.extend(nosepokes['End'])
+        timeToFix.extend(nosepokes['Start'])
 
       nosepokes = self._makeDicts(nosepokes)
       #if sessions is not None:
@@ -1335,7 +1345,11 @@ class Loader(Data):
 
     if getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
-      timeToFix.append(map(list, izip(log['DateTime'], repeat(False), repeat(None))))
+      if sessions is not None:
+        timeToFix.append(map(list, izip(log['DateTime'], repeat(False), repeat(None))))
+
+      else:
+        timeToFix.extend(log['DateTime'])
 
       log = self._makeDicts(log)
 
@@ -1346,7 +1360,12 @@ class Loader(Data):
 
     if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
-      timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
+      if sessions is not None:
+        timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
+
+      else:
+        timeToFix.extend(environment['DateTime'])
+
       environment = self._makeDicts(environment)
       #if sessions is not None:
       #  fixSessions(environment, ['DateTime'], sessions)
@@ -1355,7 +1374,12 @@ class Loader(Data):
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
-      timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
+      if sessions is not None:
+        timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
+
+      else:
+        timeToFix.extend(hardware['DateTime'])
+
       hardware = self._makeDicts(hardware)
       #if sessions is not None:
       #  fixSessions(hardware, ['DateTime'], sessions)
@@ -1363,7 +1387,12 @@ class Loader(Data):
       result['hardware'] = hardware
 
     #XXX important only when timezone changes!
-    fixSessions(timeToFix, sessions)
+    if sessions is not None:
+      fixSessions(timeToFix, sessions)
+
+    else:
+      map(methodcaller('append', pytz.utc), timeToFix) # UTC assumed
+
     return result
 
   @staticmethod
