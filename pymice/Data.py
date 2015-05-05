@@ -1360,31 +1360,33 @@ class Loader(Data):
 
     if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
-      if sessions is not None:
-        timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
+      if environment is not None:
+        if sessions is not None:
+          timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
 
-      else:
-        timeToFix.extend(environment['DateTime'])
+        else:
+          timeToFix.extend(environment['DateTime'])
 
-      environment = self._makeDicts(environment)
-      #if sessions is not None:
-      #  fixSessions(environment, ['DateTime'], sessions)
+        environment = self._makeDicts(environment)
+        #if sessions is not None:
+        #  fixSessions(environment, ['DateTime'], sessions)
 
-      result['environment'] = environment
+        result['environment'] = environment
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
-      if sessions is not None:
-        timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
+      if hardware is not None:
+        if sessions is not None:
+          timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
 
-      else:
-        timeToFix.extend(hardware['DateTime'])
+        else:
+          timeToFix.extend(hardware['DateTime'])
 
-      hardware = self._makeDicts(hardware)
-      #if sessions is not None:
-      #  fixSessions(hardware, ['DateTime'], sessions)
+        hardware = self._makeDicts(hardware)
+        #if sessions is not None:
+        #  fixSessions(hardware, ['DateTime'], sessions)
 
-      result['hardware'] = hardware
+        result['hardware'] = hardware
 
     #XXX important only when timezone changes!
     if sessions is not None:
@@ -1403,6 +1405,12 @@ class Loader(Data):
 
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
+    try:
+      fh = zf.open(path + '.txt')
+
+    except KeyError:
+      return
+
     return self._fromCSV(zf.open(path + '.txt'), source=source,
                          aliases=self._aliasesZip.get(path),
                          convert=self._convertZip.get(path),
