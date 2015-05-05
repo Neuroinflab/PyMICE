@@ -272,7 +272,7 @@ class Bottles(MetadataNode):
   _filename = 'bottles.csv'
   _labels = ['name']
   _nextClass = Liquid
-  __parseLocation = re.compile('^\s*(?P<kind>\S+)\s+(?P<number>\d+)\s*$')
+  __parseLocation = re.compile('^\s*(?P<kind>corner|side)\s*(?P<number>\d+)\s*$')
 
   def __init__(self, Name, _next=None, **locations):
     self.Name = Name.decode('utf-8').lower()
@@ -351,9 +351,9 @@ class Phase(MetadataNode):
   _filename = 'phases.csv'
   _labels = ['start', 'end', 'name', 'type', 'iteration', 'partition', 'comments']
 
-  def __init__(self, Start, End, Name, Type, Iteration, Partition, Comments, _partitions, _bottles, **kwargs):
-    self.Start = convertTime(Start)
-    self.End = convertTime(End)
+  def __init__(self, Start, End, Name, Type, Iteration, Partition, Comments, _partitions, _bottles, tzinfo=None, **kwargs):
+    self.Start = convertTime(Start, tzinfo)
+    self.End = convertTime(End, tzinfo)
     self.Name = Name.decode('utf-8') if Name != '' else None
     self.Type = Type.decode('utf-8') if Type != '' else None
     self.Iteration = int(Iteration) if Iteration != '' else None
@@ -368,7 +368,7 @@ class Phase(MetadataNode):
         self.Bottles[cage] = _bottles[val]
       
   @classmethod
-  def fromCSV(cls, filename, **kwargs):
+  def fromCSV(cls, filename, tzinfo=None, **kwargs):
     if not os.path.exists(filename):
       return
 
@@ -380,6 +380,9 @@ class Phase(MetadataNode):
         for k, v in kwargs.items():
           assert k not in row
           row[k] = v
+
+        if tzinfo is not None:
+          row['tzinfo'] = tzinfo
 
         instance = cls(*byLabel, **row)
         if instance.Name is not None:
@@ -427,14 +430,15 @@ class Phase(MetadataNode):
     return result
 
   @classmethod
-  def fromMeta(cls, meta, **kwargs):
+  def fromMeta(cls, meta, tzinfo=None, **kwargs):
     bottles = Bottles.fromMeta(meta)
     groups = {}
     partitions = {}
     animals = Animal.fromMeta(meta, _groups=groups, _partitions=partitions)
     phases = cls.fromCSV(os.path.join(meta, cls._filename),
                          _partitions=partitions,
-                         _bottles=bottles)
+                         _bottles=bottles,
+                         tzinfo=tzinfo)
     return phases, animals, groups
 
 
