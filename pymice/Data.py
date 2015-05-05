@@ -946,7 +946,7 @@ def fixSessions(data, sessions=[]):
         warnings.warn('Session representations overlap, there is no hope. :-(')
 
     end = session.End
-    if end < start:
+    if end is not None and end < start:
       warnings.warn("Negative session duration detected. Are you jocking, aren't you?")
 
   if end is not None:
