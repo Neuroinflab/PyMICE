@@ -1371,7 +1371,10 @@ class Loader(Data):
         #if sessions is not None:
         #  fixSessions(environment, ['DateTime'], sessions)
 
-        result['environment'] = environment
+      else:
+        environment = []
+
+      result['environment'] = environment
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
@@ -1386,7 +1389,10 @@ class Loader(Data):
         #if sessions is not None:
         #  fixSessions(hardware, ['DateTime'], sessions)
 
-        result['hardware'] = hardware
+      else:
+        hardware = []
+
+      result['hardware'] = hardware
 
     #XXX important only when timezone changes!
     if sessions is not None:
