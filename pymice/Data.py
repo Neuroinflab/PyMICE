@@ -31,7 +31,8 @@ from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
 from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime,\
-                   convertTime, timeToList, floatDateTime, timeListQueue
+                   convertTime, timeToList, floatDateTime, timeListQueue,\
+                   PathZipFile
 
 callCopy = methodcaller('copy')
 
@@ -1195,7 +1196,12 @@ class Loader(Data):
 
   def _loadZip(self, fname, getNp=False, getLog=False, getEnv=False,
                getHw=False, source=None):
-    zf = zipfile.ZipFile(fname)
+    if isinstance(fname, basestring) and os.path.isdir(fname):
+      zf = PathZipFile(fname)
+
+    else:
+      zf = zipfile.ZipFile(fname)
+
     animalsLabels = set()
     animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
     legacyFormat = 'Tag' in animalsLabels
@@ -1417,7 +1423,7 @@ class Loader(Data):
     except KeyError:
       return
 
-    return self._fromCSV(zf.open(path + '.txt'), source=source,
+    return self._fromCSV(fh, source=source,
                          aliases=self._aliasesZip.get(path),
                          convert=self._convertZip.get(path),
                          oldLabels=oldLabels)
@@ -1486,7 +1492,7 @@ class Loader(Data):
     print 'loading data from %s' % fname
     #sid = self._registerSource(fname.decode('utf-8'))
 
-    if fname.endswith('.zip'):
+    if fname.endswith('.zip') or os.path.isdir(fname):
       data = self._loadZip(fname,
                            getNp=self._getNp,
                            getLog=self._getLog,

@@ -5,6 +5,7 @@ _Tools.py
 
 Copyright (c) 2012-2015 Laboratory of Neuroinformatics. All rights reserved.
 """
+import os
 from datetime import datetime, timedelta
 import pytz
 import time
@@ -425,3 +426,14 @@ class timeListQueue(object):
   #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M'))\
   #         + subSec
 
+
+class PathZipFile(object):
+  """
+  A class emulating zipfile.ZipFile behaviour with filesystem directories.
+  """
+  def __init__(self, path):
+    self.__path = path
+
+  def open(self, name, mode='r'):
+    fn = os.path.join(self.__path, name)
+    return open(fn, mode)
