@@ -72,6 +72,7 @@ class LickometerLogAnalyzer(ILogAnalyzer):
     log = md.getLog()
     for cage in md.getInmates():
       for side in range(1, 9):
+        # XXX: idea - get timestamps from md._Data_logDateTime
         tt = np.array([toTimestampUTC(l.DateTime) for l in log \
                        if l.Type == 'Lickometer' and l.Cage == cage and l.Side == side])
         if len(tt) > 0:
@@ -131,6 +132,7 @@ class PresenceLogAnalyzer(ILogAnalyzer):
     log = md.getLog(order='DateTime')
     for cage in md.getInmates():
       for corner in range(1, 5):
+        # XXX: idea - get timestamps from md._Data_logDateTime
         tt = np.array([toTimestampUTC(l.DateTime) for l in log \
                        if l.Cage == cage and l.Corner == corner and l.Notes.startswith('Presence signal')])
         if len(tt) > 0:
