@@ -144,9 +144,9 @@ class floatDateTime(datetime):
                       x.__class__.__name__)
 
     tmp = datetime.fromtimestamp(self.__timestamp + dt, self.tzinfo)
-    return floatTimeDelta(tmp.year, tmp.month, tmp.day,
-                          tmp.hour, tmp.minute, tmp.second,
-                          tmp.microsecond, tmp.tzinfo)
+    return floatDateTime(tmp.year, tmp.month, tmp.day,
+                         tmp.hour, tmp.minute, tmp.second,
+                         tmp.microsecond, tmp.tzinfo)
 
   def __radd__(self, x):
     try:
