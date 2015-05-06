@@ -9,14 +9,15 @@ Refactored by Jakub Kowalski on 2015-02-20.
 Copyright (c) 2012-2015 Laboratory of Neuroinformatics. All rights reserved.
 """
 import time
+from datetime import datetime
+from pytz import UTC
 from math import ceil
 import collections
 
 import numpy as np
 import matplotlib.mlab as mmlab
 
-from ._Tools import hTime
-
+from ._Tools import toTimestampUTC
 
 class ExcludeMiceData(object):
   """
@@ -40,8 +41,8 @@ class ExcludeMiceData(object):
   def __repr__(self):
     ss = 'Exclude %s from %s to %s\nin location: %s.'\
           % (self.logType,
-             hTime(self.startTime),
-             hTime(self.endTime),
+             self.startTime.strftime("%Y-%m-%d %H:%M:%S.%f"),
+             self.endTime.strftime("%Y-%m-%d %H:%M:%S.%f"),
              ', '.join('%s = %s' % x for x in self.location.items()),)
     if self.notes is not None:
       ss += '\n\nNotes:\n' + self.notes
@@ -71,7 +72,7 @@ class LickometerLogAnalyzer(ILogAnalyzer):
     log = md.getLog()
     for cage in md.getInmates():
       for side in range(1, 9):
-        tt = np.array([float(l.DateTime) for l in log \
+        tt = np.array([toTimestampUTC(l.DateTime) for l in log \
                        if l.Type == 'Lickometer' and l.Cage == cage and l.Side == side])
         if len(tt) > 0:
           ttMin = tt.min()
@@ -91,8 +92,8 @@ class LickometerLogAnalyzer(ILogAnalyzer):
               tstart = medBins[tstartidx]
               tstop = medBins[tstopidx]
               # print tstart, tstop
-              results.append(ExcludeMiceData(startTime=tstart,
-                      endTime=tstop, logType='Lickometer',
+              results.append(ExcludeMiceData(startTime=datetime.fromtimestamp(tstart, UTC),
+                      endTime=datetime.fromtimestamp(tstop, UTC), logType='Lickometer',
                       cage=cage, side=side,
                       notes=str(sum(medHist[tstartidx:tstopidx]))
                       + ' cases. ' + self.notes))
@@ -130,7 +131,7 @@ class PresenceLogAnalyzer(ILogAnalyzer):
     log = md.getLog(order='DateTime')
     for cage in md.getInmates():
       for corner in range(1, 5):
-        tt = np.array([float(l.DateTime) for l in log \
+        tt = np.array([toTimestampUTC(l.DateTime) for l in log \
                        if l.Cage == cage and l.Corner == corner and l.Notes.startswith('Presence signal')])
         if len(tt) > 0:
           # print cage, corner, len(events)
@@ -185,8 +186,9 @@ class PresenceLogAnalyzer(ILogAnalyzer):
               for tstartidx, tstopidx in idcs:
                 tstart = bins[tstartidx]
                 tstop = bins[tstopidx]
-                results.append(ExcludeMiceData(startTime=tstart,
-                        endTime=tstop, logType='Presence',
+                results.append(ExcludeMiceData(startTime=datetime.fromtimestamp(tstart, UTC),
+                        endTime=datetime.fromtimestamp(tstop, UTC),
+                        logType='Presence',
                         cage=cage, corner=corner,
                         notes=str(sum(hist[tstartidx:tstopidx]))
                         + ' cases. ' + self.notes))
@@ -221,7 +223,7 @@ class TestMiceData(ITestMiceData):
 
   def __call__(self, md, interval, **kwargs):
     result = True
-    for exc in md.getExcludedData():
+    for exc in md.getExcluded():
       if not self._single_test(exc, interval, **kwargs):
         return False
 
@@ -229,7 +231,7 @@ class TestMiceData(ITestMiceData):
 
   def _single_test(self, exc, interval, **kwargs):
     """
-    Perform Lickometer test on a single ExcludeMiceData object
+    Perform a test on a single ExcludeMiceData object
     """
     if exc.logType is self._logType and overlap(exc, interval):
       for key, value in kwargs.items():

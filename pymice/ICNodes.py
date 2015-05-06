@@ -7,7 +7,7 @@ Copyright (c) 2012-2014 Laboratory of Neuroinformatics. All rights reserved.
 """
 
 import warnings
-from _Tools import toFloatDt 
+from _Tools import toDt 
 
 class DataNode(object):
   _baseAttrs = []
@@ -107,8 +107,8 @@ class SessionNode(DataNode):
 
   def __init__(self, Start, End, **kwargs):
     DataNode.__init__(self, **kwargs)
-    self.Start = toFloatDt(Start)
-    self.End = toFloatDt(End)
+    self.Start = toDt(Start)
+    self.End = toDt(End)
 
 
 # TODO
@@ -119,7 +119,7 @@ class LogNode(DataNode):
   def __init__(self, DateTime, Category=None, Type=None, Cage=None,
                Corner=None, Side=None, Notes=None, **kwargs):
     DataNode.__init__(self, **kwargs)
-    self.DateTime = toFloatDt(DateTime)
+    self.DateTime = toDt(DateTime)
     self.Category = unicode(Category) if Category is not None else None
     self.Type = unicode(Type) if Type is not None else None
     self.Cage = int(Cage) if Cage is not None else None
@@ -135,7 +135,7 @@ class EnvironmentNode(DataNode):
   def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
                **kwargs):
     DataNode.__init__(self, **kwargs)
-    self.DateTime = toFloatDt(DateTime)
+    self.DateTime = toDt(DateTime)
     self.Temperature = float(Temperature) if Temperature is not None else None
     self.Illumination = int(Illumination) if Illumination is not None else None
     self.Cage = int(Cage) if Cage is not None else None
@@ -152,7 +152,7 @@ class HardwareEventNode(DataNode):
   def __init__(self, DateTime, Type=None, Cage=None, Corner=None, Side=None, State=None,
                **kwargs):
     DataNode.__init__(self, **kwargs)
-    self.DateTime = toFloatDt(DateTime)
+    self.DateTime = toDt(DateTime)
     self.Type = self.__typeMapping[int(Type)] if Type is not None else None
     self.Cage = int(Cage) if Cage is not None else None
     self.Corner = int(Corner) if Corner is not None else None
@@ -247,9 +247,9 @@ class VisitNode(DataNode):
                AntennaDuration=None, PresenceNumber=None, PresenceDuration=None,
                VisitSolution=None, **kwargs):
     super(VisitNode, self).__init__(**kwargs)
-    self.Start = toFloatDt(Start)
+    self.Start = toDt(Start)
     self.Corner = int(Corner)
-    self.End = toFloatDt(End)
+    self.End = toDt(End)
     self.ModuleName = unicode(ModuleName) if ModuleName is not None else None
     self.Cage = int(Cage) if Cage is not None else None
     self.CornerCondition = float(CornerCondition) if CornerCondition is not None else None
@@ -348,8 +348,8 @@ class NosepokeNode(DataNode):
                ConditionError=None, AirState=None, DoorState=None,
                LED1State=None, LED2State=None, LED3State=None, **kwargs): # TODO
     DataNode.__init__(self, **kwargs)
-    self.Start = toFloatDt(Start)
-    self.End = toFloatDt(End)
+    self.Start = toDt(Start)
+    self.End = toDt(End)
     self.Side = int(Side) if Side is not None else None
     self.LickNumber = int(LickNumber) if LickNumber is not None else None
     self.LickContactTime = float(LickContactTime) if LickContactTime is not None else None

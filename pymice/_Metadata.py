@@ -11,13 +11,13 @@ import re
 import collections
 
 from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
-import pytz  
+import pytz 
 import numpy as np                                           
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
-from ._Tools import deprecated, convertTime, EPOCH, floatDateTime
+from ._Tools import deprecated, convertTime
 
 
 
@@ -490,7 +490,7 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           day, month, year = self.get(sec, option + 'date').split('.')
           time = self.get(sec, option + 'time').split(':')
           ts = map(int, [year, month, day] + time)
-          t = floatDateTime(*ts, **{'tzinfo': tzinfo})
+          t = datetime(*ts, **{'tzinfo': tzinfo})
 
           deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
                      (option, option, option))
@@ -513,7 +513,7 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
       return min(starts), max(ends)
 
   def __call__(self, x, pos=0):
-    x = mpd.num2epoch(x)
+    x = mpd.num2date(x)
     for sec in self.sections():
       t1, t2 = self.gettime(sec)
       if t1 <= x and x < t2:
@@ -528,7 +528,7 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
 
     ylims = ax.get_ylim()
     for tt in self.gettime(sec):
-      ax.plot([mpd.epoch2num(tt),] * 2, ylims, 'k:')
+      ax.plot([mpd.date2num(tt),] * 2, ylims, 'k:')
 
     plt.draw()
   
@@ -548,8 +548,8 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
 
     for sec in sections:
       t1, t2 = self.gettime(sec)        
-      plt.bar(mpd.epoch2num(t1), ylims[1] - ylims[0], 
-              width=mpd.epoch2num(t2) - mpd.epoch2num(t1), 
+      plt.bar(mpd.date2num(t1), ylims[1] - ylims[0], 
+              width=mpd.date2num(t2) - mpd.date2num(t1), 
               bottom=ylims[0], color='0.8', alpha=0.5, zorder=-10)
 
     ax.set_xlim(xlims)
@@ -563,7 +563,7 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     """Diagnostic plot of sections defined in the config file."""
     figg = plt.figure()                         
     for idx, sec in enumerate(self.sections()):
-      t1, t2 = mpd.epoch2num(self.gettime(sec)) #cf2time(cf, sec)
+      t1, t2 = mpd.date2num(self.gettime(sec)) #cf2time(cf, sec)
       plt.plot([t1, t2], [idx, idx], 'ko-') 
       plt.plot([t2], [idx], 'bo')
       plt.text(t2 + 0.5, idx, sec)

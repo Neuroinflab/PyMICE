@@ -26,13 +26,13 @@ from xml.dom import minidom
 
 from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
-from _Tools import timeString, deprecated, ensureFloat, ensureInt, hTime,\
-                   convertTime, timeToList, floatDateTime, timeListQueue,\
-                   PathZipFile
+from _Tools import timeString, deprecated, ensureFloat, ensureInt, \
+                   convertTime, timeToList, timeListQueue,\
+                   PathZipFile, toTimestampUTC
 
 callCopy = methodcaller('copy')
 
@@ -145,20 +145,20 @@ class Data(object):
     animals = map(unicode, map(attrgetter('Animal'), self.__visits))
     self.__animalVisits = dict((m, np.array([a == m for a in animals],
                                    dtype=bool)) for m in self.getMice())
-    self.__visitsStart = np.array(map(float, map(attrgetter('Start'),
+    self.__visitsStart = np.array(map(toTimestampUTC, map(attrgetter('Start'),
                                                  self.__visits)))
 
     if self._getLog:
-      self.__logDateTime = np.array(map(float, map(attrgetter('DateTime'),
+      self.__logDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
                                                    self.__log)))
 
     if self._getEnv:
-      self.__envDateTime = np.array(map(float, map(attrgetter('DateTime'),
-                                                   self.__environment)))
+      self.__envDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
+                                                            self.__environment)))
 
     if self._getHw:
-      self.__hwDateTime = np.array(map(float, map(attrgetter('DateTime'),
-                                                   self.__hardware)))
+      self.__hwDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
+                                                           self.__hardware)))
 
   def getCage(self, mouse):
     """
@@ -202,7 +202,7 @@ class Data(object):
   def getStart(self):
     """
     @return: timestamp of the earliest visit registration
-    @rtype: convertable to float
+    @rtype: datetime
     """
     if self.icSessionStart is not None:
       return self.icSessionStart
@@ -217,7 +217,7 @@ class Data(object):
   def getEnd(self):
     """
     @return: timestamp of the latest visit registration
-    @rtype: convertable to float
+    @rtype: datetime
     """
     if self.icSessionEnd is not None:
       return self.icSessionEnd
@@ -521,10 +521,10 @@ class Data(object):
   def _getTimeMask(time, startTime=None, endTime=None):
     mask = None
     if startTime is not None:
-      mask = float(startTime) <= time
+      mask = toTimestampUTC(startTime) <= time
 
     if endTime is not None:
-      timeMask = float(endTime) > time
+      timeMask = toTimestampUTC(endTime) > time
       mask = timeMask if mask is None else mask * timeMask
 
     return mask
@@ -578,25 +578,23 @@ class Data(object):
 
 
     >>> for v in ml_icp3.getVisits(order='Start'):
-    ...   print hTime(v.Start)
-    2012-12-18 11:13:14.139
-    2012-12-18 11:18:55.421
-    2012-12-18 11:19:55.421
+    ...   print v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z")
+    2012-12-18 12:13:14.139000 +0100
+    2012-12-18 12:18:55.421000 +0100
+    2012-12-18 12:19:55.421000 +0100
 
     >>> for v in ml_l1.getVisits(mice='Minnie'):
-    ...   print hTime(v.Start)
-    2012-12-18 12:30:02.360
+    ...   print v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z")
+    2012-12-18 12:30:02.360000 +0000
 
     @param mice: mouse (or mice) which visits are requested
     @type mice:
 
-    @param startTime: a lower bound of the visit Start attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
+    @param startTime: a lower bound of the visit Start attribute
+    @type startTime: datetime
 
-    @param endTime: an upper bound of the visit Start attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
+    @param endTime: an upper bound of the visit Start attribute
+    @type endTime: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
@@ -637,13 +635,11 @@ class Data(object):
     Session is started
     Session is stopped
 
-    @param startTime: a lower bound of the log entries DateTime attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
+    @param startTime: a lower bound of the log entries DateTime attribute
+    @type startTime: datetime
 
-    @param endTime: an upper bound of the log entries DateTime attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
+    @param endTime: an upper bound of the log entries DateTime attribute
+    @type endTime: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
@@ -676,13 +672,11 @@ class Data(object):
     22.0
     23.6
 
-    @param startTime: a lower bound of the sample DateTime attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
+    @param startTime: a lower bound of the sample DateTime attribute
+    @type startTime: datetime
 
-    @param endTime: an upper bound of the sample DateTime attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
+    @param endTime: an upper bound of the sample DateTime attribute
+    @type endTime: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
@@ -696,13 +690,11 @@ class Data(object):
 
   def getHardwareEvents(self, startTime=None, endTime=None, order=None):
     """
-    @param startTime: a lower bound of the event DateTime attribute given
-                      as a timestamp (epoch).
-    @type startTime: float
+    @param startTime: a lower bound of the event DateTime attribute
+    @type startTime: datetime
 
-    @param endTime: an upper bound of the event DateTime attribute given
-                    as a timestamp (epoch).
-    @type endTime: float
+    @param endTime: an upper bound of the event DateTime attribute
+    @type endTime: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
@@ -984,6 +976,7 @@ def fixSessions(data, sessions=[]):
       tzChanged = offsetChange != zeroTd
       while timepoint <= sentinel or interval is None:
         if not inSession:
+          print timepoint
           warnings.warn('Timepoints out of session!')
 
         if tzChanged:
@@ -1777,7 +1770,7 @@ class Merger(Data):
     self._dataSources = map(str, dataSources)
 
     self._initCache()
-    self.__topTime = float('-inf')
+    self.__topTime = datetime(MINYEAR, 1, 1, tzinfo=pytz.timezone('Etc/GMT-14'))
 
     for dataSource in dataSources:
       try:
@@ -1798,6 +1791,7 @@ class Merger(Data):
     return mystring
 
   def plotData(self):
+    # FIXME: obsoleted
     #fig, ax = plt.subplots()
     ax = plt.gca()
     ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, y: hTime(x)))
@@ -1901,7 +1895,7 @@ class Merger(Data):
         pass
 
       else:
-        if float(minStart) < self.__topTime:
+        if minStart < self.__topTime:
           print "Possible temporal overlap of visits"
 
       self._insertVisits(visits)
@@ -1920,17 +1914,17 @@ class Merger(Data):
 
     if visits != None:
       maxEnd = [self.__topTime]
-      maxEnd.extend(float(v.End) for v in visits)
+      maxEnd.extend(v.End for v in visits)
       if self._getNp:
-        maxEnd.extend(float(np.End) for v in visits if v.Nosepokes for np in v.Nosepokes)
+        maxEnd.extend(np.End for v in visits if v.Nosepokes for np in v.Nosepokes)
 
       self.__topTime = max(maxEnd)
 
     if self._getHw and hardware:
-      self.__topTime = max(self.__topTime, float(max(hw.DateTime for hw in hardware)))
+      self.__topTime = max(self.__topTime, max(hw.DateTime for hw in hardware))
 
     if self._getLog and log:
-      self.__topTime = max(self.__topTime, float(max(l.DateTime for l in log)))
+      self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
 
     self._buildCache()
 
