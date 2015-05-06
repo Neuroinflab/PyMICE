@@ -587,6 +587,9 @@ class Data(object):
     ...   print hTime(v.Start)
     2012-12-18 12:30:02.360
 
+    @param mice: mouse (or mice) which visits are requested
+    @type mice:
+
     @param startTime: a lower bound of the visit Start attribute given
                       as a timestamp (epoch).
     @type startTime: float
@@ -607,11 +610,14 @@ class Data(object):
         mask = self.__animalVisits[mice]
         
       except (KeyError, TypeError): #unhashable type: list
-        mask = sum((self.__animalVisits[m] for m in mice), False)
+        mask = sum((self.__animalVisits[unicode(m)] for m in mice if unicode(m) in self.__animalVisits), False)
 
     timeMask = self._getTimeMask(self.__visitsStart, startTime, endTime)
     if timeMask is not None:
       mask = timeMask if mask is None else mask * timeMask
+
+    if mask is False:
+      return []
 
     visits = self.__visits if mask is None else self.__visits[mask]
     return self.__orderBy(visits, order)
