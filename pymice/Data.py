@@ -608,7 +608,11 @@ class Data(object):
         mask = self.__animalVisits[mice]
         
       except (KeyError, TypeError): #unhashable type: list
-        mask = sum((self.__animalVisits[unicode(m)] for m in mice if unicode(m) in self.__animalVisits), False)
+        if isinstance(mice, basestring):
+          mask = False
+
+        else:
+          mask = sum((self.__animalVisits[unicode(m)] for m in mice if unicode(m) in self.__animalVisits), False)
 
     timeMask = self._getTimeMask(self.__visitsStart, startTime, endTime)
     if timeMask is not None:
