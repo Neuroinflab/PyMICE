@@ -9,6 +9,7 @@ from datetime import datetime
 import csv
 import re
 import collections
+from warnings import warn
 
 from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
 import pytz 
@@ -355,6 +356,10 @@ class Phase(MetadataNode):
     self.Start = convertTime(Start, tzinfo)
     self.End = convertTime(End, tzinfo)
     self.Name = Name.decode('utf-8') if Name != '' else None
+
+    if self.End < self.Start:
+      warn("Phase %s starts after it ends (%s > %s)" % (self.Name, self.Start, self.End))
+
     self.Type = Type.decode('utf-8') if Type != '' else None
     self.Iteration = int(Iteration) if Iteration != '' else None
     self.Mice = _partitions[Partition]
@@ -386,6 +391,9 @@ class Phase(MetadataNode):
 
         instance = cls(*byLabel, **row)
         if instance.Name is not None:
+          if instance.Name in result:
+            warn("Phase %s already defined - owerwriting!" % instance.Name)
+
           result[instance.Name] = instance
 
         else:
@@ -499,6 +507,9 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
           t = convertTime(value, tzinfo)
 
         times.append(t)
+
+      if times[0] > times[1]:
+        warn("Phase %s starts after it ends (%s > %s)" % (sec, times[0], times[1]))
 
       return tuple(times)
         
