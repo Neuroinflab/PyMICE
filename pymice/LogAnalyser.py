@@ -153,11 +153,9 @@ class PresenceLogAnalyzer(ILogAnalyzer):
           # tt = np.delete(tt, np.where(idcs))
 
           # Wywalamy blizsze siebie niz 30 s
-          idcs = np.zeros_like(tt)
-          idcs[tds < 30.] = 1
-          tds = np.r_[np.nan, tds]
-          idcs[tds < 30.] = 1
-          tt = np.delete(tt, np.where(idcs))
+          idcs = np.where(tds < 30.)[0]
+          tt = np.delete(tt, np.unique(np.array([idcs, idcs+1])))
+          # XXX: czy to spowoduje, ze ciag bledow pozostanie niezauwazony???
 
           if len(tt) > 0:
             # Wywalamy jesli izolowany
@@ -165,9 +163,9 @@ class PresenceLogAnalyzer(ILogAnalyzer):
             idcs = np.zeros_like(tt)
             idcs[0] += 0.5
             idcs[-1] += 0.5
-            idcs[tds > 1800.] += 0.5
-            tds = np.r_[np.nan, tds]
-            idcs[tds > 1800.] += 0.5
+            idcs2 = np.where(tds > 1800.)[0]
+            idcs[idcs2] += 0.5
+            idcs[idcs2 + 1] += 0.5
             tt = np.delete(tt, np.where(idcs > 0.75))
 
           if len(tt) > 0:
@@ -178,7 +176,10 @@ class PresenceLogAnalyzer(ILogAnalyzer):
             longBins = np.linspace(ttMin, ttMin + nBins * 24 * 3600.,
                                    int(nBins) + 1)
             hist, _ = np.histogram(tt, bins=longBins)
-            if np.all(hist > 4).any():
+            print tt
+            print longBins
+            print hist
+            if (hist > 4).any():
               # print cage, corner, 'Zostalo ', len(tt)
               nBins = ceil(span / self.finBin)
               bins = np.arange(ttMin, ttMin + nBins * self.finBin,
