@@ -41,7 +41,7 @@ class Data(object):
   """
   A base class for objects containing behavioural data.
   """
-  def __init__(self, getNp=False, getLog=False,
+  def __init__(self, getNp=True, getLog=False,
                getEnv=False, getHw=False):
     """
     @param getNp: whether to load nosepoke data.
@@ -1126,7 +1126,7 @@ class Loader(Data):
                                                },
                 }
 
-  def __init__(self, fname, getNp=False, getLog=False, getEnv=False, getHw=False,
+  def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
                logAnalyzers=(), tzinfo=pytz.UTC, **kwargs):
     """
     @param fname: a path to the data file.
@@ -1197,7 +1197,7 @@ class Loader(Data):
 
 
 
-  def _loadZip(self, fname, getNp=False, getLog=False, getEnv=False,
+  def _loadZip(self, fname, getNp=True, getLog=False, getEnv=False,
                getHw=False, source=None):
     if isinstance(fname, basestring) and os.path.isdir(fname):
       zf = PathZipFile(fname)
@@ -1680,7 +1680,7 @@ class Loader(Data):
 
 class Merger(Data):
   """
-  >>> mm = Merger(ml_icp3, ml_l1, getNp=True)
+  >>> mm = Merger(ml_icp3, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d %d' % (str(v.Animal), len(v.Nosepokes), v.Animal.Tag)
   Minnie 0 1337
@@ -1690,14 +1690,14 @@ class Merger(Data):
   Mickey 1 42
   Jerry 2 69
 
-  >>> mm = Merger(ml_empty, ml_l1, getNp=True)
+  >>> mm = Merger(ml_empty, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
   Minnie 1
   Mickey 1
   Jerry 2
 
-  >>> mm = Merger(ml_retagged, ml_l1, getNp=True)
+  >>> mm = Merger(ml_retagged, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
   ...   if isinstance(v.Animal.Tag, set):
@@ -1736,7 +1736,7 @@ class Merger(Data):
     @param getHw: whether to load hardware data (defaults to False).
     @type getHw: bool
     """
-    getNp = kwargs.pop('getNp', False)
+    getNp = kwargs.pop('getNp', True)
     getLog = kwargs.pop('getLog', False)
     getEnv = kwargs.pop('getEnv', False)
     getHw = kwargs.pop('getHw', False)
@@ -1943,12 +1943,12 @@ if __name__ == '__main__':
   testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../test'))
   TEST_GLOBALS = {
     #XXX: ml_l1 - not sure if data formad is valid
-    'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip'), getNpokes=True),
+    'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip')),
     #'ml_a1': Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
-    'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'), getNpokes=True,
+    'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'),
                       getLogs=True, getEnv=True),
-    'ml_empty': Loader(os.path.join(testDir, 'empty_data.zip'), getNpokes=True),
-    'ml_retagged': Loader(os.path.join(testDir, 'retagged_data.zip'), getNpokes=True),
+    'ml_empty': Loader(os.path.join(testDir, 'empty_data.zip')),
+    'ml_retagged': Loader(os.path.join(testDir, 'retagged_data.zip')),
     }
 
   doctest.testmod(extraglobs=TEST_GLOBALS)
