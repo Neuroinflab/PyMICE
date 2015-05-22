@@ -1,0 +1,7 @@
+$ make
+$ python setup.py install --user
+
+or
+
+# make
+# python setup.py install
