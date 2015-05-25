@@ -37,3 +37,6 @@ __ID__ = 'nlx_158570'
 __version__ = __ID__ + ' 0'
 __all__ = []
 
+print "This is a bleeding edge version of the library. It might meet your"
+print "expectations, however it might also go to your fridge, drink all beer"
+print "it can found there and then eat your cat. Be warned."
