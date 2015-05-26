@@ -1929,7 +1929,7 @@ class Merger(Data):
         self._insertHardware(hardware)
 
     if self._getEnv:
-      env = dataSource.getEnvironments()
+      env = dataSource.getEnvironment()
       if env is not None:
         self._insertEnvironment(env)
 
