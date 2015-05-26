@@ -1928,6 +1928,11 @@ class Merger(Data):
       if hardware is not None:
         self._insertHardware(hardware)
 
+    if self._getEnv:
+      env = dataSource.getEnvironments()
+      if env is not None:
+        self._insertEnvironment(env)
+
     if self._getLog:
       log = dataSource.getLog()
       if log is not None:
@@ -1945,6 +1950,9 @@ class Merger(Data):
 
     if self._getHw and hardware:
       self.__topTime = max(self.__topTime, max(hw.DateTime for hw in hardware))
+
+    if self._getEnv and hardware:
+      self.__topTime = max(self.__topTime, max(en.DateTime for en in env))
 
     if self._getLog and log:
       self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
