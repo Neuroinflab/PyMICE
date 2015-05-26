@@ -1299,8 +1299,8 @@ class Loader(Data):
     vids = visits.pop('_vid')
 
     if sessions is not None:
-      vEnds = map(list, izip(visits['End'], repeat(True), repeat(None)))
-      vStarts = map(list, izip(visits['Start'], repeat(False), vEnds)) # start blocks end
+      vEnds = map(list, izip(visits['End'], repeat(1), repeat(None)))
+      vStarts = map(list, izip(visits['Start'], repeat(0), vEnds)) # start blocks end
       timeToFix = [vEnds]
       visitStartOrder = np.argsort(vids)
       timeToFix.append(np.array(vStarts + [None], dtype=object)[visitStartOrder])
@@ -1326,10 +1326,13 @@ class Loader(Data):
         npStarts = map(list, izip(nosepokes['Start'], repeat(False), npEnds))
         npStarts = np.array(npStarts + [None], dtype=object)
         npTags = np.array(map(vid2tag.__getitem__, npVids))
+        npSides = np.array(map(int, nosepokes['Side'])) % 2 # no bilocation assumed
+        # XXX                   ^ - ugly... possibly duplicated
 
         timeToFix.append(npEnds)
         for tag in tag2Animal:
-          timeToFix.append(npStarts[npTags == tag])
+          for side in (0, 1): # tailpokes correction
+            timeToFix.append(npStarts[(npTags == tag) * (npSides == side)])
 
       else:
         timeToFix.extend(nosepokes['End'])

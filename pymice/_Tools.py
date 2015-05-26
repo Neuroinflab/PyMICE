@@ -184,7 +184,7 @@ class timeListQueue(object):
     top, _, unlock = head.pop(0)
 
     if unlock is not None:
-      unlock[1] = False
+      unlock[1] -= 1
       for i, locked in list(enumerate(self.__locked)):
         if not locked[0][1]: #found!
           heapq.heappush(self.__heap, locked)
