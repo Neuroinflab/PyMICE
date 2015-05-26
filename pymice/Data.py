@@ -1951,7 +1951,7 @@ class Merger(Data):
     if self._getHw and hardware:
       self.__topTime = max(self.__topTime, max(hw.DateTime for hw in hardware))
 
-    if self._getEnv and hardware:
+    if self._getEnv and env:
       self.__topTime = max(self.__topTime, max(en.DateTime for en in env))
 
     if self._getLog and log:
