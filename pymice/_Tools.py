@@ -220,3 +220,84 @@ class PathZipFile(object):
   def open(self, name, mode='r'):
     fn = os.path.join(self.__path, name)
     return open(fn, mode)
+
+
+def getTutorialData(path=None):
+  """
+  Download example dataset(s) used in tutorials.
+
+  @param path: a directory where tutorial data are to be loaded into
+               (defaults to working directory)
+  @type path: basestring
+  """
+
+  #fraction = [0]
+  def reporthook(blockcount, blocksize, totalsize):
+    downloaded = blockcount * blocksize * 100 / totalsize
+    if downloaded > fraction[0]:
+      print "%3d%% downloaded." % downloaded
+      fraction[0] += 25
+
+
+  if path is None:
+    path = os.getcwd()
+
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+  elif not os.path.isdir(path):
+    raise OSError("Not a directory: '%s'" % path)
+
+  DATA = {'https://www.dropbox.com/s/kxgfu7fazbwvz7e/C57_AB.zip?dl=1':
+           {'C57_AB/2012-08-28 13.44.51.zip': 86480,
+            'C57_AB/2012-08-31 11.58.22.zip': 3818445,
+            'C57_AB/2012-08-28 15.33.58.zip': 494921,
+            'C57_AB/2012-08-31 11.46.31.zip': 29344,
+           },
+         }
+
+  toDownload = {}
+  for url, files in DATA.items():
+    if all(os.path.isfile(os.path.join(path, fn)) and \
+           os.path.getsize(os.path.join(path, fn)) == fs \
+           for (fn, fs) in files.items()):
+      print "'%s' data already downloaded." % url
+      continue
+
+    toDownload[url] = sorted(files.items())
+
+  if not toDownload:
+    print "All data already downloaded."
+    return
+
+  print "In case the automatic download fails fetch the data manually."
+  for url, files in toDownload.items():
+
+    print "Download archive from: %s" % url
+    print "then extract the following files:"
+    for filename, _ in files:
+      print "- %s" % filename
+  
+    print
+  
+  print
+
+  import tempfile
+  import zipfile
+  import urllib
+
+  for url, files in toDownload.items():
+    print "Downloading data from '%s'." % url
+    fh = tempfile.NamedTemporaryFile(suffix=".zip", prefix="PyMICE_download_tmp_")
+    fraction = [0]
+    urllib.urlretrieve(url, fh.name, reporthook)
+    print 'data downloaded'
+    zf = zipfile.ZipFile(fh)
+    for filename, filesize in files:
+      print "extracting file '%s'" % filename
+      zf.extract(filename, path)
+      if os.path.getsize(os.path.join(path, filename)) != filesize:
+        print 'Warning: size of extracted file differs'
+
+    zf.close()
+    fh.close()
