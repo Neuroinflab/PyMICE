@@ -22,6 +22,7 @@
 #                                                                             #
 ###############################################################################
 
+import setuptools # XXX a fix for https://bugs.python.org/issue23246 bug
 from distutils.core import setup, Extension
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'pymice',
