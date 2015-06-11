@@ -261,13 +261,14 @@ def getTutorialData(path=None):
     if all(os.path.isfile(os.path.join(path, fn)) and \
            os.path.getsize(os.path.join(path, fn)) == fs \
            for (fn, fs) in files.items()):
-      print "'%s' data already downloaded." % url
+      print "%s data already downloaded." % url
       continue
 
     toDownload[url] = sorted(files.items())
 
   if not toDownload:
     print "All data already downloaded."
+    print
     return
 
   print "In case the automatic download fails fetch the data manually."
@@ -287,14 +288,14 @@ def getTutorialData(path=None):
   import urllib
 
   for url, files in toDownload.items():
-    print "Downloading data from '%s'." % url
+    print "downloading data from %s" % url
     fh = tempfile.NamedTemporaryFile(suffix=".zip", prefix="PyMICE_download_tmp_")
     fraction = [0]
     urllib.urlretrieve(url, fh.name, reporthook)
     print 'data downloaded'
     zf = zipfile.ZipFile(fh)
     for filename, filesize in files:
-      print "extracting file '%s'" % filename
+      print "extracting file %s" % filename
       zf.extract(filename, path)
       if os.path.getsize(os.path.join(path, filename)) != filesize:
         print 'Warning: size of extracted file differs'
