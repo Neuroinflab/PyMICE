@@ -476,19 +476,22 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     self.tzinfo = tzinfo
 
     RawConfigParser.__init__(self)
-    self.path = path               
     if fname is None:
-      if os.path.isfile(os.path.join(path, 'config.txt')):
-        self.fname = 'config.txt'
+      if os.path.isfile(path):
+        self.path = path
+
+      elif os.path.isfile(os.path.join(path, 'config.txt')):
+        self.path = os.path.join(path, 'config.txt')
 
       else:
-        self.fname = filter(lambda x: x.startswith('config') \
-                    and x.endswith('.txt'), os.listdir(path))[0]
+        self.path = filter(lambda x: x.startswith('config') \
+                           and (x.endswith('.txt') or x.endswith('.ini')),
+                           os.listdir(path))[0]
 
-    else:                  
-      self.fname = fname
+    else:
+      self.path = os.path.join(path, fname)
 
-    self.read(os.path.join(path, self.fname)) 
+    self.read(self.path)
       
   def gettime(self, sec): 
     deprecated('Deprecated method gettime() called; use getTime() instead.')
