@@ -34,7 +34,7 @@ from ._Metadata import Phase, ExperimentConfigFile
 from ._Results import ResultsCSV
 from .LogAnalyser import LickometerLogAnalyzer, PresenceLogAnalyzer, TestMiceData
 __ID__ = 'nlx_158570'
-__version__ = __ID__ + ' 0.1.1b'
+__version__ = __ID__ + ' 0.1.1'
 __all__ = []
 
 print "This is a bleeding edge version of the PyMICE library. It might meet your"
