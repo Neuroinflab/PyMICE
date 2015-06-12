@@ -289,16 +289,20 @@ def getTutorialData(path=None):
 
   for url, files in toDownload.items():
     print "downloading data from %s" % url
-    fh = tempfile.NamedTemporaryFile(suffix=".zip", prefix="PyMICE_download_tmp_")
-    fraction = [0]
-    urllib.urlretrieve(url, fh.name, reporthook)
-    print 'data downloaded'
-    zf = zipfile.ZipFile(fh)
-    for filename, filesize in files:
-      print "extracting file %s" % filename
-      zf.extract(filename, path)
-      if os.path.getsize(os.path.join(path, filename)) != filesize:
-        print 'Warning: size of extracted file differs'
+    fh, fn = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
+    os.close(fh)
+    try:
+      fraction = [0]
+      urllib.urlretrieve(url, fn, reporthook)
+      print 'data downloaded'
+      zf = zipfile.ZipFile(fn)
+      for filename, filesize in files:
+        print "extracting file %s" % filename
+        zf.extract(filename, path)
+        if os.path.getsize(os.path.join(path, filename)) != filesize:
+          print 'Warning: size of extracted file differs'
 
-    zf.close()
-    fh.close()
+      zf.close()
+
+    finally:
+      os.remove(fn)
