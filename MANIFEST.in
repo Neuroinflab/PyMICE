@@ -1,2 +1,6 @@
 include Makefile
 include pymice.h
+recursive-include test *
+prune test/*.zip
+include tutorial/config.txt
+include tutorial/*.ipynb

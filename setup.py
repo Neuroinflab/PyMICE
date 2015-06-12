@@ -38,8 +38,31 @@ else:
   setuptoolsPresent = True
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
-setup(name = 'pymice',
+#install_requires = ['numpy']?
+setup(name = 'PyMICE',
       version = '0.1.1b',
-      description = 'pymice',
+      url = 'https://neuroinflab.wordpress.com/research/pymice/',
+      description = 'PyMICE - a Python™ library for mice behavioural data analysis',
+      long_description="""PyMICE is a Python™ library for mice behavioural data analysis.
+
+The library can be used for loading and analysing of data obtained from IntelliCage™ system in an intuitive way in Python programming language.
+
+The library provides user with an object oriented application programming interface (API) and a data abstraction layer. It also comes with auxiliary tools supporting development of analysis workflows, like data validators and a tool for workflow configuration.""",
+      author="Jakub M. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
+      author_email="j.kowalski@nencki.gov.pl, s.leski@nencki.gov.pl",
+      license='GPL3',
+      classifiers = ['Development Status :: 4 - Beta',
+                     'Intended Audience :: Developers',
+                     'Intended Audience :: Science/Research',
+                     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                     'Natural Language :: English',
+                     'Operating System :: OS Independent',
+                     'Programming Language :: Python :: 2.7',
+                     'Programming Language :: C',
+                     'Topic :: Scientific/Engineering',
+                     'Topic :: Scientific/Engineering :: Bio-Informatics',
+                     'Topic :: Software Development',
+                     'Topic :: Software Development :: Libraries :: Python Modules'],
+      keywords ='IntelliCage mice behavioural data loading analysis',
       ext_modules = [cPymice],
       packages = ['pymice'])
