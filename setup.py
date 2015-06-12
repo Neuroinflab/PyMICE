@@ -22,11 +22,24 @@
 #                                                                             #
 ###############################################################################
 
-import setuptools # XXX a fix for https://bugs.python.org/issue23246 bug
-from distutils.core import setup, Extension
+
+try:
+  from setuptools import setup, Extension
+  # XXX a fix for https://bugs.python.org/issue23246 bug
+
+except ImportError:
+  from distutils.core import setup, Extension
+  print "The setuptools module is not found - 'Unable to find vcvarsall.bat' error"
+  print "(and many others) might occur."
+  print
+  setuptoolsPresent = False
+
+else:
+  setuptoolsPresent = True
+
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'pymice',
-      version = '0.1',
+      version = '0.1.1b',
       description = 'pymice',
       ext_modules = [cPymice],
       packages = ['pymice'])
