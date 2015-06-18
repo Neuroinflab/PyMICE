@@ -22,14 +22,8 @@
 #                                                                             #
 ###############################################################################
 
-import os 
-from datetime import datetime
-import csv
-import re
-import collections
-from warnings import warn
+import operator
 
-import numpy as np                                           
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
@@ -110,3 +104,35 @@ def checkData(mds):
   limits = sorted([(md.getStart(), md.getEnd()) for md in mds])
   for ((_, a), (b, _)) in zip(limits[:-1], limits[1:]):
     print 1, '             ', b - a
+
+def plotCumulativeVisits(md, **kwargs):
+  fig = plt.figure()
+  ax = fig.add_subplot(1, 1, 1)
+  visits = md.getVisits(order='Start')
+  ax.plot(mpd.date2num(map(operator.attrgetter('Start'), visits)),
+          range(len(visits)))
+
+  ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
+                                             tz=self.tzone)) 
+  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
+  ax.autoscale_view()
+  ax.get_figure().autofmt_xdate()
+  ax.set_title(ec.path) 
+  plt.draw()
+  return ax
+
+def plotIllumination(md, **kwargs):
+  fig = plt.figure()
+  ax = fig.add_subplot(1, 1, 1)
+  env = md.getEnvironment(order='DateTime')
+  ax.plot(mpd.date2num(map(operator.attrgetter('DateTime'), env)),
+          map(operator.attrgetter('Illumination'), env))
+
+  ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
+                                             tz=self.tzone)) 
+  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
+  ax.autoscale_view()
+  ax.get_figure().autofmt_xdate()
+  ax.set_title(ec.path) 
+  plt.draw()
+  return ax
