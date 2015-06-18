@@ -29,7 +29,9 @@ import warnings
 class ResultsCSV(object):
   def __init__(self, filename, fields=(), force=False):
     self.__fields = set(fields)
+    self.__fieldsOrder = list(fields)
     self.__rows = {}
+    self.__rowOrder = []
     self.__currentID = None
     self.__nextID = 0
     if os.path.exists(filename) and not force:
@@ -46,15 +48,15 @@ class ResultsCSV(object):
   def __del__(self):
     self.close()
 
-  def close(self):
+  def close(self, inOrder=False):
     if self.__fh is None:
       return
 
-    fields = sorted(self.__fields)
+    fields = self.__fieldsOrder if inOrder else sorted(self.__fields)
     writer = csv.writer(self.__fh)
 
     writer.writerow([f.encode('utf-8') for f in fields])
-    for row in self.__rows.values():
+    for row in [self.__rows[id] for id in self.__rowOrder]:
       line = [unicode(row.get(f, '')).encode('utf-8') for f in fields]
       writer.writerow(line)
 
@@ -74,6 +76,7 @@ class ResultsCSV(object):
 
     self.__current = {}
     self.__rows[id] = self.__current
+    self.__rowOrder.append(id)
     self.__currentID = id
     return id
 
@@ -91,7 +94,9 @@ class ResultsCSV(object):
       if id is None:
         raise ValueError('Row ID must be given if no row has been chosen yet.')
 
-    self.__fields.add(field)
+    if field not in self.__fields:
+      self.__fields.add(field)
+      self.__fieldsOrder.append(field)
 
     try:
       row = self.__rows[id]
