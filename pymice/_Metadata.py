@@ -573,20 +573,18 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     if ax is None:
       ax = plt.gca()
 
-    ylims = ax.get_ylim()  
-    xlims = ax.get_xlim()
+    #xlims = ax.get_xlim()
     if type(sections) == str:
       sections = [sections]
 
     for sec in sections:
-      t1, t2 = self.gettime(sec)        
-      plt.bar(mpd.date2num(t1), ylims[1] - ylims[0], 
-              width=mpd.date2num(t2) - mpd.date2num(t1), 
-              bottom=ylims[0], color='0.8', alpha=0.5, zorder=-10)
+      t1, t2 = self.gettime(sec)
+      ax.axvspan(mpd.date2num(t1), mpd.date2num(t2),
+                 color='0.8', alpha=0.5, zorder=-10)
 
-    ax.set_xlim(xlims)
+    #ax.set_xlim(xlims)
     plt.draw()
-  
+
   def plot_sections(self):
     deprecated('Deprecated method plot_sections() called; use plotSections() instead.')
     return self.plotSections()
