@@ -60,7 +60,7 @@ def plotNights(ec, sections, ax=None, color='0.8', alpha=0.5, zorder=-10, **kwar
   plt.draw()
 
 
-def plotSections(ec):
+def plotPhases(ec):
   """Diagnostic plot of sections defined in the config file."""
   fig = plt.figure()
   ax = fig.add_subplot(1, 1, 1)
