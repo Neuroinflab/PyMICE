@@ -538,7 +538,7 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
       starts = []
       ends = []
       for ss in sec:
-        st, et = self.gettime(ss)
+        st, et = self.getTime(ss)
         starts.append(st)
         ends.append(et)
 
