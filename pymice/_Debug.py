@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 
 from ._Tools import deprecated
 
+import dateutil.tz
 
 
 def plotLimits(ec, sections, ax=None, color='k', linestyle=':', **kwargs):
@@ -60,24 +61,45 @@ def plotNights(ec, sections, ax=None, color='0.8', alpha=0.5, zorder=-10, **kwar
   plt.draw()
 
 
-def plotPhases(ec):
+def plotPhases(ec, tzone=None, ax=None):
   """Diagnostic plot of sections defined in the config file."""
-  fig = plt.figure()
-  ax = fig.add_subplot(1, 1, 1)
-  for idx, sec in enumerate(ec.sections()):
+  if tzone is None:
+    tzone = dateutil.tz.tzlocal()
+
+  sections = ec.sections()
+
+  fig = None
+  if ax is None:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title(ec.path) 
+    ax.set_xlim(*mpd.date2num(ec.getTime(sections)))
+    ax.set_ylim(-1, len(sections))
+
+    locator = mpd.AutoDateLocator(tz=tzone)
+    formatter = mpd.AutoDateFormatter(locator, tz=tzone)
+    ax.xaxis.set_major_locator(locator)
+                               #mpd.HourLocator([0], 
+                               #                tz=tzone)) 
+    ax.xaxis.set_major_formatter(formatter)
+                                 #mpd.DateFormatter('%d.%m %H:%M',
+                                 #                  tz=tzone))
+    ax.autoscale_view()
+    ax.get_figure().autofmt_xdate()
+    #plt.draw()
+
+  for idx, sec in enumerate(sections):
     t1, t2 = mpd.date2num(ec.getTime(sec))
     ax.plot([t1, t2], [idx, idx], 'ko-') 
     ax.plot([t2], [idx], 'bo')
-    ax.text(t2 + 0.5, idx, sec)
+    ax.text(t2 + 0.5, idx, sec,
+            verticalalignment="center",
+            horizontalalignment="left")
 
-  ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
-                                             tz=self.tzone)) 
-  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
-  ax.autoscale_view()
-  ax.get_figure().autofmt_xdate()
-  ax.set_title(ec.path) 
-  plt.draw()
+  if fig is not None:
+    fig.canvas.draw()
 
+  return fig
 
 def plotData(mds):
   """Diagnostic plot of data from multiple sources"""
