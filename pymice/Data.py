@@ -1963,12 +1963,13 @@ class Merger(Data):
           print 'Overlap of IC sessions detected'
 
     # TODO: overlap issue!
-    for attr in ['Start', 'End']:
+    for attr, choice in [('Start', min),
+                         ('End', max)]:
       icAttr = 'icSession' + attr
       vals = [x for x in [getattr(self, icAttr),
                           getattr(dataSource, 'get' + attr)()] if x is not None]
       if len(vals) > 0:
-        setattr(self, icAttr, min(vals))
+        setattr(self, icAttr, choice(vals))
 
     # registering animals and groups (if necessary)
     for name in dataSource.getAnimal():
