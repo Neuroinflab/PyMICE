@@ -41,22 +41,48 @@ def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
 
 
-#warnings.filterwarnings('always', '', DeprecationWarning, '^pymice')
-class PmDeprecationWarning(DeprecationWarning):
-  pass
+class PmWarnings(object):
+  class PmWarning(Warning):
+    """
+    A virtual class of PyMICE warnings always to be reported
+    - a hook for U{4180-wontfix-issue <http://bugs.python.org/issue4180>}
+    """
+    pass
+  
+  class PmDeprecationWarning(DeprecationWarning, PmWarning):
+    pass
+  
+  class PmUserWarning(UserWarning, PmWarning):
+    pass
 
-def deprecationWarnings(action='always'):
-  """
-  Select PyMICE deprecation warnings behaviour.
+  __initialized__ = False
 
-  @param action: disposition
-  @type action: str
-  """
-  warnings.filterwarnings(action, category=PmDeprecationWarning)
+  def __init__(self):
+    if not PmWarnings.__initialized__:
+      warnings.filterwarnings('always',
+                              category=PmWarnings.PmWarning)
+      PmWarnings.__initialized__ = True
 
-def deprecated(message, warningClass=PmDeprecationWarning, stacklevel=1):
-  warnings.warn(message, warningClass, stacklevel=stacklevel + 2)
+    self.enable()
 
+  def disable(self):
+    self.enabled = False
+
+  def enable(self):
+    self.enabled = True
+
+  def deprecated(self, message, stacklevel=1):
+    warnings.warn(message,
+                  self.PmDeprecationWarning if self.enabled else DeprecationWarning,
+                  stacklevel=stacklevel + 2)
+
+  def warn(self, message, stacklevel=1):
+    warnings.warn(message,
+                  self.PmUserWarning if self.enabled else UserWarning,
+                  stacklevel=stacklevel + 2)
+
+
+warn = PmWarnings()
 
 def ensureFloat(x):
   """

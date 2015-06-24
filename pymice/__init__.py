@@ -29,15 +29,13 @@ A collection of tools to access IntelliCage data.
 """
 
 from .Data import Loader, Merger
-from ._Tools import hTime, convertTime, getTutorialData, deprecationWarnings
+from ._Tools import hTime, convertTime, getTutorialData, warn
 from ._Metadata import Phase, ExperimentConfigFile
 from ._Results import ResultsCSV
 from .LogAnalyser import LickometerLogAnalyzer, PresenceLogAnalyzer, TestMiceData
 __ID__ = 'nlx_158570'
 __version__ = __ID__ + ' 0.1.1'
 __all__ = []
-
-deprecationWarnings()
 
 print "This is a bleeding edge version of the PyMICE library. It might meet your"
 print "expectations, however it might also go to your fridge, drink all the beer"

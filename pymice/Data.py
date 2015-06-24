@@ -29,7 +29,6 @@ import csv
 import cStringIO
 import copy
 
-import warnings
 import dateutil.parser
 import pytz
 
@@ -46,9 +45,9 @@ from datetime import datetime, timedelta, MINYEAR
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
-from _Tools import timeString, deprecated, ensureFloat, ensureInt, \
-                   convertTime, timeToList, timeListQueue,\
-                   PathZipFile, toTimestampUTC
+from ._Tools import timeString, ensureFloat, ensureInt, \
+                    convertTime, timeToList, timeListQueue,\
+                    PathZipFile, toTimestampUTC, warn
 
 callCopy = methodcaller('copy')
 
@@ -87,17 +86,17 @@ class Data(object):
 
   @property
   def _get_npokes(self):
-    deprecated("Obsolete attribute _get_npokes accessed.")
+    warn.deprecated("Obsolete attribute _get_npokes accessed.")
     return self._getNp
 
   @property
   def _getNpokes(self):
-    deprecated("Obsolete attribute _getNpokes accessed.")
+    warn.deprecated("Obsolete attribute _getNpokes accessed.")
     return self._getNp
 
   @property
   def _getLogs(self):
-    deprecated("Obsolete attribute _getLog accessed.")
+    warn.deprecated("Obsolete attribute _getLog accessed.")
     return self._getLog
 
   def __del__(self):
@@ -133,7 +132,7 @@ class Data(object):
 
       else:
         self.__animal2cage[animal].append(cage)
-        warnings.warn("Animal %s found in multiple cages (%s)." %\
+        warn.warn("Animal %s found in multiple cages (%s)." %\
                   (animal, ', '.join(map(str, self.__animal2cage[animal]))))
                   #, stacklevel=4)
 
@@ -184,10 +183,10 @@ class Data(object):
     cages = self.__animal2cage[mouse]
     if len(cages) != 1:
       if len(cages) == 0:
-        warnings.warn("Mouse %s not found in any cage." % mouse, stacklevel=2)
+        warn.warn("Mouse %s not found in any cage." % mouse, stacklevel=2)
         return None
 
-      warnings.warn("Mouse %s found in multiple cages: %s."\
+      warn.warn("Mouse %s found in multiple cages: %s."\
                     % (mouse, ', '.join(map(str,cages))), stacklevel=2)
       return tuple(cages)
 
@@ -254,7 +253,7 @@ class Data(object):
       self.excluded.extend(loganalyzer(self))
 
   def getExcludedData(self):
-    deprecated("Deprecated method getExcludedData() called; use getExcluded() instead.")
+    warn.deprecated("Deprecated method getExcludedData() called; use getExcluded() instead.")
     return self.getExcluded()
 
   def getExcluded(self):
@@ -623,14 +622,14 @@ class Data(object):
     @rtype: [VisitNode]
     """
     if startTime is not None:
-      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
       if start is not None:
         raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
 
       start = startTime
 
     if endTime is not None:
-      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
       if end is not None:
         raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
 
@@ -662,7 +661,7 @@ class Data(object):
     """
     @deprecated: use L{getLog} instead.
     """
-    deprecated("Obsolete method getLogs accessed.")
+    warn.deprecated("Obsolete method getLogs accessed.")
     return self.getLog(*args, **kwargs)
 
   def getLog(self, start=None, end=None, order=None, startTime=None, endTime=None):
@@ -690,14 +689,14 @@ class Data(object):
     @rtype: [LogNode, ...]
     """
     if startTime is not None:
-      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
       if start is not None:
         raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
 
       start = startTime
 
     if endTime is not None:
-      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
       if end is not None:
         raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
 
@@ -745,14 +744,14 @@ class Data(object):
     @rtype: [EnvironmentNode, ...]
     """
     if startTime is not None:
-      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
       if start is not None:
         raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
 
       start = startTime
 
     if endTime is not None:
-      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
       if end is not None:
         raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
 
@@ -781,14 +780,14 @@ class Data(object):
     @rtype: [HardwareEventNode, ...]
     """
     if startTime is not None:
-      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
       if start is not None:
         raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
 
       start = startTime
 
     if endTime is not None:
-      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
       if end is not None:
         raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
 
@@ -1031,14 +1030,14 @@ def fixSessions(data, sessions=[]):
         intervals.append((start, True))
 
       if start < end:
-        warnings.warn('Session overlap detected!')
+        warn.warn('Session overlap detected!')
 
       if start + start.utcoffset() <= end + end.utcoffset():
-        warnings.warn('Session representations overlap, there is no hope. :-(')
+        warn.warn('Session representations overlap, there is no hope. :-(')
 
     end = session.End
     if end is not None and end < start:
-      warnings.warn("Negative session duration detected. Are you jocking, aren't you?")
+      warn.warn("Negative session duration detected. Are you jocking, aren't you?")
 
   if end is not None:
     intervals.append((end, False))
@@ -1069,18 +1068,18 @@ def fixSessions(data, sessions=[]):
       while timepoint <= sentinel or interval is None:
         if not inSession:
           print timepoint
-          warnings.warn('Timepoints out of session!')
+          warn.warn('Timepoints out of session!')
 
         if tzChanged:
           if lastTpDt > tpDT:
             if offsetChange > zeroTd:
-              warnings.warn('Another candidate for tzchange')
+              warn.warn('Another candidate for tzchange')
 
             else:
-              warnings.warn('Time not monotonic!')
+              warn.warn('Time not monotonic!')
 
           if offsetChange < zeroTd and delta > -offsetChange: #instead of abs
-            warnings.warn('Another candidate for tzchange')
+            warn.warn('Another candidate for tzchange')
 
           timepoint.append(tz)
 
@@ -1236,26 +1235,26 @@ class Loader(Data):
     """
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
-        deprecated("Obsolete argument %s given for Loader constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
         getNp = value
 
       elif key == 'getLogs':
-        deprecated("Obsolete argument %s given for Loader constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
         getLog = value
 
       elif key == 'getEnvironment':
-        deprecated("Obsolete argument %s given for Loader constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
         getEnv = value
 
       elif key in ('getHardware', 'getHardwareEvents'):
-        deprecated("Obsolete argument %s given for Loader constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
         getHw = value
 
       elif key == 'loganalyzers':
         logAnalyzers = value
 
       else:
-        warnings.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
+        warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
 
     if len(logAnalyzers) > 0:
       getLog = True
@@ -1344,7 +1343,7 @@ class Loader(Data):
         end = None if end.startswith('0001') else dateutil.parser.parse(end)
 
         if end is not None and start.tzinfo != end.tzinfo:
-          warnings.warn(UserWarning('Timezone changed!'))
+          warn.warn(UserWarning('Timezone changed!'))
 
         for sessionStart, sessionEnd in sessions:
           if sessionEnd is None:
@@ -1354,7 +1353,7 @@ class Loader(Data):
              end is not None and sessionStart < end < sessionEnd or\
              (end is not None and start <= sessionStart and sessionEnd <= end) or\
              (end is not None and sessionStart <= start and end <= sessionEnd):
-              warnings.warn(UserWarning('Temporal overlap of sessions!'))
+              warn.warn(UserWarning('Temporal overlap of sessions!'))
 
         sessions.append(SessionNode(Start=start, End=end))
 
@@ -1599,7 +1598,7 @@ class Loader(Data):
       orphans = data['nosepokes']
 
       if len(orphans) > 0:
-        warnings.warn('Unmatched nosepokes: %s' % orphans)
+        warn.warn('Unmatched nosepokes: %s' % orphans)
 
 
       for animal in animals:
@@ -1835,27 +1834,27 @@ class Merger(Data):
 
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
-        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         getNp = value
 
       elif key == 'getLogs':
-        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         getLog = value
 
       elif key == 'getEnvironment':
-        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         getEnv = value
 
       elif key in ('getHardware', 'getHardwareEvents'):
-        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         getHw = value
 
       elif key == 'loganalyzers':
-        deprecated("Obsolete argument %s given for Merger constructor." % key)
+        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         logAnalyzers = value
 
       else:
-        warnings.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
+        warn.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
 
     if len(logAnalyzers) > 0:
       getLog = True

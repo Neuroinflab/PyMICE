@@ -24,7 +24,8 @@
 
 import os 
 import csv
-import warnings
+
+from ._Tools import warn
 
 class ResultsCSV(object):
   def __init__(self, filename, fields=(), force=False):
@@ -102,10 +103,10 @@ class ResultsCSV(object):
       row = self.__rows[id]
 
     except KeyError:
-      warnings.warn('Row of ID %s not found, creating a new row.' % id)
+      warn.warn('Row of ID %s not found, creating a new row.' % id)
       row = self.__rows[self.addRow(id)]
 
     if field in row:
-      warnings.warn('Field %s already set for row of ID %s, overwriting.' % (field, id))
+      warn.warn('Field %s already set for row of ID %s, overwriting.' % (field, id))
       
     row[field] = value
