@@ -1867,7 +1867,7 @@ class Merger(Data):
     self._initCache()
     self.__topTime = datetime(MINYEAR, 1, 1, tzinfo=pytz.timezone('Etc/GMT-14'))
 
-    for dataSource in dataSources:
+    for dataSource in sorted(dataSources, key=methodcaller('getStart')):
       try:
         self.appendDataSource(dataSource)
 
