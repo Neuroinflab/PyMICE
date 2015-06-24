@@ -217,7 +217,7 @@ class Data(object):
 
   def getStart(self):
     """
-    @return: timestamp of the earliest visit registration
+    @return: time of the earliest visit registration
     @rtype: datetime
     """
     if self.icSessionStart is not None:
@@ -232,7 +232,7 @@ class Data(object):
 
   def getEnd(self):
     """
-    @return: timestamp of the latest visit registration
+    @return: time of the latest visit registration
     @rtype: datetime
     """
     if self.icSessionEnd is not None:
@@ -534,13 +534,13 @@ class Data(object):
     return DataNode(Visits=list(visits))
 
   @staticmethod
-  def _getTimeMask(time, startTime=None, endTime=None):
+  def _getTimeMask(time, start=None, end=None):
     mask = None
-    if startTime is not None:
-      mask = toTimestampUTC(startTime) <= time
+    if start is not None:
+      mask = toTimestampUTC(start) <= time
 
-    if endTime is not None:
-      timeMask = toTimestampUTC(endTime) > time
+    if end is not None:
+      timeMask = toTimestampUTC(end) > time
       mask = timeMask if mask is None else mask * timeMask
 
     return mask
@@ -577,7 +577,7 @@ class Data(object):
     key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
     return sorted(data, key=key)
 
-  def getVisits(self, mice=None, startTime=None, endTime=None, order=None):
+  def getVisits(self, mice=None, start=None, end=None, order=None, startTime=None, endTime=None):
     """
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
@@ -606,18 +606,36 @@ class Data(object):
     @param mice: mouse (or mice) which visits are requested
     @type mice:
 
-    @param startTime: a lower bound of the visit Start attribute
-    @type startTime: datetime
+    @param start: a lower bound of the visit Start attribute
+    @type start: datetime
 
-    @param endTime: an upper bound of the visit Start attribute
-    @type endTime: datetime
+    @param end: an upper bound of the visit Start attribute
+    @type end: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
+    @param startTime: deprecated, use C{start} instead
+
+    @param endTime: deprecated, use C{end} instead
+
     @return: visits.
     @rtype: [VisitNode]
     """
+    if startTime is not None:
+      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      if start is not None:
+        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
+
+      start = startTime
+
+    if endTime is not None:
+      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      if end is not None:
+        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
+
+      end = endTime
+
     mask = None
     if mice is not None:
       try:
@@ -630,7 +648,7 @@ class Data(object):
         else:
           mask = sum((self.__animalVisits[unicode(m)] for m in mice if unicode(m) in self.__animalVisits), False)
 
-    timeMask = self._getTimeMask(self.__visitsStart, startTime, endTime)
+    timeMask = self._getTimeMask(self.__visitsStart, start, end)
     if timeMask is not None:
       mask = timeMask if mask is None else mask * timeMask
 
@@ -647,7 +665,7 @@ class Data(object):
     deprecated("Obsolete method getLogs accessed.")
     return self.getLog(*args, **kwargs)
 
-  def getLog(self, startTime=None, endTime=None, order=None):
+  def getLog(self, start=None, end=None, order=None, startTime=None, endTime=None):
     """
     >>> log = ml_icp3.getLog(order='DateTime')
     >>> for entry in log:
@@ -655,23 +673,41 @@ class Data(object):
     Session is started
     Session is stopped
 
-    @param startTime: a lower bound of the log entries DateTime attribute
-    @type startTime: datetime
+    @param start: a lower bound of the log entries DateTime attribute
+    @type start: datetime
 
-    @param endTime: an upper bound of the log entries DateTime attribute
-    @type endTime: datetime
+    @param end: an upper bound of the log entries DateTime attribute
+    @type end: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
+    @param startTime: deprecated, use C{start} instead
+
+    @param endTime: deprecated, use C{end} instead
+
     @return: log entries.
     @rtype: [LogNode, ...]
     """
-    mask = self._getTimeMask(self.__logDateTime, startTime, endTime)
+    if startTime is not None:
+      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      if start is not None:
+        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
+
+      start = startTime
+
+    if endTime is not None:
+      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      if end is not None:
+        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
+
+      end = endTime
+
+    mask = self._getTimeMask(self.__logDateTime, start, end)
     log = self.__log if mask is None else self.__log[mask]
     return self.__orderBy(log, order)
 
-  def getEnvironment(self, startTime=None, endTime=None, order=None):
+  def getEnvironment(self, start=None, end=None, order=None, startTime=None, endTime=None):
     """
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print "%.1f" %env.Temperature
@@ -692,26 +728,44 @@ class Data(object):
     22.0
     23.6
 
-    @param startTime: a lower bound of the sample DateTime attribute
-    @type startTime: datetime
+    @param start: a lower bound of the sample DateTime attribute
+    @type start: datetime
 
-    @param endTime: an upper bound of the sample DateTime attribute
-    @type endTime: datetime
+    @param end: an upper bound of the sample DateTime attribute
+    @type end: datetime
 
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
+    @param startTime: deprecated, use C{start} instead
+
+    @param endTime: deprecated, use C{end} instead
+
     @return: sampled environment conditions.
     @rtype: [EnvironmentNode, ...]
     """
-    mask = self._getTimeMask(self.__envDateTime, startTime, endTime)
+    if startTime is not None:
+      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      if start is not None:
+        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
+
+      start = startTime
+
+    if endTime is not None:
+      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      if end is not None:
+        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
+
+      end = endTime
+
+    mask = self._getTimeMask(self.__envDateTime, start, end)
     env = list(self.__environment if mask is None else self.__environment[mask])
     return self.__orderBy(env, order)
 
-  def getHardwareEvents(self, startTime=None, endTime=None, order=None):
+  def getHardwareEvents(self, start=None, end=None, order=None, startTime=None, endTime=None):
     """
-    @param startTime: a lower bound of the event DateTime attribute
-    @type startTime: datetime
+    @param start: a lower bound of the event DateTime attribute
+    @type start: datetime
 
     @param endTime: an upper bound of the event DateTime attribute
     @type endTime: datetime
@@ -719,10 +773,28 @@ class Data(object):
     @param order: attributes that the returned list is ordered by
     @type order: str or (str, ...)
 
+    @param startTime: deprecated, use C{start} instead
+
+    @param endTime: deprecated, use C{end} instead
+
     @return: hardware events.
     @rtype: [HardwareEventNode, ...]
     """
-    mask = self._getTimeMask(self.__hwDateTime, startTime, endTime)
+    if startTime is not None:
+      deprecated("Obsolete argument 'startTime' used; use 'start' instead")
+      if start is not None:
+        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
+
+      start = startTime
+
+    if endTime is not None:
+      deprecated("Obsolete argument 'endTime' used; use 'end' instead")
+      if end is not None:
+        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
+
+      end = endTime
+
+    mask = self._getTimeMask(self.__hwDateTime, start, end)
     hw = list(self.__hardware if mask is None else self.__hardware[mask])
     return self.__orderBy(hw, order)
 

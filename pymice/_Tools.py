@@ -41,7 +41,20 @@ def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
 
 
-def deprecated(message, warningClass=DeprecationWarning, stacklevel=1):
+#warnings.filterwarnings('always', '', DeprecationWarning, '^pymice')
+class PmDeprecationWarning(DeprecationWarning):
+  pass
+
+def deprecationWarnings(action='always'):
+  """
+  Select PyMICE deprecation warnings behaviour.
+
+  @param action: disposition
+  @type action: str
+  """
+  warnings.filterwarnings(action, category=PmDeprecationWarning)
+
+def deprecated(message, warningClass=PmDeprecationWarning, stacklevel=1):
   warnings.warn(message, warningClass, stacklevel=stacklevel + 2)
 
 
