@@ -109,7 +109,7 @@ def plotPhases(ec, tzone=None, ax=None):
 
   return fig
 
-def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, legend=False, tzone=None, **kwargs):
+def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, label=False, tzone=None, **kwargs):
   envData = md.getEnvironment(start=start, end=end)
   if len(envData) == 0:
     return
@@ -176,14 +176,49 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
                                  mergeWindow=timedelta(0, 120))
     xs = mpd.date2num([t for row in data for t in row[:2]])
     ys = [y for _, _, (y,) in data for _ in xrange(2)]
-    if legend and 'label' not in kwargs:
+    if label:
       ax.plot(xs, ys, label="cage %d" % cage, **kwargs)
 
     else:
       ax.plot(xs, ys, **kwargs)
 
 
-def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, tzone=None, **kwargs):
+def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
+  data = mergeIntervalsValues(rawData,
+                              ('Start',
+                               'End'),
+                               overlap=True,
+                               mergeWindow=timedelta(0, window))
+
+  xs = []
+  ys = []
+  if start is not None:
+    xs.append(start)
+    ys.append(bottom)
+
+  for s, e, _ in data:
+    xs.extend([s, s, e, e])
+    ys.extend([bottom, top, top, bottom])
+
+  if end is not None:
+    xs.append(end)
+    ys.append(bottom)
+
+  xs = mpd.date2num(xs)
+  ax.plot(xs, ys, **kwargs)
+  return min(xs), max(xs)
+
+  #for row in data:
+  #  s, e = mpd.date2num(row[:2])
+  #  codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+  #  verts = [(s, 1), (e, 1), (e, 0), (s, 0), (s, 1)]
+  #  path = Path(verts, codes)
+  #  patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
+  #  ax.add_patch(patch)
+
+
+
+def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, tzone=None, label=False,  **kwargs):
   visits = md.getVisits(start=start, end=end)
   if len(visits) == 0:
     return
@@ -223,20 +258,9 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
       ax.xaxis.set_major_locator(locator)
       ax.xaxis.set_major_formatter(formatter)
 
-      data = mergeIntervalsValues(byCages[cage],
-                                  ('Start',
-                                   'End'),
-                                   overlap=True,
-                                   mergeWindow=timedelta(0, window))
-      for row in data:
-        s, e = mpd.date2num(row[:2])
-        codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
-        verts = [(s, 1), (e, 1), (e, 0), (s, 0), (s, 1)]
-        path = Path(verts, codes)
-        patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
-        ax.add_patch(patch)
+      xmin, xmax = _plotVisitPeriods(ax, byCages[cage], start, end, 1, 0, window, **kwargs)
 
-      ax.set_xlim(mpd.date2num([data[0][0], data[-1][1]]))
+      ax.set_xlim(xmin, xmax)
       ax.set_ylim(0, 1)
       plt.xticks(rotation=30) # -_-
       ax.autoscale_view()
@@ -247,18 +271,11 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
     return fig
   
   for i, cage in enumerate(sorted(cages)):
-    data = mergeIntervalsValues(byCages[cage],
-                                ('Start',
-                                 'End'),
-                                 overlap=True,
-                                 mergeWindow=timedelta(0, window))
-    for row in data:
-      s, e = mpd.date2num(row[:2])
-      codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
-      verts = [(s, i + 1), (e, i + 1), (e, i), (s, i), (s, i + 1)]
-      path = Path(verts, codes)
-      patch = patches.PathPatch(path)#, facecolor='none', edgecolor='red')
-      ax.add_patch(patch)
+    if label:
+      _plotVisitPeriods(ax, byCages[cage], start, end, i+1, i, window, label='cage %d' % cage, **kwargs)
+
+    else:
+      _plotVisitPeriods(ax, byCages[cage], start, end, i+1, i, window, **kwargs)
 
 
 
