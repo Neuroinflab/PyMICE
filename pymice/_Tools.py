@@ -28,6 +28,7 @@ import pytz
 import time
 import warnings
 from math import modf
+from operator import itemgetter, methodcaller, attrgetter
 
 from numbers import Number
 import numpy as np
@@ -345,3 +346,48 @@ def getTutorialData(path=None):
 
     finally:
       os.remove(fn)
+
+
+def groupBy(objects, getKey):
+  if not hasattr(getKey, '__call__'):
+    getKey = attrgetter(*getKey)
+
+  result = {}
+  for o in objects:
+    key = getKey(o)
+    try:
+      result[key].append(o)
+
+    except KeyError:
+      result[key] = [o]
+
+  return result
+
+def mergeIntervalsValues(objects, getData, mergeWindow=None):
+  if len(objects) == 0:
+    return []
+
+  if not hasattr(getData, '__call__'):
+    getData = attrgetter(*getData)
+
+  result = []
+  data = sorted(map(getData, objects))
+  row = data[0]
+  lastStart, lastEnd = row[:2]
+  assert lastStart <= lastEnd
+
+  lastValue = row[2:]
+
+  for row in data[1:]:
+    start, end = row[:2]
+    value = row[2:]
+    assert lastEnd <= start <= end
+    if lastValue == value and (start - lastEnd <= mergeWindow or mergeWindow is None):
+      lastEnd = end
+
+    else:
+      result.append((lastStart, lastEnd, lastValue))
+      lastStart, lastEnd, lastValue = start, end, value
+
+  result.append((lastStart, lastEnd, lastValue))
+  return result
