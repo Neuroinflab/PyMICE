@@ -31,6 +31,8 @@ from math import sqrt, ceil
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.path import Path
 
 import dateutil.tz
 
@@ -151,7 +153,7 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
                                   ('DateTime',
                                    'DateTime',
                                    env),
-                                   timedelta(0, 120))
+                                   mergeWindow=timedelta(0, 120))
       xs = mpd.date2num([t for row in data for t in row[:2]])
       ys = [y for _, _, (y,) in data for _ in xrange(2)]
       ax.set_xlim(min(xs), max(xs))
@@ -165,14 +167,13 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
     fig.tight_layout()
     fig.canvas.draw()
     return fig
-
   
   for cage in sorted(cages):
     data = mergeIntervalsValues(byCages[cage],
                                 ('DateTime',
                                  'DateTime',
-                                 'Illumination'),
-                                 timedelta(0, 120))
+                                 env),
+                                 mergeWindow=timedelta(0, 120))
     xs = mpd.date2num([t for row in data for t in row[:2]])
     ys = [y for _, _, (y,) in data for _ in xrange(2)]
     if legend and 'label' not in kwargs:
@@ -180,6 +181,86 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
 
     else:
       ax.plot(xs, ys, **kwargs)
+
+
+def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, tzone=None, **kwargs):
+  visits = md.getVisits(start=start, end=end)
+  if len(visits) == 0:
+    return
+
+  byCages = groupBy(visits, operator.attrgetter('Cage'))
+  if cages is None:
+    cages = set(byCages)
+
+  elif isinstance(cages, basestring):
+    cages = {int(cages)}
+
+  else:
+    try:
+      cages = set(cages)
+
+    except:
+      cages = {int(cages)}
+
+  cages = sorted(set(byCages) & cages)
+
+  if len(cages) == 0:
+    return
+
+  fig = None
+  if ax is None:
+    fig = plt.figure()
+    fig.suptitle('Visits detected')
+    width = int(ceil(sqrt(len(cages))))
+    height = int(ceil(float(len(cages)) / width))
+
+    for i, cage in enumerate(cages, 1):
+      ax = fig.add_subplot(height, width, i)
+      ax.set_title("cage %d" % cage) 
+
+      locator = mpd.AutoDateLocator(tz=tzone)
+      formatter = mpd.AutoDateFormatter(locator, tz=tzone)
+      ax.xaxis.set_major_locator(locator)
+      ax.xaxis.set_major_formatter(formatter)
+
+      data = mergeIntervalsValues(byCages[cage],
+                                  ('Start',
+                                   'End'),
+                                   overlap=True,
+                                   mergeWindow=timedelta(0, window))
+      for row in data:
+        s, e = mpd.date2num(row[:2])
+        codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+        verts = [(s, 1), (e, 1), (e, 0), (s, 0), (s, 1)]
+        path = Path(verts, codes)
+        patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
+        ax.add_patch(patch)
+
+      ax.set_xlim(mpd.date2num([data[0][0], data[-1][1]]))
+      ax.set_ylim(0, 1)
+      plt.xticks(rotation=30) # -_-
+      ax.autoscale_view()
+
+    #fig.autofmt_xdate()
+    fig.tight_layout()
+    fig.canvas.draw()
+    return fig
+  
+  for i, cage in enumerate(sorted(cages)):
+    data = mergeIntervalsValues(byCages[cage],
+                                ('Start',
+                                 'End'),
+                                 overlap=True,
+                                 mergeWindow=timedelta(0, window))
+    for row in data:
+      s, e = mpd.date2num(row[:2])
+      codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+      verts = [(s, i + 1), (e, i + 1), (e, i), (s, i), (s, i + 1)]
+      path = Path(verts, codes)
+      patch = patches.PathPatch(path)#, facecolor='none', edgecolor='red')
+      ax.add_patch(patch)
+
+
 
 def plotData(mds):
   """Diagnostic plot of data from multiple sources"""
