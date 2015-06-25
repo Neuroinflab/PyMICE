@@ -109,6 +109,20 @@ def plotPhases(ec, tzone=None, ax=None):
 
   return fig
 
+
+def _plotEnv(rawData, ax, env, **kwargs):
+  data = mergeIntervalsValues(rawData,
+                              ('DateTime',
+                               'DateTime',
+                               env),
+                               mergeWindow=timedelta(0, 120))
+  xs = mpd.date2num([t for row in data for t in row[:2]])
+  ys = [y for _, _, (y,) in data for _ in xrange(2)]
+  ax.plot(xs, ys, **kwargs)
+
+  return min(xs), max(xs), min(ys), max(ys)
+
+
 def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, label=False, tzone=None, **kwargs):
   envData = md.getEnvironment(start=start, end=end)
   if len(envData) == 0:
@@ -149,19 +163,11 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
       ax.xaxis.set_major_locator(locator)
       ax.xaxis.set_major_formatter(formatter)
 
-      data = mergeIntervalsValues(byCages[cage],
-                                  ('DateTime',
-                                   'DateTime',
-                                   env),
-                                   mergeWindow=timedelta(0, 120))
-      xs = mpd.date2num([t for row in data for t in row[:2]])
-      ys = [y for _, _, (y,) in data for _ in xrange(2)]
-      ax.set_xlim(min(xs), max(xs))
-      ax.set_ylim(min(ys) - 1, max(ys) + 1)
+      xmin, xmax, ymin, ymax = _plotEnv(byCages[cage], ax, env, **kwargs)
+      ax.set_xlim(xmin, xmax)
+      ax.set_ylim(ymin - 1, ymax + 1)
       plt.xticks(rotation=30) # -_-
       ax.autoscale_view()
-
-      ax.plot(xs, ys, **kwargs)
 
     #fig.autofmt_xdate()
     fig.tight_layout()
@@ -169,18 +175,11 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
     return fig
   
   for cage in sorted(cages):
-    data = mergeIntervalsValues(byCages[cage],
-                                ('DateTime',
-                                 'DateTime',
-                                 env),
-                                 mergeWindow=timedelta(0, 120))
-    xs = mpd.date2num([t for row in data for t in row[:2]])
-    ys = [y for _, _, (y,) in data for _ in xrange(2)]
     if label:
-      ax.plot(xs, ys, label="cage %d" % cage, **kwargs)
+      _plotEnv(byCages[cage], ax, env, label="cage %d" % cage, **kwargs)
 
     else:
-      ax.plot(xs, ys, **kwargs)
+      _plotEnv(byCages[cage], ax, env, **kwargs)
 
 
 def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
@@ -215,7 +214,6 @@ def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
   #  path = Path(verts, codes)
   #  patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
   #  ax.add_patch(patch)
-
 
 
 def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, tzone=None, label=False,  **kwargs):
@@ -258,7 +256,7 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
       ax.xaxis.set_major_locator(locator)
       ax.xaxis.set_major_formatter(formatter)
 
-      xmin, xmax = _plotVisitPeriods(ax, byCages[cage], start, end, 1, 0, window, **kwargs)
+      xmin, xmax = _plotVisitPeriods(ax, byCages[cage], start, end, 0.9, 0.1, window, **kwargs)
 
       ax.set_xlim(xmin, xmax)
       ax.set_ylim(0, 1)
@@ -272,10 +270,10 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
   
   for i, cage in enumerate(sorted(cages)):
     if label:
-      _plotVisitPeriods(ax, byCages[cage], start, end, i+1, i, window, label='cage %d' % cage, **kwargs)
+      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window, label='cage %d' % cage, **kwargs)
 
     else:
-      _plotVisitPeriods(ax, byCages[cage], start, end, i+1, i, window, **kwargs)
+      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window, **kwargs)
 
 
 
