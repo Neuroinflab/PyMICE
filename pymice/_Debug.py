@@ -24,13 +24,19 @@
 
 import operator
 
+from datetime import timedelta
+from math import sqrt, ceil
+
+
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
 
-from ._Tools import deprecated
-
 import dateutil.tz
+
+
+from ._Tools import mergeIntervalsValues, groupBy
+
 
 
 def plotLimits(ec, sections, ax=None, color='k', linestyle=':', **kwargs):
@@ -101,6 +107,80 @@ def plotPhases(ec, tzone=None, ax=None):
 
   return fig
 
+def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, legend=False, tzone=None, **kwargs):
+  envData = md.getEnvironment(start=start, end=end)
+  if len(envData) == 0:
+    return
+
+  byCages = groupBy(envData, operator.attrgetter('Cage'))
+  if cages is None:
+    cages = set(byCages)
+
+  elif isinstance(cages, basestring):
+    cages = {int(cages)}
+
+  else:
+    try:
+      cages = set(cages)
+
+    except:
+      cages = {int(cages)}
+
+  cages = sorted(set(byCages) & cages)
+
+  if len(cages) == 0:
+    return
+
+  fig = None
+  if ax is None:
+    fig = plt.figure()
+    fig.suptitle(env)
+    width = int(ceil(sqrt(len(cages))))
+    height = int(ceil(float(len(cages)) / width))
+
+    for i, cage in enumerate(cages, 1):
+      ax = fig.add_subplot(height, width, i)
+      ax.set_title("cage %d" % cage) 
+
+      locator = mpd.AutoDateLocator(tz=tzone)
+      formatter = mpd.AutoDateFormatter(locator, tz=tzone)
+      ax.xaxis.set_major_locator(locator)
+      ax.xaxis.set_major_formatter(formatter)
+
+      data = mergeIntervalsValues(byCages[cage],
+                                  ('DateTime',
+                                   'DateTime',
+                                   env),
+                                   timedelta(0, 120))
+      xs = mpd.date2num([t for row in data for t in row[:2]])
+      ys = [y for _, _, (y,) in data for _ in xrange(2)]
+      ax.set_xlim(min(xs), max(xs))
+      ax.set_ylim(min(ys) - 1, max(ys) + 1)
+      plt.xticks(rotation=30) # -_-
+      ax.autoscale_view()
+
+      ax.plot(xs, ys, **kwargs)
+
+    #fig.autofmt_xdate()
+    fig.tight_layout()
+    fig.canvas.draw()
+    return fig
+
+  
+  for cage in sorted(cages):
+    data = mergeIntervalsValues(byCages[cage],
+                                ('DateTime',
+                                 'DateTime',
+                                 'Illumination'),
+                                 timedelta(0, 120))
+    xs = mpd.date2num([t for row in data for t in row[:2]])
+    ys = [y for _, _, (y,) in data for _ in xrange(2)]
+    if legend and 'label' not in kwargs:
+      ax.plot(xs, ys, label="cage %d" % cage, **kwargs)
+
+    else:
+      ax.plot(xs, ys, **kwargs)
+
 def plotData(mds):
   """Diagnostic plot of data from multiple sources"""
   fig = plt.figure()
@@ -143,18 +223,3 @@ def plotCumulativeVisits(md, **kwargs):
   plt.draw()
   return ax
 
-def plotIllumination(md, **kwargs):
-  fig = plt.figure()
-  ax = fig.add_subplot(1, 1, 1)
-  env = md.getEnvironment(order='DateTime')
-  ax.plot(mpd.date2num(map(operator.attrgetter('DateTime'), env)),
-          map(operator.attrgetter('Illumination'), env))
-
-  ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
-                                             tz=self.tzone)) 
-  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
-  ax.autoscale_view()
-  ax.get_figure().autofmt_xdate()
-  ax.set_title(ec.path) 
-  plt.draw()
-  return ax
