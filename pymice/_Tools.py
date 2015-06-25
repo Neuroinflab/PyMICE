@@ -363,7 +363,7 @@ def groupBy(objects, getKey):
 
   return result
 
-def mergeIntervalsValues(objects, getData, mergeWindow=None):
+def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
   if len(objects) == 0:
     return []
 
@@ -381,9 +381,10 @@ def mergeIntervalsValues(objects, getData, mergeWindow=None):
   for row in data[1:]:
     start, end = row[:2]
     value = row[2:]
-    assert lastEnd <= start <= end
+    assert overlap or lastEnd <= start
+    assert start <= end
     if lastValue == value and (start - lastEnd <= mergeWindow or mergeWindow is None):
-      lastEnd = end
+      lastEnd = max(end, lastEnd)
 
     else:
       result.append((lastStart, lastEnd, lastValue))
