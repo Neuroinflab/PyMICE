@@ -45,9 +45,9 @@ from datetime import datetime, timedelta, MINYEAR
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
-from ._Tools import timeString, ensureFloat, ensureInt, \
-                    convertTime, timeToList, timeListQueue,\
-                    PathZipFile, toTimestampUTC, warn
+from _Tools import timeString, ensureFloat, ensureInt, \
+                   convertTime, timeToList, timeListQueue,\
+                   PathZipFile, toTimestampUTC, warn
 
 callCopy = methodcaller('copy')
 
