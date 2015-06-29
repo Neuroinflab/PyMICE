@@ -182,7 +182,8 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
       _plotEnv(byCages[cage], ax, env, **kwargs)
 
 
-def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
+def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window,
+                      color, linestyle, label=None, **kwargs):
   data = mergeIntervalsValues(rawData,
                               ('Start',
                                'End'),
@@ -204,8 +205,11 @@ def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
     ys.append(bottom)
 
   xs = mpd.date2num(xs)
-  ax.plot(xs, ys, **kwargs)
-  return min(xs), max(xs)
+  ax.plot(xs, ys, color=color, linestyle=linestyle, label=label, **kwargs)
+  mid = 0.5 * (top + bottom)
+  xmin, xmax = min(xs), max(xs)
+  ax.plot([xmin, xmax], [mid, mid], color=color, linestyle=':' if linestyle != ':' else '--', **kwargs)
+  return xmin, xmax
 
   #for row in data:
   #  s, e = mpd.date2num(row[:2])
@@ -216,7 +220,9 @@ def _plotVisitPeriods(ax, rawData, start, end, top, bottom, window, **kwargs):
   #  ax.add_patch(patch)
 
 
-def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, tzone=None, label=False,  **kwargs):
+def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None,
+                     tzone=None, label=False, color='b', linestyle='-',
+                     **kwargs):
   visits = md.getVisits(start=start, end=end)
   if len(visits) == 0:
     return
@@ -256,7 +262,8 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
       ax.xaxis.set_major_locator(locator)
       ax.xaxis.set_major_formatter(formatter)
 
-      xmin, xmax = _plotVisitPeriods(ax, byCages[cage], start, end, 0.9, 0.1, window, **kwargs)
+      xmin, xmax = _plotVisitPeriods(ax, byCages[cage], start, end, 0.9, 0.1,
+                                     window, color, linestyle, **kwargs)
 
       ax.set_xlim(xmin, xmax)
       ax.set_ylim(0, 1)
@@ -270,10 +277,12 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None, t
   
   for i, cage in enumerate(sorted(cages)):
     if label:
-      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window, label='cage %d' % cage, **kwargs)
+      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window,
+                        color, linestyle, label='cage %d' % cage, **kwargs)
 
     else:
-      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window, **kwargs)
+      _plotVisitPeriods(ax, byCages[cage], start, end, i + 0.9, i + 0.1, window,
+                        color, linestyle, **kwargs)
 
 
 
