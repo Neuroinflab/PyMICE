@@ -349,6 +349,16 @@ def getTutorialData(path=None):
 
 
 def groupBy(objects, getKey):
+  """
+  >>> import operator
+  >>> output = groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
+  ...                  getKey=operator.itemgetter(1))
+  >>> for k in sorted(output):
+  ...   print k, output[k]
+  1 [(1, 1), (2, 1, 8)]
+  2 [(1, 2), (3, 2)]
+  4 [(3, 4)]
+  """
   if not hasattr(getKey, '__call__'):
     getKey = attrgetter(*getKey)
 
@@ -392,3 +402,7 @@ def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
 
   result.append((lastStart, lastEnd, lastValue))
   return result
+
+if __name__ == '__main__':
+  import doctest
+  doctest.testmod()
