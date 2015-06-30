@@ -47,7 +47,7 @@ from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, timeListQueue,\
-                   PathZipFile, toTimestampUTC, warn
+                   PathZipFile, toTimestampUTC, warn, groupBy
 
 callCopy = methodcaller('copy')
 
@@ -1866,7 +1866,7 @@ class Merger(Data):
     self._initCache()
     self.__topTime = datetime(MINYEAR, 1, 1, tzinfo=pytz.timezone('Etc/GMT-14'))
 
-    for dataSource in sorted(dataSources, key=methodcaller('getStart')):
+    for dataSource in self._sortDataSources(dataSources):
       try:
         self.appendDataSource(dataSource)
 
@@ -1875,6 +1875,35 @@ class Merger(Data):
         raise
 
     self._logAnalysis(logAnalyzers)
+
+  @staticmethod
+  def _sortDataSources(dataSources):
+    """
+    >>> class FakeData(object):
+    ...   def __init__(self, start=None):
+    ...     self.__start = start
+    ...   def getStart(self):
+    ...     return self.__start
+    >>> dtA = datetime(2012, 2, 1)
+    >>> dtB = datetime(2012, 2, 2)
+
+    >>> map(methodcaller('getStart'),
+    ...     Merger._sortDataSources([FakeData(), FakeData(dtA),
+    ...                              FakeData(dtB), FakeData(dtA)])) == [dtA, dtA, dtB, None]
+    True
+
+    >>> map(methodcaller('getStart'),
+    ...     Merger._sortDataSources([FakeData(dtA),
+    ...                              FakeData(dtB), FakeData(dtA)])) == [dtA, dtA, dtB]
+    True
+
+    >>> map(methodcaller('getStart'),
+    ...     Merger._sortDataSources([FakeData(), FakeData(), FakeData()])) == [None, None, None]
+    True
+    """
+    sourcesByStartPresence = groupBy(dataSources, getKey=lambda x: x.getStart() is not None)
+    return sorted(sourcesByStartPresence.get(True, []), key=methodcaller('getStart')) \
+           + sourcesByStartPresence.get(False, [])
 
   def __repr__(self):
     """

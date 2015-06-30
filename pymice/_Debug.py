@@ -328,3 +328,9 @@ def plotCumulativeVisits(md, **kwargs):
   plt.draw()
   return ax
 
+def plotOffsetToUTC(timePoints, ax=None, **kwargs):
+  if ax is None:
+    ax = plt.gca()
+
+  utcOffsetHours = [t.tzinfo.utcoffset(t).total_seconds() / 3600. for t in timePoints]
+  ax.scatter(mpd.date2num(timePoints), utcOffsetHours, **kwargs)
