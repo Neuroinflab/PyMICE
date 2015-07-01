@@ -67,6 +67,8 @@ class ObjectBase(object):
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=1, b=4)]
 
+  >>> ob.get({'a': lambda x: x != 1})
+  []
   """
   def __init__(self, objects=[]):
     """
