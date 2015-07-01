@@ -63,9 +63,9 @@ class ObjectBase(object):
   >>> tmp
   []
 
-  >>> ob.put([ClassA(1, 4)])
+  >>> ob = ObjectBase([ClassA(1, 4)])
   >>> ob.get({'a': lambda x: x == 1})
-  [ClassA(1, 4)]
+  [ClassA(a=1, b=4)]
 
   """
   def __init__(self, objects=[]):
@@ -76,7 +76,7 @@ class ObjectBase(object):
   def put(self, objects):
     self.__objects.extend(objects)
 
-  def get(self):
+  def get(self, filters=None):
     return list(self.__objects)
 
 if __name__ == '__main__':
