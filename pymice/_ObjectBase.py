@@ -91,6 +91,11 @@ class ObjectBase(object):
   >>> ob.get({'a': lambda x: x == 1,
   ...         'b': lambda x: x == 2})
   []
+
+  >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
+  ...                  ClassA(ClassB(4, 3), 3)])
+  >>> ob.get({'b': lambda x: (x == 1) + (x == 3)})
+  [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=4, d=3), b=3)]
   """
   def __init__(self, objects=[]):
     """
