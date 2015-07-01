@@ -102,15 +102,16 @@ class ObjectBase(object):
 
   >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
   ...                  ClassA(ClassB(4, 3), 3)],
-  ...                 convertersToNumeric={'a': lambda x: x.d - x.c})
+  ...                 converters={'a': lambda x: x.d - x.c})
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
   """
-  def __init__(self, objects=[]):
+  def __init__(self, objects=[], converters={}):
     """
     """
     self.__objects = np.array(objects, dtype=object)
     self.__cachedAttributes = {}
+    self.__converters = dict(converters)
 
   def put(self, objects):
     self.__objects = np.append(self.__objects, objects)
@@ -141,8 +142,15 @@ class ObjectBase(object):
       return self. __getAndCacheAttributeValues(attributeName)
       
   def __getAndCacheAttributeValues(self, attributeName):
-    attributeValues = np.array(map(attrgetter(attributeName), self.__objects))
+    attributeValues = np.array(self.__getConvertedAttributeValues(attributeName))
     self.__cachedAttributes[attributeName] = attributeValues
+    return attributeValues
+
+  def __getConvertedAttributeValues(self, attributeName):
+    attributeValues = map(attrgetter(attributeName), self.__objects)
+    if attributeName in self.__converters:
+      return map(self.__converters[attributeName], attributeValues)
+
     return attributeValues
 
 
