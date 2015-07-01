@@ -173,6 +173,11 @@ class ObjectBase(object):
     >>> ob = ObjectBase()
     >>> ob.getAttributes('a.c')
     []
+
+    >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1)],
+    ...                 converters={'a': lambda x: x.c})
+    >>> ob.getAttributes('a')
+    [ClassB(c=1, d=2)]
     """
     return map(attrgetter(attributeName), self.__objects)
 
