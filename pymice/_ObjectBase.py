@@ -40,13 +40,13 @@ class ObjectBase(object):
     pass
 
   def get(self):
-    pass
+    return []
 
 if __name__ == '__main__':
   import doctest
   import collections
   ClassA = collections.namedtuple('ClassA', ['a', 'b'])
-  ClassA = collections.namedtuple('ClassB', ['c', 'd'])
+  ClassB = collections.namedtuple('ClassB', ['c', 'd'])
 
   doctest.testmod(extraglobs={'ClassA': ClassA,
                               'ClassB': ClassB})
