@@ -53,10 +53,10 @@ class ObjectBase(object):
   [1, 2, [1]]
 
   """
-  def __init__(self):
+  def __init__(self, objects=[]):
     """
     """
-    self.__objects = []
+    self.__objects = objects
 
   def put(self, objects):
     self.__objects.extend(objects)
