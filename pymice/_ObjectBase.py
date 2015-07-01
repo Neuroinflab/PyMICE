@@ -170,6 +170,9 @@ class ObjectBase(object):
     >>> ob.getAttributes('a.c')
     [1, 2, 4]
 
+    >>> ob.getAttributes('a.c', 'b')
+    [(1, 1), (2, 2), (4, 3)]
+
     >>> ob = ObjectBase()
     >>> ob.getAttributes('a.c')
     []
