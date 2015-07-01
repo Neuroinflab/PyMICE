@@ -25,7 +25,7 @@
 
 class ObjectBase(object):
   """
-  A base class for efficient onbject filtering.
+  A base class for efficient object filtering.
 
   >>> ob = ObjectBase()
   >>> ob.get()
@@ -62,6 +62,11 @@ class ObjectBase(object):
   >>> ob.put([1, 2])
   >>> tmp
   []
+
+  >>> ob.put([ClassA(1, 4)])
+  >>> ob.get({'a': lambda x: x == 1})
+  [ClassA(1, 4)]
+
   """
   def __init__(self, objects=[]):
     """
