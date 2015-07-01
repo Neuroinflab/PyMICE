@@ -30,6 +30,10 @@ class ObjectBase(object):
   >>> ob = ObjectBase()
   >>> ob.get()
   []
+
+  >>> ob.push([ClassA(1, 4)])
+  >>> ob.get()
+  [ClassA(1, 4)]
   """
   def __init__(self):
     """
