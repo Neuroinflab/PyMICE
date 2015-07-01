@@ -105,6 +105,10 @@ class ObjectBase(object):
   ...                 converters={'a': lambda x: x.d - x.c})
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
+
+  >>> ob = ObjectBase(converters={'a': lambda x: x.d - x.c})
+  >>> ob.get()
+  []
   """
   def __init__(self, objects=[], converters={}):
     """
