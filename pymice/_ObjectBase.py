@@ -31,20 +31,20 @@ class ObjectBase(object):
   >>> ob.get()
   []
 
-  >>> ob.push([ClassA(1, 4)])
+  >>> ob.put([ClassA(1, 4)])
   >>> ob.get()
-  [ClassA(1, 4)]
+  [ClassA(a=1, b=4)]
   """
   def __init__(self):
     """
     """
-    pass
+    self.__objects = []
 
   def put(self, objects):
-    pass
+    self.__objects = objects
 
   def get(self):
-    return []
+    return self.__objects
 
 if __name__ == '__main__':
   import doctest
