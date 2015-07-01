@@ -58,7 +58,7 @@ class ObjectBase(object):
     self.__objects.extend(objects)
 
   def get(self):
-    return self.__objects
+    return list(self.__objects)
 
 if __name__ == '__main__':
   import doctest
