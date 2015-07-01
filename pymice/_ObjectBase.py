@@ -48,6 +48,10 @@ class ObjectBase(object):
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
 
+  >>> ob = ObjectBase([1, 2, [1]])
+  >>> ob.get()
+  [1, 2, [1]]
+
   """
   def __init__(self):
     """
