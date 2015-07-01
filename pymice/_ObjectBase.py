@@ -66,7 +66,7 @@ class ObjectBase(object):
   def __init__(self, objects=[]):
     """
     """
-    self.__objects = objects
+    self.__objects = list(objects)
 
   def put(self, objects):
     self.__objects.extend(objects)
