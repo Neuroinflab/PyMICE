@@ -34,6 +34,11 @@ class ObjectBase(object):
   >>> ob.put([ClassA(1, 4)])
   >>> ob.get()
   [ClassA(a=1, b=4)]
+
+  >>> ob.put([ClassA(2, 2)])
+  >>> ob.get()
+  [ClassA(a=1, b=4), ClassA(a=2, b=2)]
+
   """
   def __init__(self):
     """
