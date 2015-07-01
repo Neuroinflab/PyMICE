@@ -52,6 +52,11 @@ class ObjectBase(object):
   >>> ob.get()
   [1, 2, [1]]
 
+  >>> inOb = ob.get()
+  >>> inOb[2][0] = 42
+  >>> ob.get()
+  [1, 2, [42]]
+
   """
   def __init__(self, objects=[]):
     """
