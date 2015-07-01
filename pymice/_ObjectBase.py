@@ -22,6 +22,8 @@
 #                                                                             #
 ###############################################################################
 
+import numpy as np
+from operator import attrgetter
 
 class ObjectBase(object):
   """
@@ -48,18 +50,18 @@ class ObjectBase(object):
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
 
-  >>> ob = ObjectBase([1, 2, [1]])
+  >>> ob = ObjectBase([ClassA(1, 4), ClassA(2, 2), ClassA(2, 2)])
   >>> ob.get()
-  [1, 2, [1]]
+  [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2)]
 
   >>> tmp = ob.get()
-  >>> tmp[2][0] = 42
+  >>> tmp[2].b = 42
   >>> ob.get()
-  [1, 2, [42]]
+  [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=42)]
 
   >>> tmp = []
   >>> ob = ObjectBase(tmp)
-  >>> ob.put([1, 2])
+  >>> ob.put([ClassA(2, 2), ClassB(0, 0)])
   >>> tmp
   []
 
@@ -73,19 +75,60 @@ class ObjectBase(object):
   def __init__(self, objects=[]):
     """
     """
-    self.__objects = list(objects)
+    self.__objects = np.array(objects, dtype=object)
+    self.__cachedAttributes = {}
 
   def put(self, objects):
-    self.__objects.extend(objects)
+    self.__objects = np.append(self.__objects, objects)
 
   def get(self, filters=None):
-    return list(self.__objects)
+    return list(self.__getFilteredObjects(filters))
+
+  def __getFilteredObjects(self, filters):
+    if filters:
+      return self.__objects[self.__getMask(filters)]
+
+    else:
+      return self.__objects
+      
+  def __getMask(self, filters):
+    mask = True
+    for attributeName, filterFunction in filters.items():
+      mask = mask * filterFunction(self.__getAttributeValues(attributeName))
+
+    return mask
+
+  def __getAttributeValues(self, attributeName):
+    try:
+      return self.__cachedAttributes[attributeName]
+
+    except KeyError:
+      return self. __getAndCacheAttributeValues(attributeName)
+      
+  def __getAndCacheAttributeValues(self, attributeName):
+    attributeValues = np.array(map(attrgetter(attributeName), self.__objects))
+    self.__cachedAttributes[attributeName] = attributeValue
+    return attributeValues
+
 
 if __name__ == '__main__':
   import doctest
   import collections
-  ClassA = collections.namedtuple('ClassA', ['a', 'b'])
-  ClassB = collections.namedtuple('ClassB', ['c', 'd'])
+  class ClassA(object):
+    def __init__(self, a, b):
+      self.a = a
+      self.b = b
+
+    def __repr__(self):
+      return "ClassA(a=%s, b=%s)" % (repr(self.a), repr(self.b))
+
+  class ClassB(object):
+    def __init__(self, c, d):
+      self.c = c
+      self.d = d
+
+    def __repr__(self):
+      return "ClassB(c=%s, d=%s)" % (repr(self.c), repr(self.d))
 
   doctest.testmod(extraglobs={'ClassA': ClassA,
                               'ClassB': ClassB})
