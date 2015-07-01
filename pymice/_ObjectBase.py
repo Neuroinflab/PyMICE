@@ -169,6 +169,10 @@ class ObjectBase(object):
 
     >>> ob.getAttributes('a.c')
     [1, 2, 4]
+
+    >>> ob = ObjectBase()
+    >>> ob.getAttributes('a.c')
+    []
     """
     return map(attrgetter(attributeName), self.__objects)
 
