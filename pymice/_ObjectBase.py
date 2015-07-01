@@ -157,7 +157,7 @@ class ObjectBase(object):
 
     return attributeValues
 
-  def getAttributes(self, attributeName):
+  def getAttributes(self, *attributeNames):
     """
     >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
     ...                  ClassA(ClassB(4, 3), 3)])
@@ -182,7 +182,7 @@ class ObjectBase(object):
     >>> ob.getAttributes('a')
     [ClassB(c=1, d=2)]
     """
-    return map(attrgetter(attributeName), self.__objects)
+    return map(attrgetter(*attributeNames), self.__objects)
 
 
 if __name__ == '__main__':
