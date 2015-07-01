@@ -43,8 +43,8 @@ class ObjectBase(object):
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
 
-  >>> inOb = ob.get()
-  >>> inOb.append(1)
+  >>> tmp = ob.get()
+  >>> tmp.append(1)
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
 
@@ -52,11 +52,16 @@ class ObjectBase(object):
   >>> ob.get()
   [1, 2, [1]]
 
-  >>> inOb = ob.get()
-  >>> inOb[2][0] = 42
+  >>> tmp = ob.get()
+  >>> tmp[2][0] = 42
   >>> ob.get()
   [1, 2, [42]]
 
+  >>> tmp = []
+  >>> ob = ObjectBase(tmp)
+  >>> ob.put([1, 2])
+  >>> tmp
+  []
   """
   def __init__(self, objects=[]):
     """
