@@ -107,7 +107,7 @@ class ObjectBase(object):
       
   def __getAndCacheAttributeValues(self, attributeName):
     attributeValues = np.array(map(attrgetter(attributeName), self.__objects))
-    self.__cachedAttributes[attributeName] = attributeValue
+    self.__cachedAttributes[attributeName] = attributeValues
     return attributeValues
 
 
