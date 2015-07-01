@@ -46,7 +46,7 @@ class ObjectBase(object):
     self.__objects = []
 
   def put(self, objects):
-    self.__objects = objects
+    self.__objects.extend(objects)
 
   def get(self):
     return self.__objects
