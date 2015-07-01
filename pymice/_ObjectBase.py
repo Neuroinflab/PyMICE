@@ -84,6 +84,7 @@ class ObjectBase(object):
 
   def put(self, objects):
     self.__objects = np.append(self.__objects, objects)
+    self.__cachedAttributes.clear()
 
   def get(self, filters=None):
     return list(self.__getFilteredObjects(filters))
