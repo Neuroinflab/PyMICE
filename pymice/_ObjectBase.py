@@ -151,11 +151,26 @@ class ObjectBase(object):
     return attributeValues
 
   def __getConvertedAttributeValues(self, attributeName):
-    attributeValues = map(attrgetter(attributeName), self.__objects)
+    attributeValues = self.getAttributes(attributeName)
     if attributeName in self.__converters:
       return map(self.__converters[attributeName], attributeValues)
 
     return attributeValues
+
+  def getAttributes(self, attributeName):
+    """
+    >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
+    ...                  ClassA(ClassB(4, 3), 3)])
+    >>> ob.getAttributes('a')
+    [ClassB(c=1, d=2), ClassB(c=2, d=3), ClassB(c=4, d=3)]
+
+    >>> ob.getAttributes('b')
+    [1, 2, 3]
+
+    >>> ob.getAttributes('a.c')
+    [1, 2, 4]
+    """
+    return map(attrgetter(attributeName), self.__objects)
 
 
 if __name__ == '__main__':
