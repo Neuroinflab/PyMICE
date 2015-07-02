@@ -116,6 +116,9 @@ class ObjectBase(object):
   >>> ob.get({'a': ()})
   []
 
+  >>> ob.get({'b': (1, 3)})
+  [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=4, d=3), b=3)]
+
   >>> ob = ObjectBase({'a': lambda x: x.d - x.c})
   >>> ob.get()
   []
