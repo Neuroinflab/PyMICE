@@ -162,7 +162,7 @@ class ObjectBase(object):
       enumeratedMasks = {}
       self.__cachedMasks[attributeName] = enumeratedMasks
 
-    sumOfMasks = False
+    sumOfMasks = False if acceptedValues else np.zeros_like(self.__objects, dtype=bool)
     for value in acceptedValues:
       try:
         mask = enumeratedMasks[value]
