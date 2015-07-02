@@ -123,18 +123,82 @@ class ObjectBase(object):
   >>> ob.get()
   []
   """
+  class MaskManager(object):
+    def __init__(self, values):
+      self.__values = np.array(values)
+      self.__cachedMasks = {}
+
+    def getMask(self, selector):
+      """
+      >>> mm = ObjectBase.MaskManager([])
+      >>> list(mm.getMask(lambda x: x != 0))
+      []
+
+      >>> list(mm.getMask(lambda x: x == 0))
+      []
+
+      >>> mm = ObjectBase.MaskManager([1, 2])
+      >>> list(mm.getMask(lambda x: x != 0))
+      [True, True]
+
+      >>> list(mm.getMask(lambda x: x == 0))
+      [False, False]
+
+      >>> list(mm.getMask(lambda x: x > 1))
+      [False, True]
+
+      >>> list(mm.getMask([]))
+      [False, False]
+
+      >>> list(mm.getMask([1]))
+      [True, False]
+
+      >>> list(mm.getMask([1, 2]))
+      [True, True]
+
+      >>> list(mm.getMask([3,]))
+      [False, False]
+      """
+      if hasattr(selector, '__call__'):
+        return selector(self.__values)
+
+      return self.__combineMasks(selector)
+
+    def __combineMasks(self, acceptedValues):
+      if not acceptedValues:
+        return np.zeros_like(self.__values, dtype=bool)
+
+      return self.__sumMasks(map(self.__getMasksMatchingValue, acceptedValues))
+
+    def __sumMasks(self, masks):
+      if len(masks) == 1:
+        return masks[0]
+
+      return sum(masks[1:], masks[0])
+
+    def __getMasksMatchingValue(self, value):
+      try:
+        return self.__cachedMasks[value]
+
+      except KeyError:
+        return self.__makeAndCacheMask(value)
+
+    def __makeAndCacheMask(self, value):
+      mask = self.__values == value
+      self.__cachedMasks[value] = mask
+      return mask
+
+
   def __init__(self, converters={}):
     """
     """
     self.__objects = np.array([], dtype=object)
-    self.__cachedAttributes = {}
-    self.__cachedMasks = {}
+    self.__cachedMaskManagers = {}
     self.__converters = dict(converters)
 
   def put(self, objects):
     self.__objects = np.append(self.__objects, objects)
-    self.__cachedAttributes.clear()
-    self.__cachedMasks.clear()
+    self.__cachedMaskManagers.clear()
 
   def get(self, filters=None):
     return list(self.__getFilteredObjects(filters))
@@ -143,8 +207,7 @@ class ObjectBase(object):
     if filters:
       return self.__objects[self.__getProductOfMasks(filters)]
 
-    else:
-      return self.__objects
+    return self.__objects
       
   def __getProductOfMasks(self, selectors):
     mask = True
@@ -154,54 +217,16 @@ class ObjectBase(object):
     return mask
 
   def __getMask(self, attributeName, selector):
-    if hasattr(selector, '__call__'):
-      return selector(self.__getAttributeValues(attributeName))
+    return self.__getMaskManager(attributeName).getMask(selector)
 
-    return self.__getMaskEnumerated(attributeName, selector)
-
-  def __getMaskEnumerated(self, attributeName, acceptedValues):
-    cachedMasks = self.__getCachedMasks(attributeName)
-
-    sumOfMasks = False if acceptedValues else np.zeros_like(self.__objects, dtype=bool)
-    for value in acceptedValues:
-      sumOfMasks = sumOfMasks + self.__getAttributeValueMask(attributeName, value)
-
-    return sumOfMasks
-
-  def __getCachedMasks(self, attributeName):
+  def __getMaskManager(self, attributeName):
     try:
-      return self.__cachedMasks[attributeName]
+      return self.__cachedMaskManagers[attributeName]
 
     except KeyError:
-      masks = {}
-      self.__cachedMasks[attributeName] = masks
-      return masks
-
-  def __getAttributeValueMask(self, attributeName, attributeValue):
-    enumeratedMasks = self.__getCachedMasks(attributeName)
-
-    try:
-      return enumeratedMasks[attributeValue]
-
-    except KeyError:
-      enumeratedMasks[attributeValue] = self.__makeAttributeValueMask(attributeName, attributeValue)
-      return enumeratedMasks[attributeValue]
-
-
-  def __makeAttributeValueMask(self, attributeName, attributeValue):
-    return attributeValue == self.__getAttributeValues(attributeName)
-
-  def __getAttributeValues(self, attributeName):
-    try:
-      return self.__cachedAttributes[attributeName]
-
-    except KeyError:
-      return self.__getAndCacheAttributeValues(attributeName)
-      
-  def __getAndCacheAttributeValues(self, attributeName):
-    attributeValues = np.array(self.__getConvertedAttributeValues(attributeName))
-    self.__cachedAttributes[attributeName] = attributeValues
-    return attributeValues
+      maskManager = self.MaskManager(self.__getConvertedAttributeValues(attributeName))
+      self.__cachedMaskManagers[attributeName] = maskManager
+      return maskManager
 
   def __getConvertedAttributeValues(self, attributeName):
     attributeValues = self.getAttributes(attributeName)
