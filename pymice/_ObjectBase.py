@@ -195,8 +195,9 @@ class ObjectBase(object):
 
   def getAttributes(self, *attributeNames):
     """
-    >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
-    ...                  ClassA(ClassB(4, 3), 3)])
+    >>> ob = ObjectBase()
+    >>> ob.put([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
+    ...        ClassA(ClassB(4, 3), 3)])
     >>> ob.getAttributes('a')
     [ClassB(c=1, d=2), ClassB(c=2, d=3), ClassB(c=4, d=3)]
 
@@ -213,8 +214,8 @@ class ObjectBase(object):
     >>> ob.getAttributes('a.c')
     []
 
-    >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1)],
-    ...                 converters={'a': lambda x: x.c})
+    >>> ob = ObjectBase(converters={'a': lambda x: x.c})
+    >>> ob.put([ClassA(ClassB(1, 2), 1)])
     >>> ob.getAttributes('a')
     [ClassB(c=1, d=2)]
     """
