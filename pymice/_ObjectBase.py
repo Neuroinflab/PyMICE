@@ -117,10 +117,10 @@ class ObjectBase(object):
   >>> ob.get()
   []
   """
-  def __init__(self, objects=[], converters={}):
+  def __init__(self, converters={}):
     """
     """
-    self.__objects = np.array(objects, dtype=object)
+    self.__objects = np.array([], dtype=object)
     self.__cachedAttributes = {}
     self.__cachedMasks = {}
     self.__converters = dict(converters)
