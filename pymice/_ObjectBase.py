@@ -158,6 +158,10 @@ class ObjectBase(object):
 
       >>> list(mm.getMask([3,]))
       [False, False]
+
+      >>> mm = ObjectBase.MaskManager([u'a', u'a', u'b'])
+      >>> list(mm.getMask(['b']))
+      [False, False, True]
       """
       if hasattr(selector, '__call__'):
         return selector(self.__values)
