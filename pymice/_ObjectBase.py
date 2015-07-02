@@ -104,7 +104,7 @@ class ObjectBase(object):
   >>> ob.get({'a.d': lambda x: x == 3})
   [ClassA(a=ClassB(c=2, d=3), b=2), ClassA(a=ClassB(c=4, d=3), b=3)]
 
-  >>> ob = ObjectBase(converters={'a': lambda x: x.d - x.c})
+  >>> ob = ObjectBase({'a': lambda x: x.d - x.c})
   >>> ob.put([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
   ...         ClassA(ClassB(4, 3), 3)])
   >>> ob.get({'a': lambda x: x == 1})
@@ -113,7 +113,7 @@ class ObjectBase(object):
   >>> ob.get({'a': (1,)})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
 
-  >>> ob = ObjectBase(converters={'a': lambda x: x.d - x.c})
+  >>> ob = ObjectBase({'a': lambda x: x.d - x.c})
   >>> ob.get()
   []
   """
@@ -214,7 +214,7 @@ class ObjectBase(object):
     >>> ob.getAttributes('a.c')
     []
 
-    >>> ob = ObjectBase(converters={'a': lambda x: x.c})
+    >>> ob = ObjectBase({'a': lambda x: x.c})
     >>> ob.put([ClassA(ClassB(1, 2), 1)])
     >>> ob.getAttributes('a')
     [ClassB(c=1, d=2)]
