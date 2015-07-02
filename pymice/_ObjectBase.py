@@ -155,6 +155,13 @@ class ObjectBase(object):
     return mask
 
   def __getMaskEnumerated(self, attributeName, acceptedValues):
+    sumOfMasks = False if acceptedValues else np.zeros_like(self.__objects, dtype=bool)
+    for value in acceptedValues:
+      sumOfMasks = sumOfMasks + self.__getAttributeValueMask(attributeName, value)
+
+    return sumOfMasks
+
+  def __getAttributeValueMask(self, attributeName, attributeValue):
     try:
       enumeratedMasks = self.__cachedMasks[attributeName]
 
@@ -162,20 +169,18 @@ class ObjectBase(object):
       enumeratedMasks = {}
       self.__cachedMasks[attributeName] = enumeratedMasks
 
-    sumOfMasks = False if acceptedValues else np.zeros_like(self.__objects, dtype=bool)
-    for value in acceptedValues:
-      try:
-        mask = enumeratedMasks[value]
+    try:
+      return enumeratedMasks[attributeValue]
 
-      except KeyError:
-        attributeValues = self.__getAttributeValues(attributeName)
-        mask = attributeValues == value
-        enumeratedMasks[value] = mask
-      
-      sumOfMasks = sumOfMasks + mask
+    except KeyError:
+      enumeratedMasks[attributeValue] = self.__makeAttributeValueMask(attributeName, attributeValue)
+      return enumeratedMasks[attributeValue]
 
-    return sumOfMasks
 
+
+
+  def __makeAttributeValueMask(self, attributeName, attributeValue):
+    return attributeValue == self.__getAttributeValues(attributeName)
 
   def __getAttributeValues(self, attributeName):
     try:
