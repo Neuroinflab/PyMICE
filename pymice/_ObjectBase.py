@@ -33,6 +33,9 @@ class ObjectBase(object):
   >>> ob.get()
   []
 
+  >>> len(ob)
+  0
+
   >>> ob.put([ClassA(1, 4)])
   >>> ob.get()
   [ClassA(a=1, b=4)]
