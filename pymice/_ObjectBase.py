@@ -141,36 +141,44 @@ class ObjectBase(object):
 
   def __getFilteredObjects(self, filters):
     if filters:
-      return self.__objects[self.__getMask(filters)]
+      return self.__objects[self.__getProductOfMasks(filters)]
 
     else:
       return self.__objects
       
-  def __getMask(self, filters):
+  def __getProductOfMasks(self, selectors):
     mask = True
-    for attributeName, filter_ in filters.items():
-      if hasattr(filter_, '__call__'):
-        mask = mask * filter_(self.__getAttributeValues(attributeName))
-
-      else:
-        mask = mask * self.__getMaskEnumerated(attributeName, filter_)
+    for attributeName, selector in selectors.items():
+      mask = mask * self.__getMask(attributeName, selector)
 
     return mask
 
+  def __getMask(self, attributeName, selector):
+    if hasattr(selector, '__call__'):
+      return selector(self.__getAttributeValues(attributeName))
+
+    return self.__getMaskEnumerated(attributeName, selector)
+
   def __getMaskEnumerated(self, attributeName, acceptedValues):
+    cachedMasks = self.__getCachedMasks(attributeName)
+
     sumOfMasks = False if acceptedValues else np.zeros_like(self.__objects, dtype=bool)
     for value in acceptedValues:
       sumOfMasks = sumOfMasks + self.__getAttributeValueMask(attributeName, value)
 
     return sumOfMasks
 
-  def __getAttributeValueMask(self, attributeName, attributeValue):
+  def __getCachedMasks(self, attributeName):
     try:
-      enumeratedMasks = self.__cachedMasks[attributeName]
+      return self.__cachedMasks[attributeName]
 
     except KeyError:
-      enumeratedMasks = {}
-      self.__cachedMasks[attributeName] = enumeratedMasks
+      masks = {}
+      self.__cachedMasks[attributeName] = masks
+      return masks
+
+  def __getAttributeValueMask(self, attributeName, attributeValue):
+    enumeratedMasks = self.__getCachedMasks(attributeName)
 
     try:
       return enumeratedMasks[attributeValue]
@@ -178,8 +186,6 @@ class ObjectBase(object):
     except KeyError:
       enumeratedMasks[attributeValue] = self.__makeAttributeValueMask(attributeName, attributeValue)
       return enumeratedMasks[attributeValue]
-
-
 
 
   def __makeAttributeValueMask(self, attributeName, attributeValue):
