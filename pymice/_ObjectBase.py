@@ -203,6 +203,9 @@ class ObjectBase(object):
     self.__cachedMaskManagers = {}
     self.__converters = dict(converters)
 
+  def __len__(self):
+    return len(self.__objects)
+
   def put(self, objects):
     self.__objects = np.append(self.__objects, objects)
     self.__cachedMaskManagers.clear()
