@@ -50,7 +50,8 @@ class ObjectBase(object):
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
 
-  >>> ob = ObjectBase([ClassA(1, 4), ClassA(2, 2), ClassA(2, 2)])
+  >>> ob = ObjectBase()
+  >>> ob.put([ClassA(1, 4), ClassA(2, 2), ClassA(2, 2)])
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2)]
 
@@ -60,12 +61,14 @@ class ObjectBase(object):
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=42)]
 
   >>> tmp = []
-  >>> ob = ObjectBase(tmp)
+  >>> ob = ObjectBase()
+  >>> ob.put(tmp)
   >>> ob.put([ClassA(2, 2), ClassB(0, 0)])
   >>> tmp
   []
 
-  >>> ob = ObjectBase([ClassA(1, 4)])
+  >>> ob = ObjectBase()
+  >>> ob.put([ClassA(1, 4)])
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=1, b=4)]
 
@@ -92,17 +95,18 @@ class ObjectBase(object):
   ...         'b': lambda x: x == 2})
   []
 
-  >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
-  ...                  ClassA(ClassB(4, 3), 3)])
+  >>> ob = ObjectBase()
+  >>> ob.put([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
+  ...         ClassA(ClassB(4, 3), 3)])
   >>> ob.get({'b': lambda x: (x == 1) + (x == 3)})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=4, d=3), b=3)]
 
   >>> ob.get({'a.d': lambda x: x == 3})
   [ClassA(a=ClassB(c=2, d=3), b=2), ClassA(a=ClassB(c=4, d=3), b=3)]
 
-  >>> ob = ObjectBase([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
-  ...                  ClassA(ClassB(4, 3), 3)],
-  ...                 converters={'a': lambda x: x.d - x.c})
+  >>> ob = ObjectBase(converters={'a': lambda x: x.d - x.c})
+  >>> ob.put([ClassA(ClassB(1, 2), 1), ClassA(ClassB(2, 3), 2),
+  ...         ClassA(ClassB(4, 3), 3)])
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
 
