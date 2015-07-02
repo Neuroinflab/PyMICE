@@ -106,7 +106,7 @@ class ObjectBase(object):
   >>> ob.get({'a': lambda x: x == 1})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
 
-  >>> ob.get('a': (1,))
+  >>> ob.get({'a': (1,)})
   [ClassA(a=ClassB(c=1, d=2), b=1), ClassA(a=ClassB(c=2, d=3), b=2)]
 
   >>> ob = ObjectBase(converters={'a': lambda x: x.d - x.c})
@@ -118,11 +118,13 @@ class ObjectBase(object):
     """
     self.__objects = np.array(objects, dtype=object)
     self.__cachedAttributes = {}
+    self.__cachedMasks = {}
     self.__converters = dict(converters)
 
   def put(self, objects):
     self.__objects = np.append(self.__objects, objects)
     self.__cachedAttributes.clear()
+    self.__cachedMasks.clear()
 
   def get(self, filters=None):
     return list(self.__getFilteredObjects(filters))
@@ -136,17 +138,44 @@ class ObjectBase(object):
       
   def __getMask(self, filters):
     mask = True
-    for attributeName, filterFunction in filters.items():
-      mask = mask * filterFunction(self.__getAttributeValues(attributeName))
+    for attributeName, filter_ in filters.items():
+      if hasattr(filter_, '__call__'):
+        mask = mask * filter_(self.__getAttributeValues(attributeName))
+
+      else:
+        mask = mask * self.__getMaskEnumerated(attributeName, filter_)
 
     return mask
+
+  def __getMaskEnumerated(self, attributeName, acceptedValues):
+    try:
+      enumeratedMasks = self.__cachedMasks[attributeName]
+
+    except KeyError:
+      enumeratedMasks = {}
+      self.__cachedMasks[attributeName] = enumeratedMasks
+
+    sumOfMasks = False
+    for value in acceptedValues:
+      try:
+        mask = enumeratedMasks[value]
+
+      except KeyError:
+        attributeValues = self.__getAttributeValues(attributeName)
+        mask = attributeValues == value
+        enumeratedMasks[value] = mask
+      
+      sumOfMasks = sumOfMasks + mask
+
+    return sumOfMasks
+
 
   def __getAttributeValues(self, attributeName):
     try:
       return self.__cachedAttributes[attributeName]
 
     except KeyError:
-      return self. __getAndCacheAttributeValues(attributeName)
+      return self.__getAndCacheAttributeValues(attributeName)
       
   def __getAndCacheAttributeValues(self, attributeName):
     attributeValues = np.array(self.__getConvertedAttributeValues(attributeName))
