@@ -40,6 +40,9 @@ class ObjectBase(object):
   >>> ob.get()
   [ClassA(a=1, b=4)]
 
+  >>> len(ob)
+  1
+
   >>> ob.put([ClassA(2, 2)])
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2)]
@@ -47,6 +50,9 @@ class ObjectBase(object):
   >>> ob.put([ClassA(2, 2), ClassB(0, 0)])
   >>> ob.get()
   [ClassA(a=1, b=4), ClassA(a=2, b=2), ClassA(a=2, b=2), ClassB(c=0, d=0)]
+
+  >>> len(ob)
+  4
 
   >>> tmp = ob.get()
   >>> tmp.append(1)
