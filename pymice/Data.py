@@ -959,10 +959,6 @@ except Exception as e:
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def convertInt(x):
-  return None if x == '' else int(x)
-
-
 def convertStr(x):
   return None if x == '' else x
 
@@ -1117,53 +1113,27 @@ class Loader(Data):
                                         '_vid': int,
                                         'Start': timeToList,
                                         'End': timeToList,
-                                        #'ModuleName': convertStr,
-                                        #'Cage': int,
-                                        #'Corner': int,
                                         'CornerCondition': convertFloat,
                                         'PlaceError': convertFloat,
-                                        #'AntennaNumber': convertInt,
                                         'AntennaDuration': convertFloat,
-                                        #'PresenceNumber': convertInt,
                                         'PresenceDuration': convertFloat,
-                                        #'VisitSolution': convertInt,
                                        },
                  'IntelliCage/Nosepokes': {'_vid': int,
                                            'Start': timeToList,
                                            'End': timeToList,
-                                           #'Side': int,
-                                           #'LickNumber': int,
                                            'LickContactTime': convertFloat,
                                            'LickDuration': convertFloat,
                                            'SideCondition': convertFloat,
                                            'SideError': convertFloat,
                                            'TimeError': convertFloat,
                                            'ConditionError': convertFloat,
-                                           #'AirState': convertInt,
-                                           #'DoorState': convertInt,
-                                           #'LED1State': convertInt,
-                                           #'LED2State': convertInt,
-                                           #'LED3State': convertInt,
                                           },
                  'IntelliCage/Log': {'DateTime': timeToList,
-                                     #'Category': convertStr,
-                                     #'Type': convertStr,
-                                     #'Cage': convertInt,
-                                     #'Corner': convertInt,
-                                     #'Side': convertInt,
-                                     #'Notes': convertStr,
                                     },
                  'IntelliCage/Environment': {'DateTime': timeToList,
                                              'Temperature': convertFloat,
-                                             #'Illumination': convertInt,
-                                             #'Cage': convertInt,
                                             },
                  'IntelliCage/HardwareEvents': {'DateTime': timeToList,
-                                                #'Type': convertInt,
-                                                #'Cage': convertInt,
-                                                #'Corner': convertInt,
-                                                #'Side': convertInt,
-                                                #'State': convertInt,
                                                },
                 }
 
@@ -1574,113 +1544,6 @@ class Loader(Data):
 
       if self._getHw:
         self._insertHardware(data['hardware'])
-
-      #self.loadZip(fname,
-      #             sid = sid)
-
-## Analyser data loading
-#    else:
-#      # Is that the right thing to do with directories?
-#      if os.path.isdir(fname):
-#        fname = os.path.join(fname, 'Visits.txt')
-#
-#      visits = self.fromCSV(fname, True)
-#
-#      startDate = visits.pop('StartDate')
-#      startTime = visits.pop('StartTime')
-#      #start = ['%s %s' % x for x in zip(startDate, startTime)]
-#      #visits['Start'] = convertTime(start)
-#      # Daylight saving time issue -_-
-#
-#      time0 = convertTime(startDate[0] + ' ' + startTime[0])
-#      startTimecode = visits.pop('StartTimecode')
-#      offset = time0 - float(startTimecode[0])
-#      visits['Start'] = [offset + float(x) for x in startTimecode]
-#
-#      #endDate = visits.pop('EndDate')
-#      #endTime = visits.pop('EndTime')
-#      #end = ['%s %s' % x for x in zip(endDate, endTime)]
-#      #visits['End'] = convertTime(end)
-#      endTimecode = visits.pop('EndTimecode')
-#      visits['End'] = [offset + float(x) for x in endTimecode]
-#      del visits['EndDate']
-#      del visits['EndTime']
-#
-#      del visits['VisitDuration'] # maybe some validation?
-#      visits['ModuleName'] = visits.pop('Module')
-#      animalTag = map(int, visits.pop('Tag'))
-#      visits['AnimalTag'] = animalTag
-#
-#      ccMap = {'Neutral': 0.,
-#               'Correct': 1.,
-#               'Incorrect': -1.}
-#
-#      cc = visits['CornerCondition']
-#      visits['CornerCondition'] = [(ccMap[c] if c in ccMap else convertFloat(c)) for c in cc]
-#
-#      aGroups = visits.pop('Group')
-#      aNames = visits.pop('Animal')
-#      aSexes = visits.pop('Sex')
-#
-#      # registering animals and groups
-#      tag2aid = {}
-#      for name, tag, sex in list(set(zip(aNames, animalTag, aSexes))):
-#        if sex not in ('Male', 'Female', 'Unknown'):
-#          print "Unknown sex: %s" % sex
-#
-#        animalNode = {'Name': name,
-#                      'Tag': tag}
-#        if sex != 'Unknown':
-#          animalNode['Sex'] = sex
-#
-#        aid = self._registerAnimal(animalNode)
-#        tag2aid[tag] = aid
-#
-#      group2gid = {}
-#      for group in list(set(aGroups)):
-#        self._registerGroup(group)
-#
-#      for tag, group in list(set(zip(animalTag, aGroups))):
-#        aid = tag2aid[tag]
-#        self._addMember(group, aid)
-#
-#      fakeNpokes = {}
-#      fakeNpokes['VisitID'] = list(visits['VisitID'])
-#      fakeNpokes['_line'] = list(visits['_line'])
-#      fakeNpokes['SideError'] = visits.pop('SideErrors')
-#      fakeNpokes['TimeError'] = visits.pop('TimeErrors')
-#      fakeNpokes['ConditionError'] = visits.pop('ConditionErrors')
-#      fakeNpokes['NosepokeNumber'] = visits.pop('NosepokeNumber')
-#      fakeNpokes['NosepokeDuration'] = visits.pop('NosepokeDuration')
-#      fakeNpokes['LickNumber'] = visits.pop('LickNumber')
-#      fakeNpokes['LickDuration'] = visits.pop('LickDuration')
-#      fakeNpokes['LickContactTime'] = visits.pop('LickContactTime')
-#
-#      vidMapping = self._insertVisits(visits, tag2aid, 'AnimalTag',
-#                                      'VisitID', sid = sid)
-#
-#      if self._get_npokes:
-#        self._insertNosepokes(fakeNpokes, vidMapping, 'VisitID', sid = sid)
-#
-#      try:
-#        fh = open(os.path.join(os.path.dirname(fname),
-#                               'Environment.txt'))
-#        env = self.fromCSV(fh, True)
-#        fh.close()
-#
-#        env['DateTime'] = convertTime(env['DateTime'])
-#        self._insertDataSid(env, 'environment', sid)
-#
-#      except IOError:
-#        print "'Environment.txt' not found."
-#
-#      try:
-#        fh = open(os.path.join(os.path.dirname(fname),
-#                               'Log.txt'))
-#        self.loadLog(fh, sid=sid)
-#
-#      except IOError:
-#        print "'Log.txt' not found."
 
     self._buildCache()
 
