@@ -2028,7 +2028,7 @@ if __name__ == '__main__':
     'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip')),
     #'ml_a1': Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
     'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'),
-                      getLogs=True, getEnv=True),
+                      getLog=True, getEnv=True),
     'ml_empty': Loader(os.path.join(testDir, 'empty_data.zip')),
     'ml_retagged': Loader(os.path.join(testDir, 'retagged_data.zip')),
     }
