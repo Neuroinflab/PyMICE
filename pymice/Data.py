@@ -49,6 +49,8 @@ from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, timeListQueue,\
                    PathZipFile, toTimestampUTC, warn, groupBy
 
+from _ObjectBase import ObjectBase
+
 callCopy = methodcaller('copy')
 
 
@@ -78,11 +80,13 @@ class Data(object):
     self.__animals = []
     self.__animalsByName = {}
 
-    self.__visits = []
+    self.__visits = ObjectBase({
+      'Start': toTimestampUTC,
+      'End': toTimestampUTC})
     self.__nosepokes = [] #reserved for future use
-    self.__log = []
-    self.__environment = []
-    self.__hardware = []
+    self.__log = ObjectBase({'DateTime': toTimestampUTC})
+    self.__environment = ObjectBase({'DateTime': toTimestampUTC})
+    self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
 
   @property
   def _get_npokes(self):
@@ -100,7 +104,7 @@ class Data(object):
     return self._getLog
 
   def __del__(self):
-    for vNode in self.__visits:
+    for vNode in self.__visits.get():
       if vNode:
         vNode._del_()
 
@@ -112,11 +116,6 @@ class Data(object):
     self.__sessionsStarts = np.array([])
     self.__cages = {}
     self.__animal2cage = {}
-    self.__animalVisits = {}
-    self.__visitsStart = None
-    self.__logDateTime = None
-    self.__envDateTime = None
-    self.__hwDateTime = None
 
   def _buildCache(self):
     # build cache
@@ -124,7 +123,7 @@ class Data(object):
     self.__animal2cage = {}
     currentCage = None
     animals = []
-    cursor = sorted(set((int(v.Cage), unicode(v.Animal)) for v in self.__visits))
+    cursor = sorted(set((int(c), unicode(a)) for (c, a) in self.__visits.getAttributes('Cage', 'Animal.Name')))
 
     for cage, animal in cursor:
       if animal not in self.__animal2cage:
@@ -156,24 +155,6 @@ class Data(object):
     for animal in self.getMice():
       if animal not in self.__animal2cage:
         self.__animal2cage[animal] = []
-
-    animals = map(unicode, map(attrgetter('Animal'), self.__visits))
-    self.__animalVisits = dict((m, np.array([a == m for a in animals],
-                                   dtype=bool)) for m in self.getMice())
-    self.__visitsStart = np.array(map(toTimestampUTC, map(attrgetter('Start'),
-                                                 self.__visits)))
-
-    if self._getLog:
-      self.__logDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
-                                                   self.__log)))
-
-    if self._getEnv:
-      self.__envDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
-                                                            self.__environment)))
-
-    if self._getHw:
-      self.__hwDateTime = np.array(map(toTimestampUTC, map(attrgetter('DateTime'),
-                                                           self.__hardware)))
 
   def getCage(self, mouse):
     """
@@ -222,7 +203,7 @@ class Data(object):
     if self.icSessionStart is not None:
       return self.icSessionStart
 
-    times = map(attrgetter('Start'), self.__visits)
+    times = self.__visits.getAttributes('Start')
     try:
       return min(times)
 
@@ -237,7 +218,7 @@ class Data(object):
     if self.icSessionEnd is not None:
       return self.icSessionEnd
 
-    times = map(attrgetter('End'), self.__visits)
+    times = self.__visits.getAttributes('End')
     try:
       return max(times)
 
@@ -269,13 +250,13 @@ class Data(object):
     return map(cls.fromDict, nodes)
 
   def _insertLog(self, lNodes):
-    self.__log = np.append(self.__log, self._newNodes(lNodes, LogNode))
+    self.__log.put(self._newNodes(lNodes, LogNode))
 
   def _insertEnvironment(self, eNodes):
-    self.__environment = np.append(self.__environment, self._newNodes(eNodes, EnvironmentNode))
+    self.__environment.put(self._newNodes(eNodes, EnvironmentNode))
 
   def _insertHardware(self, hNodes):
-    self.__hardware = np.append(self.__hardware, self._newNodes(hNodes, HardwareEventNode))
+    self.__hardware.put(self._newNodes(hNodes, HardwareEventNode))
 
   def _insertVisits(self, vNodes):
     vNodes = self._newNodes(vNodes, VisitNode) # callCopy might be faster but requires vNodes to be VisitNode-s
@@ -298,21 +279,8 @@ class Data(object):
       else:
         vNode.Nosepokes = None
 
-    self.__visits = np.append(self.__visits, vNodes)
+    self.__visits.put(vNodes)
   
-  @staticmethod
-  def getItem(collection, key):
-    if hasattr(key, '__iter__'):
-      if len(key) > 1:
-        return itemgetter(*key)(collection)
-
-      if len(key) == 1:
-        return (collection[key[0]],)
-
-      return ()
-
-    return collection[key]
-
   def getGroup(self, name = None):
     if name != None:
       return self.__name2group[name]
@@ -375,10 +343,6 @@ class Data(object):
     self.__animals.append(aNode)
     self.__animalsByName[unicode(name)] = aNode
     return aNode
-
-  def _getAnimalNode(self, aid):
-    print "deprecated _getAnimalNode"
-    return self.getItem(self.__animals, aid)
 
   # TODO or not TODO
 #  def _unregisterAnimal(self, Name = None, aid = None):
@@ -522,28 +486,6 @@ class Data(object):
     # to be overriden
     return self.plotChannel(top=top, bottom=bottom)
 
-  def getChannel(self, mice=None, corner=None):
-    visits = self.__visits
-    if mice is not None:
-      visits = self.__filterUnicode(visits, 'Animal', mice)
-
-    if corner is not None:
-      visits = self.__filterInt(visits, 'Corner', corner)
-
-    return DataNode(Visits=list(visits))
-
-  @staticmethod
-  def _getTimeMask(time, start=None, end=None):
-    mask = None
-    if start is not None:
-      mask = toTimestampUTC(start) <= time
-
-    if end is not None:
-      timeMask = toTimestampUTC(end) > time
-      mask = timeMask if mask is None else mask * timeMask
-
-    return mask
-
   def __filterUnicode(self, data, field, select=None):
     if select is None:
       return data
@@ -575,6 +517,27 @@ class Data(object):
 
     key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
     return sorted(data, key=key)
+
+  @staticmethod
+  def __makeTimeFilter(start, end):
+    if start is not None:
+      startTimestamp = toTimestampUTC(start)
+      if end is not None:
+        endTimestamp = toTimestampUTC(end)
+        return lambda X: (startTimestamp <= X) * (X < endTimestamp)
+
+      return lambda X: startTimestamp <= X
+
+    if end is not None:
+      endTimestamp = toTimestampUTC(end)
+      return lambda X: X < endTimestamp
+
+  @staticmethod
+  def __makeTimeSelectors(attributeName, start, end):
+    if start is None and end is None:
+      return {}
+
+    return {attributeName: Data.__makeTimeFilter(start, end)}
 
   def getVisits(self, mice=None, start=None, end=None, order=None, startTime=None, endTime=None):
     """
@@ -635,26 +598,17 @@ class Data(object):
 
       end = endTime
 
-    mask = None
+    selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
-      try:
-        mask = self.__animalVisits[mice]
-        
-      except (KeyError, TypeError): #unhashable type: list
-        if isinstance(mice, basestring):
-          mask = False
+      if isinstance(mice, AnimalNode):
+        mice = [mice.Name]
 
-        else:
-          mask = sum((self.__animalVisits[unicode(m)] for m in mice if unicode(m) in self.__animalVisits), False)
+      elif isinstance(mice, basestring): 
+        mice = [mice]
 
-    timeMask = self._getTimeMask(self.__visitsStart, start, end)
-    if timeMask is not None:
-      mask = timeMask if mask is None else mask * timeMask
+      selectors['Animal.Name'] = mice
 
-    if mask is False:
-      return []
-
-    visits = self.__visits if mask is None else self.__visits[mask]
+    visits = self.__visits.get(selectors)
     return self.__orderBy(visits, order)
 
   def getLogs(self, *args, **kwargs):
@@ -702,8 +656,8 @@ class Data(object):
 
       end = endTime
 
-    mask = self._getTimeMask(self.__logDateTime, start, end)
-    log = self.__log if mask is None else self.__log[mask]
+    selectors = self.__makeTimeSelectors('DateTime', start, end)
+    log = self.__log.get(selectors)
     return self.__orderBy(log, order)
 
   def getEnvironment(self, start=None, end=None, order=None, startTime=None, endTime=None):
@@ -757,8 +711,8 @@ class Data(object):
 
       end = endTime
 
-    mask = self._getTimeMask(self.__envDateTime, start, end)
-    env = list(self.__environment if mask is None else self.__environment[mask])
+    selectors = self.__makeTimeSelectors('DateTime', start, end)
+    env = self.__environment.get(selectors)
     return self.__orderBy(env, order)
 
   def getHardwareEvents(self, start=None, end=None, order=None, startTime=None, endTime=None):
@@ -793,8 +747,8 @@ class Data(object):
 
       end = endTime
 
-    mask = self._getTimeMask(self.__hwDateTime, start, end)
-    hw = list(self.__hardware if mask is None else self.__hardware[mask])
+    selectors = self.__makeTimeSelectors('DateTime', start, end)
+    hw = self.__hardware.get(selectors)
     return self.__orderBy(hw, order)
 
   def save(self, filename, force=False):
@@ -860,7 +814,7 @@ class Data(object):
     npKeys = set()
     visits = {}
 
-    for visit in self.__visits:
+    for visit in self.__visits.get():
       visKeys.update(visit.keys())
       sources.add(visit._source)
       visits[id(visit)] = str(len(visits)) #vid
@@ -869,11 +823,11 @@ class Data(object):
       npKeys.update(nosepoke.keys())
       sources.add(nosepoke._source)
 
-    for log in self.__log:
+    for log in self.__log.get():
       logKeys.update(log.keys())
       sources.add(log._source)
 
-    for env in self.__environment:
+    for env in self.__environment.get():
       envKeys.update(env.keys())
       sources.add(env._source)
 
@@ -899,7 +853,7 @@ class Data(object):
 
       writer = csv.writer(buf, delimiter='\t')
       writer.writerow(['_vid', '_aid', 'Start', 'End'] + visKeys + ['_sid'])
-      for visit in self.__visits:
+      for visit in self.__visits.get():
         _vid = visits[id(visit)]
         _aid = animals[unicode(visit.Animal)]
         Start = timeString(visit.Start)
@@ -952,7 +906,7 @@ class Data(object):
 
       writer = csv.writer(buf, delimiter='\t')
       writer.writerow(['DateTime'] + visKeys + ['_sid'])
-      for log in self.__log:
+      for log in self.__log.get():
         _sid = sources[log._source]
         DateTime = timeString(log.DateTime)
         row = log.select(logKeys)
@@ -970,7 +924,7 @@ class Data(object):
 
       writer = csv.writer(buf, delimiter='\t')
       writer.writerow(['DateTime'] + visKeys + ['_sid'])
-      for env in self.__environment:
+      for env in self.__environment.get():
         _sid = sources[env._source]
         DateTime = timeString(env.DateTime)
         row = env.select(logKeys)
