@@ -253,12 +253,12 @@ class AnimalNode(DataNode):
 
 
 class VisitNode(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'ModuleName', 'Cage',
+  _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'Module', 'Cage',
                'Corner', 'CornerCondition', 'PlaceError', 'AntennaNumber',
                'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
                '_vid', 'VisitSolution']
 
-  def __init__(self, Start, Corner, End=None, ModuleName=None, Cage=None,
+  def __init__(self, Start, Corner, End=None, Module=None, Cage=None,
                CornerCondition=None, PlaceError=None, AntennaNumber=None,
                AntennaDuration=None, PresenceNumber=None, PresenceDuration=None,
                VisitSolution=None, **kwargs):
@@ -266,7 +266,7 @@ class VisitNode(DataNode):
     self.Start = toDt(Start)
     self.Corner = int(Corner)
     self.End = toDt(End)
-    self.ModuleName = unicode(ModuleName) if ModuleName is not None else None
+    self.Module = unicode(Module) if Module is not None else None
     self.Cage = int(Cage) if Cage is not None else None
     self.CornerCondition = float(CornerCondition) if CornerCondition is not None else None
     self.PlaceError = float(PlaceError) if PlaceError is not None else None
