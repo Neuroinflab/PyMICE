@@ -100,7 +100,7 @@ class Data(object):
 
   @property
   def _getLogs(self):
-    warn.deprecated("Obsolete attribute _getLog accessed.")
+    warn.deprecated("Obsolete attribute _getLogs accessed.")
     return self._getLog
 
   def __del__(self):
