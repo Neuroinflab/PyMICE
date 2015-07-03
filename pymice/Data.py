@@ -959,10 +959,6 @@ except Exception as e:
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def convertStr(x):
-  return None if x == '' else x
-
-
 def fixSessions(data, sessions=[]):
   intervals = []
   end = None
@@ -1105,9 +1101,6 @@ class Loader(Data):
                                                },
                 }
   _convertZip = {'Animals': {'Tag': int,
-                             'Group': convertStr,
-                             'Notes': convertStr,
-                             'Sex': convertStr,
                             },
                  'IntelliCage/Visits': {'Tag': int,
                                         '_vid': int,
