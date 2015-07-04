@@ -24,10 +24,19 @@
 
 import unittest
 
+from datetime import datetime
+import pytz
+
 from _FixTimezones import fixTimezones
 
+startTimepoint = datetime(2015, 7, 4, 17, 40, tzinfo=pytz.utc)
+
+
 class TestFixTimezones(unittest.TestCase):
-  pass
+  def testEmptyDataStayEmpty():
+    data = []
+    fixTimezones(data, startTimepoint)
+    self.assertEqual(data, [])
 
 if __name__ == '__main__':
   unittest.main()
