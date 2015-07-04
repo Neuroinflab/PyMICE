@@ -22,5 +22,5 @@
 #                                                                             #
 ###############################################################################
 
-def fixTimezones(timepoints, sessionStart):
+def fixTimezones(timepoints, sessionStart, sessionEnd=None):
   pass
