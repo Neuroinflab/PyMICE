@@ -1019,23 +1019,25 @@ def fixSessions(data, sessions=[]):
         if tzChanged:
           if lastTpDt > tpDT:
             if offsetChange > zeroTd:
-              warn.warn('Another candidate for tzchange')
+              warn.warn('Another candidate for tzchange..')
 
             else:
               warn.warn('Time not monotonic!')
 
           if offsetChange < zeroTd and delta > -offsetChange: #instead of abs
-            warn.warn('Another candidate for tzchange')
+            warn.warn('Another candidate for tzchange.')
 
           timepoint.append(tz)
 
           # no check if there are other possibilities of change
 
         elif offsetChange > zeroTd and lastTpDt > tpDT:
+          print 'A'
           tzChanged = True
           timepoint.append(tz)
 
         elif offsetChange < zeroTd and delta > -offsetChange: #instead of abs
+          print 'B'
           tzChanged = True
           timepoint.append(tz)
 
