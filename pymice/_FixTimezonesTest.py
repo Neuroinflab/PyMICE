@@ -34,13 +34,24 @@ sessionEnd = datetime(2015, 7, 4, 18, 40, tzinfo=pytz.utc)
 
 
 class TestFixTimezones(unittest.TestCase):
-  def testEmptyDataStayEmpty(self):
+  def testEmptyTimepointsStayEmpty(self):
     timepoints = []
     fixTimezones(timepoints, sessionStart)
     self.assertEqual(timepoints, [])
 
     fixTimezones(timepoints, sessionStart, sessionEnd)
     self.assertEqual(timepoints, [])
+
+  def testInSessionTimepointsGetSameTimezoneAsBothStartAndEnd(self):
+    timepoints = [[2015, 7, 4, 17, 45, 15, 0]]
+    fixTimezones(timepoints, sessionStart, sessionEnd)
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc]])
+
+    timepoints = [[2015, 7, 4, 17, 45, 15, 0],
+                  [2015, 7, 4, 17, 56, 43, 1]]
+    fixTimezones(timepoints, sessionStart, sessionEnd)
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc],
+                                  [2015, 7, 4, 17, 56, 43, 1, pytz.utc]])
 
 if __name__ == '__main__':
   unittest.main()
