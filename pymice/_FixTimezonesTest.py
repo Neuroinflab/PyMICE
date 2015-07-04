@@ -30,12 +30,16 @@ import pytz
 from _FixTimezones import fixTimezones
 
 sessionStart = datetime(2015, 7, 4, 17, 40, tzinfo=pytz.utc)
+sessionEnd = datetime(2015, 7, 4, 18, 40, tzinfo=pytz.utc)
 
 
 class TestFixTimezones(unittest.TestCase):
   def testEmptyDataStayEmpty(self):
     timepoints = []
     fixTimezones(timepoints, sessionStart)
+    self.assertEqual(timepoints, [])
+
+    fixTimezones(timepoints, sessionStart, sessionEnd)
     self.assertEqual(timepoints, [])
 
 if __name__ == '__main__':
