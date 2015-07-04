@@ -22,3 +22,9 @@
 #                                                                             #
 ###############################################################################
 
+import unittest
+
+from _FixTimezones import fixTimezones
+
+class TestFixTimezones(unittest.TestCase):
+  pass
