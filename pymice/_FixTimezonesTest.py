@@ -75,6 +75,8 @@ class TestFixTimezones(unittest.TestCase):
                      [])
     self.assertEqual(inferTimezones([], sessionStart, sessionEnd),
                      [])
+    self.assertEqual(inferTimezones([], sessionStart, sessionEnd.astimezone(utcDST)),
+                     [])
 
   def testInSessionTimepointsGetSameTimezoneAsBothStartAndEnd(self):
     self.assertEqual(inferTimezones([[2015, 7, 4, 17, 45, 15, 0]],
@@ -96,7 +98,6 @@ class TestFixTimezones(unittest.TestCase):
                                     sessionStart, None),
                      [utc, utc])
 
-  @unittest.skip("refactoring in progress")
   def testDetectionChangeToDST(self):
     timepointsUTC, timezonesUTC = makeTestCases(sessionStart, timeChange, minute)
     timepointsDST, timezonesDST = makeTestCases(timeChange.astimezone(utcDST),
@@ -105,6 +106,23 @@ class TestFixTimezones(unittest.TestCase):
     inferred = inferTimezones(timepointsUTC + timepointsDST, sessionStart, sessionEnd.astimezone(utcDST))
     self.assertEqual(inferred, timezonesUTC + timezonesDST)
 
+    self.assertEqual(inferTimezones(timepointsUTC, sessionStart, sessionEnd.astimezone(utcDST)),
+                     timezonesUTC)
+
+    self.assertEqual(inferTimezones(timepointsDST, sessionStart, sessionEnd.astimezone(utcDST)),
+                     timezonesDST)
+
+  def testUnequivocalChangeToDST(self):
+    timepoints = dateRange(sessionStart + 61 * minute, sessionStart + 65 * minute, minute) +\
+                 dateRange(sessionStart + 126 * minute, sessionStart + 130 * minute, minute)
+    with self.assertRaises(ValueError):
+      inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
+
+  def testNoChangeToDST(self):
+    timepoints = dateRange(sessionStart,
+                           sessionEnd.astimezone(utcDST).replace(tzinfo=utc), minute)
+    with self.assertRaises(ValueError):
+      inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
 
 if __name__ == '__main__':
   unittest.main()
