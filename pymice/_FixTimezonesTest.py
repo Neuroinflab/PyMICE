@@ -29,8 +29,11 @@ import pytz
 
 from _FixTimezones import fixTimezones
 
-sessionStart = datetime(2015, 7, 4, 17, 40, tzinfo=pytz.utc)
-sessionEnd = datetime(2015, 7, 4, 18, 40, tzinfo=pytz.utc)
+utc = pytz.utc
+utcDST = pytz.timezone('Etc/GMT-1')
+
+sessionStart = datetime(2015, 7, 4, 17, 40, tzinfo=utc)
+sessionEnd = datetime(2015, 7, 4, 18, 40, tzinfo=utc)
 
 
 class TestFixTimezones(unittest.TestCase):
@@ -45,24 +48,24 @@ class TestFixTimezones(unittest.TestCase):
   def testInSessionTimepointsGetSameTimezoneAsBothStartAndEnd(self):
     timepoints = [[2015, 7, 4, 17, 45, 15, 0]]
     fixTimezones(timepoints, sessionStart, sessionEnd)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc]])
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc]])
 
     timepoints = [[2015, 7, 4, 17, 45, 15, 0],
                   [2015, 7, 4, 17, 56, 43, 1]]
     fixTimezones(timepoints, sessionStart, sessionEnd)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc],
-                                  [2015, 7, 4, 17, 56, 43, 1, pytz.utc]])
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc],
+                                  [2015, 7, 4, 17, 56, 43, 1, utc]])
 
   def testInOpenSessionTimepointsGetSameTimezoneAsStart(self):
     timepoints = [[2015, 7, 4, 17, 45, 15, 0]]
     fixTimezones(timepoints, sessionStart, None)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc]])
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc]])
 
     timepoints = [[2015, 7, 4, 17, 45, 15, 0],
                   [2015, 7, 4, 17, 56, 43, 1]]
     fixTimezones(timepoints, sessionStart, None)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, pytz.utc],
-                                  [2015, 7, 4, 17, 56, 43, 1, pytz.utc]])
+    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc],
+                                  [2015, 7, 4, 17, 56, 43, 1, utc]])
     
 
 if __name__ == '__main__':
