@@ -24,7 +24,7 @@
 
 import unittest
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 from _FixTimezones import fixTimezones
@@ -33,7 +33,44 @@ utc = pytz.utc
 utcDST = pytz.timezone('Etc/GMT-1')
 
 sessionStart = datetime(2015, 7, 4, 17, 40, tzinfo=utc)
-sessionEnd = datetime(2015, 7, 4, 18, 40, tzinfo=utc)
+sessionEnd = datetime(2015, 7, 4, 20, 40, tzinfo=utc)
+timeChange = datetime(2015, 7, 4, 18, 40, tzinfo=utc)
+minute = timedelta(seconds=60)
+
+def dateRange(start, end, step):
+  time = start
+  result = []
+  while time < end:
+    result.append(datetimeToList(time))
+    time += step
+
+  return result
+
+def datetimeToList(time):
+  return [time.year, time.month, time.day,
+          time.hour, time.minute, time.second]
+
+class TestDateRange(unittest.TestCase):
+  def testEmptyRange(self):
+    self.assertEqual([], dateRange(sessionStart, sessionStart, minute))
+
+  def testOneItem(self):
+    self.assertEqual(dateRange(sessionStart, sessionStart + minute, minute),
+                     [[2015, 7, 4, 17, 40, 0]])
+
+  def testMoreItems(self):
+    self.assertEqual(dateRange(sessionStart, sessionStart + 2 * minute, minute),
+                     [[2015, 7, 4, 17, 40, 0],
+                      [2015, 7, 4, 17, 41, 0]])
+
+def makeTestCases(start, end, step):
+  naiveTimeLists = dateRange(start,end, step)
+  return naiveTimeLists, makeAwareTimeLists(naiveTimeLists,
+                                            start.tzinfo)
+
+
+def makeAwareTimeLists(naiveTimeLists, tz):
+  return [l + [tz] for l in naiveTimeLists]
 
 
 class TestFixTimezones(unittest.TestCase):
@@ -66,7 +103,16 @@ class TestFixTimezones(unittest.TestCase):
     fixTimezones(timepoints, sessionStart, None)
     self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc],
                                   [2015, 7, 4, 17, 56, 43, 1, utc]])
-    
+
+  def testDetectionChangeToDST(self):
+    naiveUTC, awareUTC = makeTestCases(sessionStart, timeChange, minute)
+    naiveDST, awareDST = makeTestCases(timeChange.astimezone(utcDST),
+                                       sessionEnd.astimezone(utcDST),
+                                       minute)
+    fixTimezones(naiveUTC + naiveDST, sessionStart, sessionEnd.astimezone(utcDST))
+    self.assertEqual(naiveUTC, awareUTC)
+    self.assertEqual(naiveDST, awareDST)
+
 
 if __name__ == '__main__':
   unittest.main()
