@@ -27,7 +27,8 @@ import unittest
 from datetime import datetime, timedelta
 import pytz
 
-from _FixTimezones import fixTimezones
+from _FixTimezones import inferTimezones
+
 
 utc = pytz.utc
 utcDST = pytz.timezone('Etc/GMT-1')
@@ -65,53 +66,44 @@ class TestDateRange(unittest.TestCase):
 
 def makeTestCases(start, end, step):
   naiveTimeLists = dateRange(start,end, step)
-  return naiveTimeLists, makeAwareTimeLists(naiveTimeLists,
-                                            start.tzinfo)
-
-
-def makeAwareTimeLists(naiveTimeLists, tz):
-  return [l + [tz] for l in naiveTimeLists]
+  return naiveTimeLists, [start.tzinfo] * len(naiveTimeLists)
 
 
 class TestFixTimezones(unittest.TestCase):
   def testEmptyTimepointsStayEmpty(self):
-    timepoints = []
-    fixTimezones(timepoints, sessionStart)
-    self.assertEqual(timepoints, [])
-
-    fixTimezones(timepoints, sessionStart, sessionEnd)
-    self.assertEqual(timepoints, [])
+    self.assertEqual(inferTimezones([], sessionStart),
+                     [])
+    self.assertEqual(inferTimezones([], sessionStart, sessionEnd),
+                     [])
 
   def testInSessionTimepointsGetSameTimezoneAsBothStartAndEnd(self):
-    timepoints = [[2015, 7, 4, 17, 45, 15, 0]]
-    fixTimezones(timepoints, sessionStart, sessionEnd)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc]])
+    self.assertEqual(inferTimezones([[2015, 7, 4, 17, 45, 15, 0]],
+                                    sessionStart, sessionEnd),
+                     [utc])
 
-    timepoints = [[2015, 7, 4, 17, 45, 15, 0],
-                  [2015, 7, 4, 17, 56, 43, 1]]
-    fixTimezones(timepoints, sessionStart, sessionEnd)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc],
-                                  [2015, 7, 4, 17, 56, 43, 1, utc]])
+
+    self.assertEqual(inferTimezones([[2015, 7, 4, 17, 45, 15, 0],
+                                     [2015, 7, 4, 17, 56, 43, 1]],
+                                    sessionStart, sessionEnd),
+                     [utc, utc])
 
   def testInOpenSessionTimepointsGetSameTimezoneAsStart(self):
-    timepoints = [[2015, 7, 4, 17, 45, 15, 0]]
-    fixTimezones(timepoints, sessionStart, None)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc]])
+    self.assertEqual(inferTimezones([[2015, 7, 4, 17, 45, 15, 0]],
+                                    sessionStart, None),
+                     [utc])
+    self.assertEqual(inferTimezones([[2015, 7, 4, 17, 45, 15, 0],
+                                     [2015, 7, 4, 17, 56, 43, 1]],
+                                    sessionStart, None),
+                     [utc, utc])
 
-    timepoints = [[2015, 7, 4, 17, 45, 15, 0],
-                  [2015, 7, 4, 17, 56, 43, 1]]
-    fixTimezones(timepoints, sessionStart, None)
-    self.assertEqual(timepoints, [[2015, 7, 4, 17, 45, 15, 0, utc],
-                                  [2015, 7, 4, 17, 56, 43, 1, utc]])
-
+  @unittest.skip("refactoring in progress")
   def testDetectionChangeToDST(self):
-    naiveUTC, awareUTC = makeTestCases(sessionStart, timeChange, minute)
-    naiveDST, awareDST = makeTestCases(timeChange.astimezone(utcDST),
+    timepointsUTC, timezonesUTC = makeTestCases(sessionStart, timeChange, minute)
+    timepointsDST, timezonesDST = makeTestCases(timeChange.astimezone(utcDST),
                                        sessionEnd.astimezone(utcDST),
                                        minute)
-    fixTimezones(naiveUTC + naiveDST, sessionStart, sessionEnd.astimezone(utcDST))
-    self.assertEqual(naiveUTC, awareUTC)
-    self.assertEqual(naiveDST, awareDST)
+    inferred = inferTimezones(timepointsUTC + timepointsDST, sessionStart, sessionEnd.astimezone(utcDST))
+    self.assertEqual(inferred, timezonesUTC + timezonesDST)
 
 
 if __name__ == '__main__':

@@ -22,7 +22,5 @@
 #                                                                             #
 ###############################################################################
 
-def fixTimezones(timepoints, sessionStart, sessionEnd=None):
-  tz = sessionStart.tzinfo
-  for timepoint in timepoints:
-    timepoint.append(tz)
+def inferTimezones(timepoints, sessionStart, sessionEnd=None):
+  return [sessionStart.tzinfo] * len(timepoints)
