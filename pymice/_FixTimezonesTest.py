@@ -27,7 +27,7 @@ import unittest
 from datetime import datetime, timedelta
 import pytz
 
-from _FixTimezones import inferTimezones
+from _FixTimezones import inferTimezones, TimezonesInferrer
 
 
 utc = pytz.utc
@@ -37,6 +37,9 @@ sessionStart = datetime(2015, 7, 4, 17, 40, tzinfo=utc)
 sessionEnd = datetime(2015, 7, 4, 20, 40, tzinfo=utc)
 timeChange = datetime(2015, 7, 4, 18, 40, tzinfo=utc)
 minute = timedelta(seconds=60)
+
+def likeDST(time):
+  return time.astimezone(utcDST).replace(tzinfo=utc)
 
 def dateRange(start, end, step):
   time = start
@@ -112,16 +115,15 @@ class TestFixTimezones(unittest.TestCase):
     self.assertEqual(inferTimezones(timepointsDST, sessionStart, sessionEnd.astimezone(utcDST)),
                      timezonesDST)
 
-  def testUnequivocalChangeToDST(self):
+  def testAmbigousChangeToDST(self):
     timepoints = dateRange(sessionStart + 61 * minute, sessionStart + 65 * minute, minute) +\
                  dateRange(sessionStart + 126 * minute, sessionStart + 130 * minute, minute)
-    with self.assertRaises(ValueError):
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
       inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
 
   def testNoChangeToDST(self):
-    timepoints = dateRange(sessionStart,
-                           sessionEnd.astimezone(utcDST).replace(tzinfo=utc), minute)
-    with self.assertRaises(ValueError):
+    timepoints = dateRange(sessionStart, likeDST(sessionEnd), minute)
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
       inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
 
   def testDetectionOfChangeFromDST(self):
@@ -132,9 +134,26 @@ class TestFixTimezones(unittest.TestCase):
     inferred = inferTimezones(timepointsDST + timepointsUTC, sessionStart.astimezone(utcDST), sessionEnd)
     self.assertEqual(inferred, timezonesDST + timezonesUTC)
 
-    #self.assertEqual(inferTimezones(imepointsDST, sessionStart.astimezone(utcDST), sessionEnd),
-    #                 timezonesDST)
+  def testAmbigousChangeFromDST(self):
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+      timepoints = dateRange(likeDST(sessionStart), sessionEnd, minute)
+      inferTimezones(timepoints, sessionStart.astimezone(utcDST), sessionEnd)
 
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+      timepoints = dateRange(sessionStart - 121 * minute, sessionEnd, minute)
+      inferTimezones(timepoints, sessionStart.astimezone(utcDST), sessionEnd)
+
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+      timepoints = dateRange(likeDST(sessionStart),
+                             sessionEnd + 120 * minute, minute)
+      inferTimezones(timepoints, sessionStart.astimezone(utcDST), sessionEnd)
+
+    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+      start = likeDST(sessionStart)
+      timepoints = dateRange(start, start + 90*minute, minute) +\
+                   dateRange(start + 40*minute, start + 110*minute, minute) +\
+                   dateRange(start + 60*minute, sessionEnd, minute)
+      inferTimezones(timepoints, sessionStart.astimezone(utcDST), sessionEnd)
 
 if __name__ == '__main__':
   unittest.main()

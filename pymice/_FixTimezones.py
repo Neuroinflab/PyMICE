@@ -31,6 +31,9 @@ def inferTimezones(timepoints, sessionStart, sessionEnd=None):
 
 
 class TimezonesInferrer(object):
+  class AmbigousTimezoneChangeError(ValueError):
+    pass
+
   zeroTimedelta = timedelta(0)
 
   def __init__(self, sessionStart, sessionEnd):
@@ -54,7 +57,7 @@ class TimezonesInferrer(object):
     candidates = [c for (interval, c) in izip(self.intervals, count(0)) if
                   interval > self.timeChange]
     if len(candidates) != 1:
-      raise ValueError
+      raise self.AmbigousTimezoneChangeError
 
     return candidates[0]
 
@@ -64,7 +67,7 @@ class TimezonesInferrer(object):
       return [self.start.tzinfo] * self.timepointsNumber
 
     self.timeChange = self.end.utcoffset() - self.start.utcoffset()
-    self.getIntervals(timepoints)
+    self.makeIntervals(timepoints)
     if self.isTimeAdvanced():
       return self.inferWhenTimeAdvances()
 
@@ -74,9 +77,16 @@ class TimezonesInferrer(object):
     return self.prepareTimezoneList(self.findFirstBackedTimePoint())
 
   def findFirstBackedTimePoint(self):
-    return np.argmin(self.intervals)
+    candidate = np.argmin(self.intervals)
+    if self.intervals[candidate] >= self.zeroTimedelta:
+      raise self.AmbigousTimezoneChangeError
 
-  def getIntervals(self, timepoints):
+    if self.intervals[candidate] < self.timeChange:
+      raise self.AmbigousTimezoneChangeError
+
+    return candidate
+
+  def makeIntervals(self, timepoints):
     dtTimepoints = self.getBoundedTimepoints(timepoints)
     self.intervals = [b - a for (a, b) in
                       izip(dtTimepoints, islice(dtTimepoints, 1, None))]
