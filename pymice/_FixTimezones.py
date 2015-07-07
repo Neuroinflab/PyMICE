@@ -26,30 +26,62 @@ from datetime import datetime, timedelta
 from itertools import izip, count, islice
 import numpy as np
 
-zeroTimedelta = timedelta(0)
-
 def inferTimezones(timepoints, sessionStart, sessionEnd=None):
-  n = len(timepoints)
-  if sessionEnd is None or sessionStart.tzinfo == sessionEnd.tzinfo:
-    return [sessionStart.tzinfo] * n
+  return TimezonesInferrer(sessionStart, sessionEnd).infer(timepoints)
 
-  tzDelta = sessionEnd.utcoffset() - sessionStart.utcoffset()
 
-  intervals = getIntervals(sessionEnd, sessionStart, timepoints)
-  if tzDelta > zeroTimedelta:
-    candidates = [c for (interval, c) in izip(intervals, count(0)) if interval > tzDelta]
+class TimezonesInferrer(object):
+  zeroTimedelta = timedelta(0)
 
+  def __init__(self, sessionStart, sessionEnd):
+    self.start = sessionStart
+    self.end = sessionEnd
+
+  def isTimeAdvanced(self):
+    return self.timeChange > self.zeroTimedelta
+
+  def isTimePreserved(self):
+    return self.end is None or self.start.tzinfo == self.end.tzinfo
+
+  def inferWhenTimeAdvances(self):
+    return self.prepareTimezoneList(self.findFirstAdvancedTimePoint())
+
+  def prepareTimezoneList(self, firstChanged):
+    return [self.start.tzinfo] * firstChanged + [self.end.tzinfo] * (
+    self.timepointsNumber - firstChanged)
+
+  def findFirstAdvancedTimePoint(self):
+    candidates = [c for (interval, c) in izip(self.intervals, count(0)) if
+                  interval > self.timeChange]
     if len(candidates) != 1:
       raise ValueError
 
-    return [sessionStart.tzinfo] * candidates[0] + [sessionEnd.tzinfo] * (n - candidates[0])
+    return candidates[0]
 
-  candidate = np.argmin(intervals)
-  return [sessionStart.tzinfo] * candidate + [sessionEnd.tzinfo] * (n - candidate)
+  def infer(self, timepoints):
+    self.timepointsNumber = len(timepoints)
+    if self.isTimePreserved():
+      return [self.start.tzinfo] * self.timepointsNumber
 
+    self.timeChange = self.end.utcoffset() - self.start.utcoffset()
+    self.getIntervals(timepoints)
+    if self.isTimeAdvanced():
+      return self.inferWhenTimeAdvances()
 
-def getIntervals(sessionEnd, sessionStart, timepoints):
-  dtTimepoints = [sessionStart.replace(tzinfo=None)] + [datetime(*t) for t in timepoints] + [
-    sessionEnd.replace(tzinfo=None)]
-  intervals = [b - a for (a, b) in izip(dtTimepoints, islice(dtTimepoints, 1, None))]
-  return intervals
+    return self.inferWhenTimeBacks()
+
+  def inferWhenTimeBacks(self):
+    return self.prepareTimezoneList(self.findFirstBackedTimePoint())
+
+  def findFirstBackedTimePoint(self):
+    return np.argmin(self.intervals)
+
+  def getIntervals(self, timepoints):
+    dtTimepoints = self.getBoundedTimepoints(timepoints)
+    self.intervals = [b - a for (a, b) in
+                      izip(dtTimepoints, islice(dtTimepoints, 1, None))]
+
+  def getBoundedTimepoints(self, timepoints):
+    return [self.start.replace(tzinfo=None)] +\
+           [datetime(*t) for t in timepoints] +\
+           [self.end.replace(tzinfo=None)]

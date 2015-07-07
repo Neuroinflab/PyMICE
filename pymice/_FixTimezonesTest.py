@@ -132,6 +132,9 @@ class TestFixTimezones(unittest.TestCase):
     inferred = inferTimezones(timepointsDST + timepointsUTC, sessionStart.astimezone(utcDST), sessionEnd)
     self.assertEqual(inferred, timezonesDST + timezonesUTC)
 
+    #self.assertEqual(inferTimezones(imepointsDST, sessionStart.astimezone(utcDST), sessionEnd),
+    #                 timezonesDST)
+
 
 if __name__ == '__main__':
   unittest.main()
