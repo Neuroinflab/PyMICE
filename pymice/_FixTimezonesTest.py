@@ -98,7 +98,7 @@ class TestFixTimezones(unittest.TestCase):
                                     sessionStart, None),
                      [utc, utc])
 
-  def testDetectionChangeToDST(self):
+  def testDetectionOfChangeToDST(self):
     timepointsUTC, timezonesUTC = makeTestCases(sessionStart, timeChange, minute)
     timepointsDST, timezonesDST = makeTestCases(timeChange.astimezone(utcDST),
                                        sessionEnd.astimezone(utcDST),
@@ -123,6 +123,15 @@ class TestFixTimezones(unittest.TestCase):
                            sessionEnd.astimezone(utcDST).replace(tzinfo=utc), minute)
     with self.assertRaises(ValueError):
       inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
+
+  def testDetectionOfChangeFromDST(self):
+    timepointsDST, timezonesDST = makeTestCases(sessionStart.astimezone(utcDST),
+                                                timeChange.astimezone(utcDST),
+                                                minute)
+    timepointsUTC, timezonesUTC = makeTestCases(timeChange, sessionEnd, minute)
+    inferred = inferTimezones(timepointsDST + timepointsUTC, sessionStart.astimezone(utcDST), sessionEnd)
+    self.assertEqual(inferred, timezonesDST + timezonesUTC)
+
 
 if __name__ == '__main__':
   unittest.main()

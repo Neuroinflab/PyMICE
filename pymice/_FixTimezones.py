@@ -22,8 +22,11 @@
 #                                                                             #
 ###############################################################################
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import izip, count, islice
+import numpy as np
+
+zeroTimedelta = timedelta(0)
 
 def inferTimezones(timepoints, sessionStart, sessionEnd=None):
   n = len(timepoints)
@@ -33,12 +36,16 @@ def inferTimezones(timepoints, sessionStart, sessionEnd=None):
   tzDelta = sessionEnd.utcoffset() - sessionStart.utcoffset()
 
   intervals = getIntervals(sessionEnd, sessionStart, timepoints)
-  candidates = [c for (interval, c) in izip(intervals, count(0)) if interval > tzDelta]
+  if tzDelta > zeroTimedelta:
+    candidates = [c for (interval, c) in izip(intervals, count(0)) if interval > tzDelta]
 
-  if len(candidates) != 1:
-    raise ValueError
+    if len(candidates) != 1:
+      raise ValueError
 
-  return [sessionStart.tzinfo] * candidates[0] + [sessionEnd.tzinfo] * (n - candidates[0])
+    return [sessionStart.tzinfo] * candidates[0] + [sessionEnd.tzinfo] * (n - candidates[0])
+
+  candidate = np.argmin(intervals)
+  return [sessionStart.tzinfo] * candidate + [sessionEnd.tzinfo] * (n - candidate)
 
 
 def getIntervals(sessionEnd, sessionStart, timepoints):
