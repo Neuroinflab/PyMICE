@@ -54,12 +54,7 @@ class TimezonesInferrer(object):
     self.timepointsNumber - firstChanged)
 
   def findFirstAdvancedTimePoint(self):
-    candidates = [c for (interval, c) in izip(self.intervals, count(0)) if
-                  interval > self.timeChange]
-    if len(candidates) != 1:
-      raise self.AmbigousTimezoneChangeError
-
-    return candidates[0]
+    return self.getIndexOfTheOnlyTrueElement(self.intervals > self.timeChange)
 
   def infer(self, timepoints):
     self.timepointsNumber = len(timepoints)
@@ -84,11 +79,14 @@ class TimezonesInferrer(object):
     if minInterval < self.timeChange:
       raise self.AmbigousTimezoneChangeError
 
-    candidates = np.where(self.intervals == minInterval)[0]
-    if len(candidates) != 1:
+    return self.getIndexOfTheOnlyTrueElement(self.intervals == minInterval)
+
+  def getIndexOfTheOnlyTrueElement(self, mask):
+    indices = np.where(mask)[0]
+    if len(indices) != 1:
       raise self.AmbigousTimezoneChangeError
 
-    return candidates[0]
+    return indices[0]
 
   def makeIntervals(self, timepoints):
     dtTimepoints = self.getBoundedTimepoints(timepoints)
