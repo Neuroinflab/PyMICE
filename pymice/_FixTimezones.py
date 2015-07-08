@@ -77,19 +77,23 @@ class TimezonesInferrer(object):
     return self.prepareTimezoneList(self.findFirstBackedTimePoint())
 
   def findFirstBackedTimePoint(self):
-    candidate = np.argmin(self.intervals)
-    if self.intervals[candidate] >= self.zeroTimedelta:
+    minInterval = self.intervals.min()
+    if minInterval >= self.zeroTimedelta:
       raise self.AmbigousTimezoneChangeError
 
-    if self.intervals[candidate] < self.timeChange:
+    if minInterval < self.timeChange:
       raise self.AmbigousTimezoneChangeError
 
-    return candidate
+    candidates = np.where(self.intervals == minInterval)[0]
+    if len(candidates) != 1:
+      raise self.AmbigousTimezoneChangeError
+
+    return candidates[0]
 
   def makeIntervals(self, timepoints):
     dtTimepoints = self.getBoundedTimepoints(timepoints)
-    self.intervals = [b - a for (a, b) in
-                      izip(dtTimepoints, islice(dtTimepoints, 1, None))]
+    self.intervals = np.array([b - a for (a, b) in
+                               izip(dtTimepoints, islice(dtTimepoints, 1, None))])
 
   def getBoundedTimepoints(self, timepoints):
     return [self.start.replace(tzinfo=None)] +\
