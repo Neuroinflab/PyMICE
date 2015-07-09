@@ -110,3 +110,24 @@ class ResultsCSV(object):
       warn.warn('Field %s already set for row of ID %s, overwriting.' % (field, id))
       
     row[field] = value
+
+  def getField(self, field, id=None):
+    if id is None:
+      id = self.__currentID
+      if id is None:
+        raise ValueError('Row ID must be given if no row has been chosen yet.')
+
+    if field not in self.__fields:
+      raise KeyError('Unknown field: %s.' % field)
+
+    try:
+      row = self.__rows[id]
+
+    except KeyError:
+      raise KeyError('Unknown ID: %s.' % id)
+
+    try:
+      return row[field]
+
+    except KeyError:
+      raise KeyError('Field %s not set for ID %s.' % (field, id))
