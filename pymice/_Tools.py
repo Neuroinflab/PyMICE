@@ -160,6 +160,9 @@ def convertTime(tStr, tzinfo=None):
   args.extend((secs / 1000000, secs % 1000000, tzinfo))
   return datetime(*args)
 
+class objectList(list):
+  pass
+
 def timeToList(tStr):
   date, time = tStr.split()
   tokens = date.split('-') + time.split(':')
@@ -169,6 +172,7 @@ def timeToList(tStr):
 
   decimal, seconds = modf(float(tokens[5]))
   return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
+  #return objectList(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
 
 class timeListList(list):
   def __eq__(self, x):
@@ -206,6 +210,9 @@ class timeListQueue(object):
         self.__heap.append(item)
 
     heapq.heapify(self.__heap)
+
+  def __iter__(self):
+    return self
 
   def top(self):
     try:
@@ -368,9 +375,22 @@ def groupBy(objects, getKey):
 
   >>> groupBy([], getKey=lambda x: x[0] + x[1])
   {}
+
+  >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], 'a')
+  >>> for k in sorted(output):
+  ...   print k, output[k]
+  1 [Pair(a=1, b=2), Pair(a=1, b=1)]
+  2 [Pair(a=2, b=1)]
+
+  >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b'))
+  >>> for k in sorted(output):
+  ...   print k, output[k]
+  (1, 1) [Pair(a=1, b=1)]
+  (1, 2) [Pair(a=1, b=2)]
+  (2, 1) [Pair(a=2, b=1)]
   """
   if not hasattr(getKey, '__call__'):
-    getKey = attrgetter(*getKey)
+    getKey = attrgetter(getKey) if isinstance(getKey, basestring) else attrgetter(*getKey)
 
   result = {}
   for o in objects:
@@ -415,4 +435,6 @@ def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
 
 if __name__ == '__main__':
   import doctest
-  doctest.testmod()
+  import collections
+  doctest.testmod(extraglobs={
+    'Pair': collections.namedtuple('Pair', ['a', 'b'])})
