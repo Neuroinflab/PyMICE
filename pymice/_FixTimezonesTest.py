@@ -27,7 +27,7 @@ import unittest
 from datetime import datetime, timedelta
 import pytz
 
-from _FixTimezones import inferTimezones, TimezonesInferrer
+from _FixTimezones import inferTimezones, TimezonesInferrer, LatticeOrderer
 
 
 utc = pytz.utc
@@ -118,12 +118,12 @@ class TestFixTimezones(unittest.TestCase):
   def testAmbigousChangeToDST(self):
     timepoints = dateRange(sessionStart + 61 * minute, sessionStart + 65 * minute, minute) +\
                  dateRange(sessionStart + 126 * minute, sessionStart + 130 * minute, minute)
-    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+    with self.assertRaises(TimezonesInferrer.TooManyIntervalsBigEnoughForTimeAdvance):
       inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
 
   def testNoChangeToDST(self):
     timepoints = dateRange(sessionStart, likeDST(sessionEnd), minute)
-    with self.assertRaises(TimezonesInferrer.AmbigousTimezoneChangeError):
+    with self.assertRaises(TimezonesInferrer.NoIntervalsBigEnoughForTimeAdvance):
       inferTimezones(timepoints, sessionStart, sessionEnd.astimezone(utcDST))
 
   def testDetectionOfChangeFromDST(self):
@@ -154,6 +154,40 @@ class TestFixTimezones(unittest.TestCase):
                    dateRange(start + 40*minute, start + 110*minute, minute) +\
                    dateRange(start + 60*minute, sessionEnd, minute)
       inferTimezones(timepoints, sessionStart.astimezone(utcDST), sessionEnd)
+
+
+class TestLatticeOrderer(unittest.TestCase):
+  def testEmptyStaysEmpty(self):
+    self.assertEqual(list(LatticeOrderer([])), [])
+
+  def testSimpleOrder(self):
+    nodes = map(LatticeOrderer.Node, [[3], [1], [2]])
+    self.assertEqual(list(LatticeOrderer(nodes)), [[1], [2], [3]])
+
+  def testSimpleLatticeOrder(self):
+    b = LatticeOrderer.Node([1])
+    a = LatticeOrderer.Node([2]).markLessThan(b)
+    self.assertEqual(list(LatticeOrderer([b, a])), [[2], [1]])
+
+  def testComplexLatticeOrder(self):
+    d = LatticeOrderer.Node([0])
+    b = LatticeOrderer.Node([2]).markLessThan(d)
+    c = LatticeOrderer.Node([1]).markLessThan(d)
+    a = LatticeOrderer.Node([3]).markLessThan(b).markLessThan(c)
+    self.assertEqual(list(LatticeOrderer([b, a, c, d])), [[3], [1], [2], [0]])
+
+
+    f = LatticeOrderer.Node([0])
+    d = LatticeOrderer.Node([0])
+    b = LatticeOrderer.Node([4]).markLessThan(d)
+    c = LatticeOrderer.Node([2]).markLessThan(d)
+    a = LatticeOrderer.Node([1]).markLessThan(b).markLessThan(c)
+    e = LatticeOrderer.Node([5])
+
+    g = LatticeOrderer.Node([3])
+    self.assertEqual(list(LatticeOrderer([b, a, c, d, e, f, g])),
+                     [[0], [1], [2], [3], [4], [0], [5]])
+
 
 if __name__ == '__main__':
   unittest.main()

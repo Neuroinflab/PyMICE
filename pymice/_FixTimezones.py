@@ -24,14 +24,21 @@
 
 from datetime import datetime, timedelta
 from itertools import izip, count, islice
+
 import numpy as np
+import heapq
 
 def inferTimezones(timepoints, sessionStart, sessionEnd=None):
   return TimezonesInferrer(sessionStart, sessionEnd).infer(timepoints)
 
-
 class TimezonesInferrer(object):
   class AmbigousTimezoneChangeError(ValueError):
+    pass
+
+  class TooManyIntervalsBigEnoughForTimeAdvance(AmbigousTimezoneChangeError):
+    pass
+
+  class NoIntervalsBigEnoughForTimeAdvance(AmbigousTimezoneChangeError):
     pass
 
   zeroTimedelta = timedelta(0)
@@ -54,7 +61,9 @@ class TimezonesInferrer(object):
     self.timepointsNumber - firstChanged)
 
   def findFirstAdvancedTimePoint(self):
-    return self.getIndexOfTheOnlyTrueElement(self.intervals > self.timeChange)
+    return self.getIndexOfTheOnlyTrueElement(self.intervals > self.timeChange,
+                                      self.NoIntervalsBigEnoughForTimeAdvance,
+                                      self.TooManyIntervalsBigEnoughForTimeAdvance)
 
   def infer(self, timepoints):
     self.timepointsNumber = len(timepoints)
@@ -81,12 +90,20 @@ class TimezonesInferrer(object):
 
     return self.getIndexOfTheOnlyTrueElement(self.intervals == minInterval)
 
-  def getIndexOfTheOnlyTrueElement(self, mask):
+  def getIndexOfTheOnlyTrueElement(self, mask,
+                                   tooLittle = AmbigousTimezoneChangeError,
+                                   tooMany = AmbigousTimezoneChangeError):
     indices = np.where(mask)[0]
-    if len(indices) != 1:
-      raise self.AmbigousTimezoneChangeError
-
+    self.ensureOneElementCollection(indices, tooLittle, tooMany)
     return indices[0]
+
+  @staticmethod
+  def ensureOneElementCollection(collection, tooLittle, tooMany):
+    if len(collection) == 0:
+      raise tooLittle
+
+    if len(collection) > 1:
+      raise tooMany
 
   def makeIntervals(self, timepoints):
     dtTimepoints = self.getBoundedTimepoints(timepoints)
@@ -97,3 +114,56 @@ class TimezonesInferrer(object):
     return [self.start.replace(tzinfo=None)] +\
            [datetime(*t) for t in timepoints] +\
            [self.end.replace(tzinfo=None)]
+
+
+class LatticeOrderer(object):
+  class Node(list):
+    pass
+
+    def __init__(self, *args, **kwargs):
+      self.__children = []
+      self.__parents = 0
+      list.__init__(self, *args, **kwargs)
+
+    def markLessThan(self, greaterNode):
+      self.__children.append(greaterNode)
+      greaterNode.__parents += 1
+      return self
+
+    def isMinimal(self):
+      return self.__parents == 0
+
+    def getSuccessors(self):
+      return self.__children
+
+    def removePredecessor(self):
+      self.__parents -= 1
+
+
+  def __init__(self, elements=[]):
+    self.__elements = []
+    for e in elements:
+      self.__moveToMinimalIfAppropriate(e)
+
+
+  def __iter__(self):
+    return self
+
+  def next(self):
+    try:
+      leastElement = heapq.heappop(self.__elements)
+
+    except IndexError:
+      raise StopIteration
+
+    else:
+      for e in leastElement.getSuccessors():
+        e.removePredecessor()
+        self.__moveToMinimalIfAppropriate(e)
+
+      return leastElement
+
+  def __moveToMinimalIfAppropriate(self, e):
+    if e.isMinimal():
+      heapq.heappush(self.__elements, e)
+
