@@ -37,6 +37,8 @@ if not issubclass(np.floating, Number):
 
 import heapq
 
+from _FixTimezones import LatticeOrderer
+
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
@@ -160,9 +162,6 @@ def convertTime(tStr, tzinfo=None):
   args.extend((secs / 1000000, secs % 1000000, tzinfo))
   return datetime(*args)
 
-class objectList(list):
-  pass
-
 def timeToList(tStr):
   date, time = tStr.split()
   tokens = date.split('-') + time.split(':')
@@ -171,8 +170,8 @@ def timeToList(tStr):
     return map(int, tokens) + [0, 0]
 
   decimal, seconds = modf(float(tokens[5]))
-  return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
-  #return objectList(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
+  #return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
+  return LatticeOrderer.Node(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
 
 class timeListList(list):
   def __eq__(self, x):

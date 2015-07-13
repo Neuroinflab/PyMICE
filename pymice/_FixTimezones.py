@@ -23,7 +23,7 @@
 ###############################################################################
 
 from datetime import datetime, timedelta
-from itertools import izip, count, islice
+from itertools import izip, islice
 
 import numpy as np
 import heapq
@@ -143,7 +143,7 @@ class LatticeOrderer(object):
   def __init__(self, elements=[]):
     self.__elements = []
     for e in elements:
-      self.__moveToMinimalIfAppropriate(e)
+      self.addNode(e)
 
 
   def __iter__(self):
@@ -159,11 +159,18 @@ class LatticeOrderer(object):
     else:
       for e in leastElement.getSuccessors():
         e.removePredecessor()
-        self.__moveToMinimalIfAppropriate(e)
+        self.addNode(e)
 
       return leastElement
 
-  def __moveToMinimalIfAppropriate(self, e):
-    if e.isMinimal():
-      heapq.heappush(self.__elements, e)
+  def addNode(self, node):
+    if node.isMinimal():
+      heapq.heappush(self.__elements, node)
+
+  def addOrderedSequence(self, sequence):
+    for first, second in izip(sequence, islice(sequence, 1, None)):
+      first.markLessThan(second)
+      
+    if len(sequence) > 0:
+      self.addNode(sequence[0])
 

@@ -157,24 +157,39 @@ class TestFixTimezones(unittest.TestCase):
 
 
 class TestLatticeOrderer(unittest.TestCase):
+  def setUp(self):
+    self.orderer = LatticeOrderer()
+
+  def tearDown(self):
+    del self.orderer
+
   def testEmptyStaysEmpty(self):
-    self.assertEqual(list(LatticeOrderer([])), [])
+    self.compareOrderTo([])
 
   def testSimpleOrder(self):
-    nodes = map(LatticeOrderer.Node, [[3], [1], [2]])
-    self.assertEqual(list(LatticeOrderer(nodes)), [[1], [2], [3]])
+    for node in map(LatticeOrderer.Node, [[3], [1], [2]]):
+      self.orderer.addNode(node)
+
+    self.compareOrderTo([[1], [2], [3]])
 
   def testSimpleLatticeOrder(self):
     b = LatticeOrderer.Node([1])
     a = LatticeOrderer.Node([2]).markLessThan(b)
-    self.assertEqual(list(LatticeOrderer([b, a])), [[2], [1]])
+    self.orderer.addNode(a)
+    self.orderer.addNode(b)
+
+    self.compareOrderTo([[2], [1]])
 
   def testComplexLatticeOrder(self):
     d = LatticeOrderer.Node([0])
     b = LatticeOrderer.Node([2]).markLessThan(d)
     c = LatticeOrderer.Node([1]).markLessThan(d)
     a = LatticeOrderer.Node([3]).markLessThan(b).markLessThan(c)
-    self.assertEqual(list(LatticeOrderer([b, a, c, d])), [[3], [1], [2], [0]])
+    self.orderer.addNode(a)
+    self.orderer.addNode(b)
+    self.orderer.addNode(c)
+    self.orderer.addNode(d)
+    self.compareOrderTo([[3], [1], [2], [0]])
 
 
     f = LatticeOrderer.Node([0])
@@ -183,10 +198,25 @@ class TestLatticeOrderer(unittest.TestCase):
     c = LatticeOrderer.Node([2]).markLessThan(d)
     a = LatticeOrderer.Node([1]).markLessThan(b).markLessThan(c)
     e = LatticeOrderer.Node([5])
-
     g = LatticeOrderer.Node([3])
-    self.assertEqual(list(LatticeOrderer([b, a, c, d, e, f, g])),
-                     [[0], [1], [2], [3], [4], [0], [5]])
+    self.orderer.addNode(a)
+    self.orderer.addNode(e)
+    self.orderer.addNode(f)
+    self.orderer.addNode(g)
+    self.compareOrderTo([[0], [1], [2], [3], [4], [0], [5]])
+
+  def testAddEmptyLatticeSequence(self):
+    self.orderer.addNode(LatticeOrderer.Node([0]))
+    self.orderer.addOrderedSequence([])
+    self.compareOrderTo([[0]])
+
+  def testAddLatticeSequence(self):
+    self.orderer.addOrderedSequence([LatticeOrderer.Node([i]) for i in xrange(10, 0, -1)])
+    self.compareOrderTo([[i] for i in xrange(10, 0, -1)])
+
+  def compareOrderTo(self, reference):
+    self.assertEqual(list(self.orderer),
+                     reference)
 
 
 if __name__ == '__main__':

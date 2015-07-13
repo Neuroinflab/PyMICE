@@ -40,7 +40,7 @@ import numpy as np
 from xml.dom import minidom
 
 from operator import itemgetter, methodcaller, attrgetter
-from itertools import izip, repeat
+from itertools import izip, repeat, islice
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
@@ -48,6 +48,7 @@ from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, timeListQueue,\
                    PathZipFile, toTimestampUTC, warn, groupBy
+from _FixTimezones import inferTimezones, LatticeOrderer
 
 from _ObjectBase import ObjectBase
 
@@ -959,103 +960,13 @@ except Exception as e:
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def fixSessions(data, sessions=[]):
-  intervals = []
-  end = None
-  for session in sessions:
-    start = session.Start
-    if end is None:
-      intervals.append((start, True))
-
-    else:
-      if end != start:
-        intervals.append((end, False))
-        intervals.append((start, True))
-
-      else:
-        intervals.append((start, True))
-
-      if start < end:
-        warn.warn('Session overlap detected!')
-
-      if start + start.utcoffset() <= end + end.utcoffset():
-        warn.warn('Session representations overlap, there is no hope. :-(')
-
-    end = session.End
-    if end is not None and end < start:
-      warn.warn("Negative session duration detected. Are you jocking, aren't you?")
-
-  if end is not None:
-    intervals.append((end, False))
-
-  intervals = [([t.year, t.month, t.day,
-                 t.hour, t.minute, t.second,
-                 t.microsecond], t.tzinfo, t.utcoffset(), s) for t, s in intervals]
-  intervals.append(None)
-  lastTz = intervals[0][1]
-  lastTo = intervals[0][2]
-
-  dataQueue = timeListQueue(data)
-  try:
-    timepoint = dataQueue.next()
-    lastTimepoint = timepoint
-    tpDT = datetime(*timepoint)
-    lastTpDt = tpDT
-    delta = tpDT - lastTpDt
-    zeroTd = delta
-    hourTd = timedelta(seconds=3600)
-    inSession = False
-    for interval in intervals:
-      if interval is not None:
-        sentinel, tz, to, nextSession = interval
-
-      offsetChange = to - lastTo
-      tzChanged = offsetChange != zeroTd
-      while timepoint <= sentinel or interval is None:
-        if not inSession:
-          print timepoint
-          warn.warn('Timepoints out of session!')
-
-        if tzChanged:
-          if lastTpDt > tpDT:
-            if offsetChange > zeroTd:
-              warn.warn('Another candidate for tzchange..')
-
-            else:
-              warn.warn('Time not monotonic!')
-
-          if offsetChange < zeroTd and delta > -offsetChange: #instead of abs
-            warn.warn('Another candidate for tzchange.')
-
-          timepoint.append(tz)
-
-          # no check if there are other possibilities of change
-
-        elif offsetChange > zeroTd and lastTpDt > tpDT:
-          print 'A'
-          tzChanged = True
-          timepoint.append(tz)
-
-        elif offsetChange < zeroTd and delta > -offsetChange: #instead of abs
-          print 'B'
-          tzChanged = True
-          timepoint.append(tz)
-
-        else:
-          timepoint.append(lastTz)
-
-        lastTimepoint = timepoint
-        lastTpDt = tpDT
-        timepoint = dataQueue.next()
-        tpDT = datetime(*timepoint)
-        delta = tpDT - lastTpDt
-
-      lastTz = tz
-      lastTo = to
-      inSession = nextSession
-
-  except StopIteration:
-    pass
+def fixSessions(latticeNodes, sessions=[]):
+  assert len(sessions) == 1
+  session = sessions[0]
+  sortedTimepoints = list(LatticeOrderer(latticeNodes))
+  sortedTimezones = inferTimezones(sortedTimepoints, session.Start, session.End)
+  for timepoint, timezone in zip(sortedTimepoints, sortedTimezones):
+    timepoint.append(timezone)
 
 
 class Loader(Data):
@@ -1289,17 +1200,29 @@ class Loader(Data):
     vids = visits.pop('_vid')
 
     if sessions is not None:
-      vEnds = map(list, izip(visits['End'], repeat(1), repeat(None)))
-      vStarts = map(list, izip(visits['Start'], repeat(0), vEnds)) # start blocks end
-      timeToFix = [vEnds]
-      visitStartOrder = np.argsort(vids)
-      timeToFix.append(np.array(vStarts + [None], dtype=object)[visitStartOrder])
+      # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
+      #   ee._type = 'v.End'
+      #   ee._source = ss
+      #   ee._line = ll
+      #   es._type = 'v.Start'
+      #   es._source = ss
+      #   es._line = ll
+      vEnds = visits['End']
+      vStarts = visits['Start']
 
-    else:
+      for vStart, vEnd, nextEnd in izip(vStarts, vEnds, islice(vEnds, 1, None)):
+        vStart.markLessThan(vEnd.markLessThan(nextEnd))
+
+      if len(vStarts) > 0:
+        vStarts[-1].markLessThan(vEnds[-1])
+
+      vStarts = np.array(vStarts + [None], dtype=object)[np.argsort(vids)]
+      timeToFix = [self.__linkLatticeNodesInOrder(vStarts)] if len(vStarts) > 0 else []
+
+    else: #XXX
       timeToFix = visits['End'] + visits['Start'] 
 
     visits['Animal'] = map(tag2Animal.__getitem__, tags)
-                     #[tag2Animal[tag] for tag in tags]
 
     orphans = []
     if getNp:
@@ -1312,25 +1235,35 @@ class Loader(Data):
       npVids = nosepokes.pop('_vid')
 
       if sessions is not None:
-        npEnds = map(list, izip(nosepokes['End'], repeat(True), repeat(None)))
-        npStarts = map(list, izip(nosepokes['Start'], repeat(False), npEnds))
+        # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
+        #   ee._type = 'n.End'
+        #   ee._source = ss
+        #   ee._line = ll
+        #   es._type = 'n.Start'
+        #   es._source = ss
+        #   es._line = ll
+
+        npEnds = nosepokes['End']
+        npStarts = nosepokes['Start']
+        for npStart, npEnd, nextEnd in izip(npStarts, npEnds, islice(npEnds, 1, None)):
+          npStart.markLessThan(npEnd.markLessThan(nextEnd))
+
         npStarts = np.array(npStarts + [None], dtype=object)
         npTags = np.array(map(vid2tag.__getitem__, npVids))
         npSides = np.array(map(int, nosepokes['Side'])) % 2 # no bilocation assumed
         # XXX                   ^ - ugly... possibly duplicated
 
-        timeToFix.append(npEnds)
         for tag in tag2Animal:
           for side in (0, 1): # tailpokes correction
-            timeToFix.append(npStarts[(npTags == tag) * (npSides == side)])
+            animalSideStarts = npStarts[(npTags == tag) * (npSides == side)]
+            if len(animalSideStarts) > 0:
+              timeToFix.append(self.__linkLatticeNodesInOrder(animalSideStarts))
 
-      else:
+      else: #XXX
         timeToFix.extend(nosepokes['End'])
         timeToFix.extend(nosepokes['Start'])
 
       nosepokes = self._makeDicts(nosepokes)
-      #if sessions is not None:
-      #  fixSessions(nosepokes, ['Start', 'End'], sessions)
 
       for vid, nosepoke in zip(npVids, nosepokes):
         try:
@@ -1351,10 +1284,6 @@ class Loader(Data):
       
     visits = self._makeDicts(visits)
 
-    # XXX!!!
-    #if sessions is not None:
-    #  fixSessions(visits, ['Start', 'End'], sessions)
-
     result = {'animals': animals,
               'groups': groups.values(),
               'visits': visits,
@@ -1364,15 +1293,13 @@ class Loader(Data):
     if getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       if sessions is not None:
-        timeToFix.append(map(list, izip(log['DateTime'], repeat(False), repeat(None))))
+        if len(log['DateTime']) > 0:
+          timeToFix.append(self.__linkLatticeNodesInOrder(log['DateTime']))
 
-      else:
+      else: #XXX
         timeToFix.extend(log['DateTime'])
 
       log = self._makeDicts(log)
-
-      #if sessions is not None:
-      #  fixSessions(log, ['DateTime'], sessions)
 
       result['logs'] = log
 
@@ -1380,7 +1307,8 @@ class Loader(Data):
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       if environment is not None:
         if sessions is not None:
-          timeToFix.append(map(list, izip(environment['DateTime'], repeat(False), repeat(None))))
+          if len(environment['DateTime']) > 0:
+            timeToFix.append(self.__linkLatticeNodesInOrder(environment['DateTime']))
 
         else:
           timeToFix.extend(environment['DateTime'])
@@ -1398,9 +1326,10 @@ class Loader(Data):
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
       if hardware is not None:
         if sessions is not None:
-          timeToFix.append(map(list, izip(hardware['DateTime'], repeat(False), repeat(None))))
+          if len(hardware['DateTime']) > 0:
+            timeToFix.append(self.__linkLatticeNodesInOrder(hardware['DateTime']))
 
-        else:
+        else: #XXX
           timeToFix.extend(hardware['DateTime'])
 
         hardware = self._makeDicts(hardware)
@@ -1420,6 +1349,13 @@ class Loader(Data):
       map(methodcaller('append', pytz.utc), timeToFix) # UTC assumed
 
     return result
+
+  @staticmethod
+  def __linkLatticeNodesInOrder(nodes):
+    for node, nextNode in izip(nodes, islice(nodes, 1, None)):
+      node.markLessThan(nextNode)
+
+    return nodes[0]
 
   @staticmethod
   def _makeDicts(data):
