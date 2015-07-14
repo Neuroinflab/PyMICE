@@ -193,69 +193,6 @@ class timeListList(list):
     return self[0] > x[0]
 
 
-class timeListQueue(object):
-  # soo dirty...
-  def __init__(self, lists):
-    # list item: [[time list], locked, unlocks]
-    tmpLists = filter(None, map(timeListList, lists))
-    self.__heap = []
-    self.__locked = []
-    #self.__seen = set()
-    for item in tmpLists:
-      if item[0][1]:
-        self.__locked.append(item)
-
-      else:
-        self.__heap.append(item)
-
-    heapq.heapify(self.__heap)
-
-  def __iter__(self):
-    return self
-
-  def top(self):
-    try:
-      return self.__heap[0][0][0]
-
-    except IndexError:
-      raise StopIteration
-
-  def next(self):
-    try:
-      head = heapq.heappop(self.__heap)
-
-    except IndexError:
-      raise StopIteration
-
-    top, _, unlock = head.pop(0)
-
-    if unlock is not None:
-      unlock[1] -= 1
-      for i, locked in list(enumerate(self.__locked)):
-        if not locked[0][1]: #found!
-          heapq.heappush(self.__heap, locked)
-          self.__locked[i:] = self.__locked[i+1:] # -_-
-          break
-
-    if head:
-      if head[0][1]:
-        self.__locked.append(head)
-
-      else:
-        heapq.heappush(self.__heap, head)
-
-    return top
-
-
-  #try:
-  #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M:%S'))\
-  #         + subSec
-
-  #except ValueError:
-  #  return time.mktime(time.strptime(tSplit[0], '%Y-%m-%d %H:%M'))\
-  #         + subSec
-
-
 class PathZipFile(object):
   """
   A class emulating zipfile.ZipFile behaviour with filesystem directories.

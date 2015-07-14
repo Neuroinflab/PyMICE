@@ -46,7 +46,7 @@ from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
                     LogNode, EnvironmentNode, HardwareEventNode, SessionNode
 
 from _Tools import timeString, ensureFloat, ensureInt, \
-                   convertTime, timeToList, timeListQueue,\
+                   convertTime, timeToList, \
                    PathZipFile, toTimestampUTC, warn, groupBy
 from _FixTimezones import inferTimezones, LatticeOrderer
 
