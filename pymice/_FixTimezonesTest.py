@@ -168,16 +168,14 @@ class TestLatticeOrderer(unittest.TestCase):
 
   def testSimpleOrder(self):
     for node in map(LatticeOrderer.Node, [[3], [1], [2]]):
-      self.orderer.addNode(node)
+      self.orderer.addNodes(node)
 
     self.compareOrderTo([[1], [2], [3]])
 
   def testSimpleLatticeOrder(self):
     b = LatticeOrderer.Node([1])
     a = LatticeOrderer.Node([2]).markLessThan(b)
-    self.orderer.addNode(a)
-    self.orderer.addNode(b)
-
+    self.orderer.addNodes(a, b)
     self.compareOrderTo([[2], [1]])
 
   def testComplexLatticeOrder(self):
@@ -185,10 +183,7 @@ class TestLatticeOrderer(unittest.TestCase):
     b = LatticeOrderer.Node([2]).markLessThan(d)
     c = LatticeOrderer.Node([1]).markLessThan(d)
     a = LatticeOrderer.Node([3]).markLessThan(b).markLessThan(c)
-    self.orderer.addNode(a)
-    self.orderer.addNode(b)
-    self.orderer.addNode(c)
-    self.orderer.addNode(d)
+    self.orderer.addNodes(a, b, c, d)
     self.compareOrderTo([[3], [1], [2], [0]])
 
 
@@ -199,23 +194,43 @@ class TestLatticeOrderer(unittest.TestCase):
     a = LatticeOrderer.Node([1]).markLessThan(b).markLessThan(c)
     e = LatticeOrderer.Node([5])
     g = LatticeOrderer.Node([3])
-    self.orderer.addNode(a)
-    self.orderer.addNode(e)
-    self.orderer.addNode(f)
-    self.orderer.addNode(g)
+    self.orderer.addNodes(a, e, f, g)
     self.compareOrderTo([[0], [1], [2], [3], [4], [0], [5]])
 
   def testAddEmptyLatticeSequence(self):
-    self.orderer.addNode(LatticeOrderer.Node([0]))
+    self.orderer.addNodes(LatticeOrderer.Node([0]))
     self.orderer.addOrderedSequence([])
+
     self.compareOrderTo([[0]])
 
   def testAddLatticeSequence(self):
-    self.orderer.addOrderedSequence([LatticeOrderer.Node([i]) for i in xrange(10, 0, -1)])
+    self.orderer.addOrderedSequence(self.generateSequence(xrange(10, 0, -1)))
+
     self.compareOrderTo([[i] for i in xrange(10, 0, -1)])
 
+
+  def testMakeTupleSequence(self):
+    firstElements = self.generateSequence(xrange(2, 9, 3))
+    secondElements = self.generateSequence(xrange(1, 9, 3))
+    thirdElements = self.generateSequence(xrange(0, 9, 3))
+    self.orderer.coupleTuples(firstElements, secondElements, thirdElements)
+    self.orderer.addNodes(*firstElements)
+
+    self.compareOrderTo([[2], [1], [0], [5], [4], [3], [8], [7], [6]])
+
+  def testMakeOrderedSequence(self):
+    sequence = self.generateSequence(xrange(5, 0, -1))
+    self.orderer.makeOrderedSequence(sequence)
+    a = LatticeOrderer.Node([10])
+    a.markLessThan(sequence[0])
+    self.orderer.addNodes(a)
+    self.compareOrderTo([[10], [5], [4], [3], [2], [1]])
+
+  def generateSequence(self, iterator):
+    return [LatticeOrderer.Node([i]) for i in iterator]
+
   def compareOrderTo(self, reference):
-    self.assertEqual(list(self.orderer),
+    self.assertEqual(self.orderer.pullOrdered(),
                      reference)
 
 

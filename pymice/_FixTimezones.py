@@ -142,9 +142,9 @@ class LatticeOrderer(object):
 
   def __init__(self, elements=[]):
     self.__elements = []
-    for e in elements:
-      self.addNode(e)
 
+  def pullOrdered(self):
+    return list(self)
 
   def __iter__(self):
     return self
@@ -159,18 +159,27 @@ class LatticeOrderer(object):
     else:
       for e in leastElement.getSuccessors():
         e.removePredecessor()
-        self.addNode(e)
+        self.addNodes(e)
 
       return leastElement
 
-  def addNode(self, node):
-    if node.isMinimal():
-      heapq.heappush(self.__elements, node)
+  def addNodes(self, *nodes):
+    for node in nodes:
+      if node.isMinimal():
+        heapq.heappush(self.__elements, node)
 
   def addOrderedSequence(self, sequence):
+    self.makeOrderedSequence(sequence)
+
+    if len(sequence) > 0:
+      self.addNodes(sequence[0])
+
+  @classmethod
+  def coupleTuples(cls, *sequences):
+    for sequence in izip(*sequences):
+      cls.makeOrderedSequence(sequence)
+
+  @staticmethod
+  def makeOrderedSequence(sequence):
     for first, second in izip(sequence, islice(sequence, 1, None)):
       first.markLessThan(second)
-      
-    if len(sequence) > 0:
-      self.addNode(sequence[0])
-

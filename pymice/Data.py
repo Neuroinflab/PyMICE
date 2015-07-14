@@ -960,10 +960,9 @@ except Exception as e:
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def fixSessions(latticeNodes, sessions=[]):
+def fixSessions(sortedTimepoints, sessions=[]):
   assert len(sessions) == 1
   session = sessions[0]
-  sortedTimepoints = list(LatticeOrderer(latticeNodes))
   sortedTimezones = inferTimezones(sortedTimepoints, session.Start, session.End)
   for timepoint, timezone in zip(sortedTimepoints, sortedTimezones):
     timepoint.append(timezone)
@@ -1193,7 +1192,7 @@ class Loader(Data):
       sessions = None
       pass
 
-    # timeToFix = []
+    timeOrderer = LatticeOrderer()
 
     visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
     tags = visits.pop('Tag')
@@ -1210,14 +1209,9 @@ class Loader(Data):
       vEnds = visits['End']
       vStarts = visits['Start']
 
-      for vStart, vEnd, nextEnd in izip(vStarts, vEnds, islice(vEnds, 1, None)):
-        vStart.markLessThan(vEnd.markLessThan(nextEnd))
-
-      if len(vStarts) > 0:
-        vStarts[-1].markLessThan(vEnds[-1])
-
-      vStarts = np.array(vStarts + [None], dtype=object)[np.argsort(vids)]
-      timeToFix = [self.__linkLatticeNodesInOrder(vStarts)] if len(vStarts) > 0 else []
+      timeOrderer.coupleTuples(vStarts, vEnds)
+      timeOrderer.makeOrderedSequence(vEnds)
+      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(vids)])
 
     else: #XXX
       timeToFix = visits['End'] + visits['Start'] 
@@ -1245,8 +1239,8 @@ class Loader(Data):
 
         npEnds = nosepokes['End']
         npStarts = nosepokes['Start']
-        for npStart, npEnd, nextEnd in izip(npStarts, npEnds, islice(npEnds, 1, None)):
-          npStart.markLessThan(npEnd.markLessThan(nextEnd))
+        timeOrderer.coupleTuples(npStarts, npEnds)
+        timeOrderer.makeOrderedSequence(npEnds)
 
         npStarts = np.array(npStarts + [None], dtype=object)
         npTags = np.array(map(vid2tag.__getitem__, npVids))
@@ -1255,9 +1249,7 @@ class Loader(Data):
 
         for tag in tag2Animal:
           for side in (0, 1): # tailpokes correction
-            animalSideStarts = npStarts[(npTags == tag) * (npSides == side)]
-            if len(animalSideStarts) > 0:
-              timeToFix.append(self.__linkLatticeNodesInOrder(animalSideStarts))
+            timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
 
       else: #XXX
         timeToFix.extend(nosepokes['End'])
@@ -1293,8 +1285,7 @@ class Loader(Data):
     if getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       if sessions is not None:
-        if len(log['DateTime']) > 0:
-          timeToFix.append(self.__linkLatticeNodesInOrder(log['DateTime']))
+        timeOrderer.addOrderedSequence(log['DateTime'])
 
       else: #XXX
         timeToFix.extend(log['DateTime'])
@@ -1307,15 +1298,12 @@ class Loader(Data):
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       if environment is not None:
         if sessions is not None:
-          if len(environment['DateTime']) > 0:
-            timeToFix.append(self.__linkLatticeNodesInOrder(environment['DateTime']))
+          timeOrderer.addOrderedSequence(environment['DateTime'])
 
         else:
           timeToFix.extend(environment['DateTime'])
 
         environment = self._makeDicts(environment)
-        #if sessions is not None:
-        #  fixSessions(environment, ['DateTime'], sessions)
 
       else:
         environment = []
@@ -1326,15 +1314,12 @@ class Loader(Data):
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
       if hardware is not None:
         if sessions is not None:
-          if len(hardware['DateTime']) > 0:
-            timeToFix.append(self.__linkLatticeNodesInOrder(hardware['DateTime']))
+          timeOrderer.addOrderedSequence(hardware['DateTime'])
 
         else: #XXX
           timeToFix.extend(hardware['DateTime'])
 
         hardware = self._makeDicts(hardware)
-        #if sessions is not None:
-        #  fixSessions(hardware, ['DateTime'], sessions)
 
       else:
         hardware = []
@@ -1343,19 +1328,12 @@ class Loader(Data):
 
     #XXX important only when timezone changes!
     if sessions is not None:
-      fixSessions(timeToFix, sessions)
+      fixSessions(timeOrderer.pullOrdered(), sessions)
 
     else:
       map(methodcaller('append', pytz.utc), timeToFix) # UTC assumed
 
     return result
-
-  @staticmethod
-  def __linkLatticeNodesInOrder(nodes):
-    for node, nextNode in izip(nodes, islice(nodes, 1, None)):
-      node.markLessThan(nextNode)
-
-    return nodes[0]
 
   @staticmethod
   def _makeDicts(data):
@@ -1403,10 +1381,7 @@ class Loader(Data):
     n = len(data)
     if n == 0:
       return dict((l, []) for l in labels)
-    
-    #noneMapper = lambda x: x or None
-    #data = map(lambda row: map(noneMapper, row), data)
-    #data = [[x or None for x in row] for row in data]
+
     emptyStringToNone(data)
     data = dict(zip(labels, zip(*data)))
     if source is not None:
