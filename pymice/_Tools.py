@@ -23,19 +23,17 @@
 ###############################################################################
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 import time
 import warnings
 from math import modf
-from operator import itemgetter, methodcaller, attrgetter
+from operator import attrgetter
 
 from numbers import Number
 import numpy as np
 if not issubclass(np.floating, Number):
   Number.register(np.floating)
-
-import heapq
 
 from _FixTimezones import LatticeOrderer
 
