@@ -88,16 +88,14 @@ class ResultsCSV(object):
 
   def getRow(self):
     return self.__currentID
-
+      
   def addField(self, field, value='', id=None):
     if id is None:
       id = self.__currentID
       if id is None:
         raise ValueError('Row ID must be given if no row has been chosen yet.')
 
-    if field not in self.__fields:
-      self.__fields.add(field)
-      self.__fieldsOrder.append(field)
+    self.declareFields(field)
 
     try:
       row = self.__rows[id]
@@ -110,6 +108,15 @@ class ResultsCSV(object):
       warn.warn('Field %s already set for row of ID %s, overwriting.' % (field, id))
       
     row[field] = value
+    
+  def declareFields(self, *fields):
+    for field in fields:
+        self._declareField(field)
+        
+  def _declareField(self, field):
+    if field not in self.__fields:
+      self.__fields.add(field)
+      self.__fieldsOrder.append(field)
 
   def getField(self, field, id=None):
     if id is None:
