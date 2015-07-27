@@ -95,7 +95,7 @@ class ResultsCSV(object):
       if id is None:
         raise ValueError('Row ID must be given if no row has been chosen yet.')
 
-    self.declareFields(field)
+    self._declareField(field)
 
     try:
       row = self.__rows[id]
