@@ -39,5 +39,5 @@ __all__ = []
 
 print "This is a bleeding edge version of the PyMICE library. It might meet your"
 print "expectations, however it might also go to your fridge, drink all the beer"
-print "it can found there and then eat your cat. Be warned."
+print "it can find there and then eat your cat. Be warned."
 print
