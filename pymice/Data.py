@@ -1411,7 +1411,7 @@ class Loader(Data):
     """
     Process one input file and append data to self.data
     """
-    fname = fname.encode('utf-8') # stupid users!
+    fname = fname.encode('utf-8')
     print 'loading data from %s' % fname
     #sid = self._registerSource(fname.decode('utf-8'))
 
