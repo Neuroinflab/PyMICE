@@ -229,12 +229,12 @@ def getTutorialData(path=None):
   elif not os.path.isdir(path):
     raise OSError("Not a directory: '%s'" % path)
 
-  DATA = {'https://www.dropbox.com/s/kxgfu7fazbwvz7e/C57_AB.zip?dl=1':
+  DATA = {'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1':
            {'C57_AB/2012-08-28 13.44.51.zip': 86480,
             'C57_AB/2012-08-31 11.58.22.zip': 3818445,
             'C57_AB/2012-08-28 15.33.58.zip': 494921,
             'C57_AB/2012-08-31 11.46.31.zip': 29344,
-            'config.ini': 2894,
+            'C57_AB/timeline.ini': 2894,
            },
          }
 
