@@ -469,7 +469,7 @@ class Phase(MetadataNode):
 
 
 
-class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
+class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
   def __init__(self, path, fname=None, tzone=None, tzinfo=None): 
     self.tzone = pytz.timezone('CET') if tzone is None else tzone
     self.tzinfo = tzinfo
@@ -606,3 +606,8 @@ class ExperimentConfigFile(RawConfigParser, matplotlib.ticker.Formatter):
     plt.title(self.path) 
     plt.draw()
 
+
+class ExperimentConfigFile(ExperimentTimeline):
+  def __init__(self, *args, **kwargs):
+    warn.deprecated('Deprecated class ExperimentConfigFile used; use ExperimentTimeline instead.')
+    ExperimentTimeline.__init__(self, *args, **kwargs)
