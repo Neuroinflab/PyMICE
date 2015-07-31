@@ -30,14 +30,19 @@ A collection of tools to access IntelliCage data.
 
 from .Data import Loader, Merger
 from ._Tools import hTime, convertTime, getTutorialData, warn
-from ._Metadata import Phase, ExperimentConfigFile
+from ._Metadata import Phase, ExperimentConfigFile, ExperimentTimeline
 from ._Results import ResultsCSV
 from .LogAnalyser import LickometerLogAnalyzer, PresenceLogAnalyzer, TestMiceData
-__ID__ = 'nlx_158570'
-__version__ = __ID__ + ' 0.1.3'
+__NeuroLexID__ = 'nlx_158570'
+__version__ = '0.1.4'
+__ID__ = __NeuroLexID__ + ' ' + __version__
 __all__ = []
 
-print "This is a bleeding edge version of the PyMICE library. It might meet your"
-print "expectations, however it might also go to your fridge, drink all the beer"
-print "it can find there and then eat your cat. Be warned."
-print
+
+print """PyMICE library v. %s
+(NeuroLex.org ID: %s)
+
+This is a bleeding edge version of the library. It might meet your expectations,
+however it might also go to your fridge, drink all the beer it can find there
+and then eat your cat. Be warned.
+""" % (__version__, __NeuroLexID__)
