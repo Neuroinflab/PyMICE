@@ -555,6 +555,11 @@ class Data(object):
     >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'], order='Start')]
     [1, 3]
 
+    >>> mice = map(ml_l1.getAnimal, ['Mickey', 'Minnie'])
+    >>> [v.Corner for v in ml_l1.getVisits(mice=mice, order='Start')]
+    [4, 1]
+
+
 
     >>> for v in ml_icp3.getVisits(order='Start'):
     ...   print v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z")
@@ -601,13 +606,10 @@ class Data(object):
 
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
-      if isinstance(mice, Animal):
-        mice = [mice.Name]
-
-      elif isinstance(mice, basestring): 
+      if isinstance(mice, (basestring, Animal)):
         mice = [mice]
 
-      selectors['Animal.Name'] = mice
+      selectors['Animal.Name'] = map(unicode, mice)
 
     visits = self.__visits.get(selectors)
     return self.__orderBy(visits, order)
