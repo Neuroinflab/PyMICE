@@ -243,7 +243,7 @@ class Animal(DataNode):
 
       else:
         if not isinstance(self.Tag, set):
-          self.Tag = set([self.Tag])
+          self.Tag = {self.Tag}
 
         if isinstance(Tag, set):
           self.Tag.update(Tag)
