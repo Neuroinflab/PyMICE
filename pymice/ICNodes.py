@@ -118,7 +118,7 @@ class DataNode(object):
     return map(self.__dict__.get, query)
 
 
-class SessionNode(DataNode):
+class Session(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Start', 'End']
 
   def __init__(self, Start, End, **kwargs):
@@ -128,7 +128,7 @@ class SessionNode(DataNode):
 
 
 # TODO
-class LogNode(DataNode):
+class LogEntry(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Category', 'Type', 'Cage',
                                       'Corner', 'Side', 'Notes']
 
@@ -144,7 +144,7 @@ class LogNode(DataNode):
     self.Notes = unicode(Notes) if Notes is not None else None
 
 
-class EnvironmentNode(DataNode):
+class EnvironmentalConditions(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Temperature',
                                       'Illumination', 'Cage']
 
@@ -157,7 +157,7 @@ class EnvironmentNode(DataNode):
     self.Cage = int(Cage) if Cage is not None else None
 
 
-class HardwareEventNode(DataNode):
+class HardwareEvent(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Type',
                                       'Cage', 'Corner', 'Side', 'State']
   __typeMapping = {0: 'Air',
@@ -176,7 +176,7 @@ class HardwareEventNode(DataNode):
     self.State = int(State) if State is not None else None
 
 
-class AnimalNode(DataNode):
+class Animal(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Name', 'Tag', 'Sex', 'Notes']
   _keys = ['Name', 'Sex']
 
@@ -252,7 +252,7 @@ class AnimalNode(DataNode):
           self.Tag.add(Tag)
 
 
-class VisitNode(DataNode):
+class Visit(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'Module', 'Cage',
                'Corner', 'CornerCondition', 'PlaceError', 'AntennaNumber',
                'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
@@ -262,7 +262,7 @@ class VisitNode(DataNode):
                CornerCondition=None, PlaceError=None, AntennaNumber=None,
                AntennaDuration=None, PresenceNumber=None, PresenceDuration=None,
                VisitSolution=None, **kwargs):
-    super(VisitNode, self).__init__(**kwargs)
+    super(Visit, self).__init__(**kwargs)
     self.Start = toDt(Start)
     self.Corner = int(Corner)
     self.End = toDt(End)
@@ -347,10 +347,10 @@ class VisitNode(DataNode):
       for npNode in self.Nosepokes:
         npNode._del_()
 
-    super(VisitNode, self)._del_()
+    super(Visit, self)._del_()
 
 
-class NosepokeNode(DataNode):
+class Nosepoke(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'Side', 'LickNumber',
                                       'LickContactTime', 'LickDuration',
                                       'SideCondition', 'SideError', 'TimeError',
@@ -389,7 +389,7 @@ class NosepokeNode(DataNode):
     return 'left' if self.Side % 2 == 1 else 'right'
 
 
-class GroupNode(DataNode):
+class Group(DataNode):
   _baseAttrs = DataNode._baseAttrs + ['Name', 'Animals']
   _keys = ['Name']
 

@@ -42,8 +42,8 @@ from xml.dom import minidom
 from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat, islice
 from datetime import datetime, timedelta, MINYEAR 
-from ICNodes import DataNode, AnimalNode, GroupNode, VisitNode, NosepokeNode,\
-                    LogNode, EnvironmentNode, HardwareEventNode, SessionNode
+from ICNodes import DataNode, Animal, Group, Visit, Nosepoke,\
+                    LogEntry, EnvironmentalConditions, HardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
@@ -187,7 +187,7 @@ class Data(object):
     @type cage: convertable to int
 
     @return: cages available in data if cage is C{None} animals detected in the cage otherwise
-    @rtype: frozenset(int, ...) if cage is C{None} C{frozenset(L{AnimalNode}, ...)} otherwise
+    @rtype: frozenset(int, ...) if cage is C{None} C{frozenset(L{Animal}, ...)} otherwise
     """
     if cage == None:
       return frozenset(self.__cages)
@@ -251,16 +251,16 @@ class Data(object):
     return map(cls.fromDict, nodes)
 
   def _insertLog(self, lNodes):
-    self.__log.put(self._newNodes(lNodes, LogNode))
+    self.__log.put(self._newNodes(lNodes, LogEntry))
 
   def _insertEnvironment(self, eNodes):
-    self.__environment.put(self._newNodes(eNodes, EnvironmentNode))
+    self.__environment.put(self._newNodes(eNodes, EnvironmentalConditions))
 
   def _insertHardware(self, hNodes):
-    self.__hardware.put(self._newNodes(hNodes, HardwareEventNode))
+    self.__hardware.put(self._newNodes(hNodes, HardwareEvent))
 
   def _insertVisits(self, vNodes):
-    vNodes = self._newNodes(vNodes, VisitNode) # callCopy might be faster but requires vNodes to be VisitNode-s
+    vNodes = self._newNodes(vNodes, Visit) # callCopy might be faster but requires vNodes to be Visit-s
     for (vid, vNode) in enumerate(vNodes, start=len(self.__visits)):
       vNode._vid = vid
 
@@ -269,7 +269,7 @@ class Data(object):
 
       nosepokes = vNode.pop('Nosepokes', None)
       if self._getNp and nosepokes is not None:
-        nosepokes = tuple(self._newNodes(nosepokes, NosepokeNode))
+        nosepokes = tuple(self._newNodes(nosepokes, Nosepoke))
         vNode.Nosepokes = nosepokes
         for nid, npNode in enumerate(nosepokes, start=len(self.__nosepokes)):
           npNode.Visit = vNode
@@ -295,7 +295,7 @@ class Data(object):
       group.merge(Name=Name, Animals=Animals, **kwargs)
       return group
 
-    group = GroupNode(Name=Name, Animals=Animals, **kwargs)
+    group = Group(Name=Name, Animals=Animals, **kwargs)
     self.__name2group[Name] = group
     return group
 
@@ -316,7 +316,7 @@ class Data(object):
     @type aid: int
 
     @return: animal data if name or aid given else names of animals
-    @rtype: AnimalNode if name or aid given else frozenset([unicode, ...])
+    @rtype: Animal if name or aid given else frozenset([unicode, ...])
     """
     if name is not None:
       return self.__animalsByName[unicode(name)]
@@ -327,7 +327,7 @@ class Data(object):
     return frozenset(self.__animalsByName)
 
   def _registerAnimal(self, animal):
-    aNode = AnimalNode(animal['Name'], Tag=animal.get('Tag'),
+    aNode = Animal(animal['Name'], Tag=animal.get('Tag'),
                        Sex=animal.get('Sex'),
                        Notes=animal.get('Notes'))
     return self._registerAnimalNode(aNode)
@@ -583,7 +583,7 @@ class Data(object):
     @param endTime: deprecated, use C{end} instead
 
     @return: visits.
-    @rtype: [VisitNode]
+    @rtype: [Visit]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -601,7 +601,7 @@ class Data(object):
 
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
-      if isinstance(mice, AnimalNode):
+      if isinstance(mice, Animal):
         mice = [mice.Name]
 
       elif isinstance(mice, basestring): 
@@ -641,7 +641,7 @@ class Data(object):
     @param endTime: deprecated, use C{end} instead
 
     @return: log entries.
-    @rtype: [LogNode, ...]
+    @rtype: [LogEntry, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -696,7 +696,7 @@ class Data(object):
     @param endTime: deprecated, use C{end} instead
 
     @return: sampled environment conditions.
-    @rtype: [EnvironmentNode, ...]
+    @rtype: [EnvironmentalConditions, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -732,7 +732,7 @@ class Data(object):
     @param endTime: deprecated, use C{end} instead
 
     @return: hardware events.
-    @rtype: [HardwareEventNode, ...]
+    @rtype: [HardwareEvent, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -1184,7 +1184,7 @@ class Loader(Data):
              (end is not None and sessionStart <= start and end <= sessionEnd):
               warn.warn(UserWarning('Temporal overlap of sessions!'))
 
-        sessions.append(SessionNode(Start=start, End=end))
+        sessions.append(Session(Start=start, End=end))
 
       sessions = sorted(sessions, key=attrgetter('Start'))
 
