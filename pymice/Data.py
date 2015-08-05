@@ -153,21 +153,25 @@ class Data(object):
     if currentCage != None:
       self.__cages[currentCage] = frozenset(animals)
 
-    for animal in self.getMice():
-      if animal not in self.__animal2cage:
-        self.__animal2cage[animal] = []
-
   def getCage(self, mouse):
     """
+    >>> ml_icp3.getCage('Minnie')
+    1
+
+    >>> ml_icp3.getCage(ml_icp3.getAnimal('Minnie'))
+    1
+
     @return: cage(s) mouse presence has been detected
     @rtype: convertable to int or (convertable to int, ...)
     """
-    cages = self.__animal2cage[mouse]
-    if len(cages) != 1:
-      if len(cages) == 0:
-        warn.warn("Mouse %s not found in any cage." % mouse, stacklevel=2)
-        return None
+    try:
+      cages = self.__animal2cage[unicode(mouse)]
 
+    except KeyError:
+      warn.warn("Mouse %s not found in any cage." % mouse, stacklevel=2)
+      return None
+
+    if len(cages) != 1:
       warn.warn("Mouse %s found in multiple cages: %s."\
                     % (mouse, ', '.join(map(str,cages))), stacklevel=2)
       return tuple(cages)
