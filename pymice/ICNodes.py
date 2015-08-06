@@ -190,7 +190,7 @@ class Animal(DataNode):
     self.Notes = unicode(Notes) if Notes is not None else None
 
   def __repr__(self):
-    result = "Animal %s" % self.Name
+    result = "< Animal %s" % self.Name
 
     if self.Sex is not None or self.Tag is not None:
       result += "("
@@ -207,7 +207,7 @@ class Animal(DataNode):
         else:
           result += "Tag: %d" % self.Tag
 
-      result += ")"
+      result += ") >"
 
     return result
 
