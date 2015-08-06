@@ -342,6 +342,12 @@ class Visit(DataNode):
   def LickContactTime(self, value):
     self.__dict__['LickContactTime'] = float(value) if value is not None else None
 
+  def __repr__(self):
+    start = self.Start.strftime('%Y-%m-%d %H:%M:%S')
+    start += ('%.3f' % (self.Start.microsecond / 1000000.))[1:5]
+    return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
+           (self.Animal, self.Corner, self.Cage, start)
+
   def _del_(self):
     if self.Nosepokes:
       for npNode in self.Nosepokes:
@@ -387,6 +393,11 @@ class Nosepoke(DataNode):
   @property
   def Door(self):
     return 'left' if self.Side % 2 == 1 else 'right'
+
+  def __repr__(self):
+    start = self.Start.strftime('%Y-%m-%d %H:%M:%S')
+    start += ('%.3f' % (self.Start.microsecond / 1000000.))[1:5]
+    return '< Nosepoke to %s door (at %s) >' % (self.Door, start)
 
 
 class Group(DataNode):
