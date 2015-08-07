@@ -23,12 +23,15 @@
 ###############################################################################
 
 import warnings
-from _Tools import toDt 
+from _Tools import toDt
+
+def getTimeString(time):
+  return time.strftime('%Y-%m-%d %H:%M:%S') + \
+         ('%.3f' % (time.microsecond / 1000000.))[1:5]
 
 class DataNode(object):
   _baseAttrs = []
   _keys = []
-  _convert = {}
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
@@ -118,8 +121,15 @@ class DataNode(object):
     return map(self.__dict__.get, query)
 
 
+class SideAware(DataNode):
+  @property
+  def Door(self):
+    if self.Side is not None:
+      return 'left' if self.Side % 2 == 1 else 'right'
+
+
 class Session(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Start', 'End']
+  _baseAttrs = ['Start', 'End']
 
   def __init__(self, Start, End, **kwargs):
     DataNode.__init__(self, **kwargs)
@@ -128,9 +138,9 @@ class Session(DataNode):
 
 
 # TODO
-class LogEntry(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Category', 'Type', 'Cage',
-                                      'Corner', 'Side', 'Notes']
+class LogEntry(SideAware):
+  _baseAttrs = ['DateTime', 'Category', 'Type',
+                'Cage', 'Corner', 'Side', 'Notes']
 
   def __init__(self, DateTime, Category=None, Type=None, Cage=None,
                Corner=None, Side=None, Notes=None, **kwargs):
@@ -143,10 +153,13 @@ class LogEntry(DataNode):
     self.Side = int(Side) if Side is not None else None
     self.Notes = unicode(Notes) if Notes is not None else None
 
+  def __repr__(self):
+    return '< Log %s, %s (at %s) >' % \
+           (self.Category, self.Type, getTimeString(self.DateTime))
+
 
 class EnvironmentalConditions(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Temperature',
-                                      'Illumination', 'Cage']
+  _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
 
   def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
                **kwargs):
@@ -156,10 +169,13 @@ class EnvironmentalConditions(DataNode):
     self.Illumination = int(Illumination) if Illumination is not None else None
     self.Cage = int(Cage) if Cage is not None else None
 
+  def __repr__(self):
+    return '< Illumination: %d, Temperature: %f (at %s) >' % \
+           (self.Illumination, self.Temperature, getTimeString(self.DateTime))
 
-class HardwareEvent(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['DateTime', 'Type',
-                                      'Cage', 'Corner', 'Side', 'State']
+
+class HardwareEvent(SideAware):
+  _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
   __typeMapping = {0: 'Air',
                    1: 'Door',
                    2: 'LED',
@@ -175,9 +191,15 @@ class HardwareEvent(DataNode):
     self.Side = int(Side) if Side is not None else None
     self.State = int(State) if State is not None else None
 
+  def __repr__(self):
+    side = '' if self.Side is None else ', %5s side' % self.Door
+    return '< HardwareEvent %s: %d in cage #%d, corner #%d%s (at %s) >' % \
+           (self.Type, self.State, self.Cage, self.Corner, side,
+            getTimeString(self.DateTime))
+
 
 class Animal(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Name', 'Tag', 'Sex', 'Notes']
+  _baseAttrs = ['Name', 'Tag', 'Sex', 'Notes']
   _keys = ['Name', 'Sex']
 
   def __init__(self, Name, Tag, Sex=None, Notes=None, **kwargs):
@@ -253,7 +275,7 @@ class Animal(DataNode):
 
 
 class Visit(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'Module', 'Cage',
+  _baseAttrs = ['Start', 'End', 'Module', 'Cage',
                'Corner', 'CornerCondition', 'PlaceError', 'AntennaNumber',
                'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
                '_vid', 'VisitSolution']
@@ -343,10 +365,8 @@ class Visit(DataNode):
     self.__dict__['LickContactTime'] = float(value) if value is not None else None
 
   def __repr__(self):
-    start = self.Start.strftime('%Y-%m-%d %H:%M:%S')
-    start += ('%.3f' % (self.Start.microsecond / 1000000.))[1:5]
     return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
-           (self.Animal, self.Corner, self.Cage, start)
+           (self.Animal, self.Corner, self.Cage, getTimeString(self.Start))
 
   def _del_(self):
     if self.Nosepokes:
@@ -356,13 +376,11 @@ class Visit(DataNode):
     super(Visit, self)._del_()
 
 
-class Nosepoke(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Start', 'End', 'Side', 'LickNumber',
-                                      'LickContactTime', 'LickDuration',
-                                      'SideCondition', 'SideError', 'TimeError',
-                                      'ConditionError', 'AirState', 'DoorState',
-                                      'LED1State', 'LED2State', 'LED3State',]
-  _convert = dict(DataNode._convert) # TODO ?
+class Nosepoke(SideAware):
+  _baseAttrs = ['Start', 'End', 'Side',
+                'LickNumber', 'LickContactTime', 'LickDuration',
+                'SideCondition', 'SideError', 'TimeError', 'ConditionError',
+                'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',]
 
   def __init__(self, Start=None, End=None, Side=None, LickNumber=None,
                LickContactTime=None, LickDuration=None,
@@ -390,18 +408,13 @@ class Nosepoke(DataNode):
   def Duration(self):
     return self.End - self.Start
 
-  @property
-  def Door(self):
-    return 'left' if self.Side % 2 == 1 else 'right'
-
   def __repr__(self):
-    start = self.Start.strftime('%Y-%m-%d %H:%M:%S')
-    start += ('%.3f' % (self.Start.microsecond / 1000000.))[1:5]
-    return '< Nosepoke to %s door (at %s) >' % (self.Door, start)
+    return '< Nosepoke to %5s door (at %s) >' % \
+           (self.Door, getTimeString(self.Start))
 
 
 class Group(DataNode):
-  _baseAttrs = DataNode._baseAttrs + ['Name', 'Animals']
+  _baseAttrs = ['Name', 'Animals']
   _keys = ['Name']
 
   def __init__(self, Name, Animals=[], Notes=None, Module=None, **kwargs):
