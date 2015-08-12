@@ -22,7 +22,8 @@
 #                                                                             #
 ###############################################################################
 
-import warnings
+import operator
+import collections
 from _Tools import toDt
 
 def getTimeString(time):
@@ -30,95 +31,120 @@ def getTimeString(time):
          ('%.3f' % (time.microsecond / 1000000.))[1:5]
 
 class DataNode(object):
+  __slots__ = []
   _baseAttrs = []
   _keys = []
 
   def __init__(self, **kwargs):
-    self.__dict__.update(kwargs)
-    #self._attrs = set(self._baseAttrs + kwargs.keys())
-    #for k, v in kwargs.items():
-    #  setattr(self, k, v)
+    for k, v in kwargs.items():
+      self.__setattr__(k, v)
+
+    #self.__dict__.update(kwargs)
 
   @classmethod
   def fromDict(cls, d):
     return cls(**d)
 
-  @classmethod #XXX
-  def fromKwargs(cls, _mapping={}, **kwargs):
-    updates = [(k, f(kwargs[k])) for k, f in _mapping.items() if k in kwargs]
-    kwargs.update(updates)
-    return cls(**kwargs)
-
-  def merge(self, **kwargs):
-    updated = {}
-    for k in self._keys:
-      v = kwargs.pop(k, None)
-      if v is not None:
-        current = self.__dict__.get(v)
-        if current is None:
-          updated[k] = v
-
-        elif v != current:
-          raise ValueError("%s conflict: %s != %s." % (k, current, v))
-
-    for k, v in kwargs.items():
-      if v is not None:
-        current = self.__dict__.get(k)
-        if current is None:
-          updated[k] = v
-
-        elif current != v:
-          warnings.warn("%s conflict: %s != %s. Update ignored." %\
-                        (k, current, v))
-
-    self.__dict__.update(updated)
-    return updated
-
-
+  # @classmethod #XXX
+  # def fromKwargs(cls, _mapping={}, **kwargs):
+  #   updates = [(k, f(kwargs[k])) for k, f in _mapping.items() if k in kwargs]
+  #   kwargs.update(updates)
+  #   return cls(**kwargs)
+  #
+  # def merge(self, **kwargs):
+  #   updated = {}
+  #   for k in self._keys:
+  #     v = kwargs.pop(k, None)
+  #     if v is not None:
+  #       current = self.__dict__.get(v)
+  #       if current is None:
+  #         updated[k] = v
+  #
+  #       elif v != current:
+  #         raise ValueError("%s conflict: %s != %s." % (k, current, v))
+  #
+  #   for k, v in kwargs.items():
+  #     if v is not None:
+  #       current = self.__dict__.get(k)
+  #       if current is None:
+  #         updated[k] = v
+  #
+  #       elif current != v:
+  #         warnings.warn("%s conflict: %s != %s. Update ignored." %\
+  #                       (k, current, v))
+  #
+  #   self.__dict__.update(updated)
+  #   return updated
+  #
+  #
   def __getitem__(self, key):
-    return self.__dict__.__getitem__(key)
+    try:
+      return self.__getattribute__(key)
 
+    except AttributeError:
+      raise KeyError(key)
+  #
   def get(self, key, default=None):
-    #return self.__dict__.get(key, default)
-    # not very Pythonic but fast
-    return self.__dict__[key] if key in self.__dict__ else default
+    try:
+      return self.__getattribute__(key)
 
-  def __setitem__(self, key, value):
-    return self.__dict__.__setitem__(key, value)
+    except AttributeError:
+      return default
 
-  def __delitem__(self, key):
-    return self.__dict__.__delitem__(key)
-
-  def __contains__(self, item):
-    return item in self.__dict__
-
+  #   #return self.__dict__.get(key, default)
+  #   # not very Pythonic but fast
+  #   return self.__dict__[key] if key in self.__dict__ else default
+  #
+  # def __setitem__(self, key, value):
+  #   return self.__setattr__(key, value)
+  #   #return self.__dict__.__setitem__(key, value)
+  #
+  # def __delitem__(self, key):
+  #   return self.__delattr__(key)
+  #   #return self.__dict__.__delitem__(key)
+  #
+  # def __contains__(self, item):
+  #   return hasattr(self, item)
+  #   #return item in self.__dict__
+  #
   def keys(self):
-    return self.__dict__.keys()
+    keys = []
+    for key in self.__slots__:
+      try:
+        self.__getattribute__(key)
 
+      except AttributeError:
+        pass
+
+      else:
+        keys.append(key)
+
+    return keys
+
+  #
   def pop(self, key, *args, **kwargs):
-    return self.__dict__.pop(key, *args, **kwargs)
+    try:
+      value = self.__getattribute__(key)
 
-  def update(self, *args, **kwargs):
-    return self.__dict__.update(*args, **kwargs)
+    except AttributeError:
+      raise KeyError(key)
 
-  def copy(self):
-    return self.__class__(**self.__dict__)
+    self.__delattr__(key)
+    return value
 
-  def _del_(self):
-    self.__dict__.clear()
-
-  #def __setitem__(self, key, value):
-  #  self._attrs.add(key)
-  #  setattr(self, key, value)
-
-  #def keys(self):
-  #  return list(self._attrs)
-
-  #def items(self):
-  #  return [(k, getattr(self, k) for k in self._attrs]
-
-  def select(self, query):
-    return map(self.__dict__.get, query)
+  #   return self.__dict__.pop(key, *args, **kwargs)
+  #
+  # def update(self, *args, **kwargs):
+  #   return self.__dict__.update(*args, **kwargs)
+  #
+  # def copy(self):
+  #   return self.__class__(**self.__dict__)
+  #
+  # def _del_(self):
+  #   self.__dict__.clear()
+  #
+  # def select(self, query):
+  #   return map(self.__dict__.get, query)
 
 
 class SideAware(DataNode):
@@ -198,182 +224,202 @@ class HardwareEvent(SideAware):
             getTimeString(self.DateTime))
 
 
-class Animal(DataNode):
-  _baseAttrs = ['Name', 'Tag', 'Sex', 'Notes']
-  _keys = ['Name', 'Sex']
+def makePrivateSlots(attributes):
+  return tuple('__' + s for s in attributes)
 
-  def __init__(self, Name, Tag, Sex=None, Notes=None, **kwargs):
-    DataNode.__init__(self, **kwargs)
-    self.Name = unicode(Name)
-    self.Tag = (set(Tag) if isinstance(Tag, set) else long(Tag))\
-               if Tag is not None\
-               else None
-    self.Sex = unicode(Sex) if Sex is not None else None
-    self.Notes = unicode(Notes) if Notes is not None else None
+def makeReadOnlyAttributes(cls):
+  privatePrefix = '_%s__' % cls.__name__
+  for attr in cls.attributes:
+    setattr(cls, attr, property(operator.attrgetter(privatePrefix + attr)))
 
-  def __repr__(self):
-    result = "< Animal %s" % self.Name
 
-    if self.Sex is not None or self.Tag is not None:
-      result += "("
-      if self.Sex is not None:
-        result += self.Sex
+class Animal(object):
+  class DifferentMouse(ValueError):
+    pass
 
-      if self.Sex is not None and self.Tag is not None:
-        result += "; "
+  attributes = ('Name', 'Tag', 'Sex', 'Notes')
+  __slots__ = makePrivateSlots(attributes)
 
-      if self.Tag is not None:
-        if isinstance(self.Tag, set):
-          result += "Tags: " + (', '.join(map(str, sorted(self.Tag))))
-
-        else:
-          result += "Tag: %d" % self.Tag
-
-      result += ") >"
-
-    return result
-
-  def __str__(self):
-    return str(self.Name)
-
-  def __unicode__(self):
-    return unicode(self.Name)
+  def __init__(self, Name, Tag, Sex=None, Notes=None):
+    self.__Name = unicode(Name)
+    self.__Tag = frozenset({long(Tag)})
+    self.__Sex = None if Sex is None else unicode(Sex)
+    self.__Notes = frozenset() if Notes is None else frozenset({unicode(Notes)})
 
   def __eq__(self, other):
-    if self.Name != other['Name']:
+    if isinstance(other, basestring):
+      return other.__class__(self) == other
+
+    if self.__Name != other.__Name:
       return False
 
-    if self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None:
+    if self.__Sex == other.__Sex or other.__Sex is None or self.__Sex is None:
       return True
 
     return NotImplemented
 
   def __ne__(self, other):
-    if self.Name != other['Name']:
+    if isinstance(other, basestring):
+      return other.__class__(self) != other
+
+    if self.__Name != other.__Name:
       return True
 
-    if self.Sex == other['Sex'] or self.Sex is None or other['Sex'] is None:
+    if self.__Sex == other.__Sex or other.__Sex is None or self.__Sex is None:
       return False
 
     return NotImplemented
 
-  def merge(self, Tag=None, **kwargs):
-    updated = DataNode.merge(self, **kwargs)
-    if Tag is not None and self.Tag != Tag:
-      if self.Tag is None:
-        self.Tag = set(Tag) if isinstance(Tag, set) else Tag
+  def __hash__(self):
+    return self.__Name.__hash__()
 
-      else:
-        if not isinstance(self.Tag, set):
-          self.Tag = {self.Tag}
+  def __str__(self):
+    return self.__Name.encode('utf-8')
 
-        if isinstance(Tag, set):
-          self.Tag.update(Tag)
+  def __unicode__(self):
+    return self.__Name
 
-        else:
-          self.Tag.add(Tag)
+  def __repr__(self):
+    result = '< Animal %s (' % self.Name
+    if self.__Sex is not None:
+      result += '%s; ' % self.Sex
+
+    result += 'Tag: ' if len(self.__Tag) == 1 else 'Tags: '
+    result += ', '.join(str(t) for t in self.__Tag)
+    return result + ') >'
+
+  def merge(self, other):
+    if self != other:
+      raise self.DifferentMouse
+
+    if self.__Sex is None:
+      self.__Sex = other.__Sex
+
+    self.__Notes = self.__Notes | other.__Notes
+    self.__Tag = self.__Tag | other.__Tag
+
+makeReadOnlyAttributes(Animal)
 
 
-class Visit(DataNode):
-  _baseAttrs = ['Start', 'End', 'Module', 'Cage',
-               'Corner', 'CornerCondition', 'PlaceError', 'AntennaNumber',
-               'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
-               '_vid', 'VisitSolution']
+class Visit(object):
+  attributes = ('Start', 'Corner', 'End', 'Module', 'Cage',
+                'CornerCondition', 'PlaceError',
+                'AntennaNumber', 'AntennaDuration',
+                'PresenceNumber', 'PresenceDuration',
+                'VisitSolution',
+                '_source', '_line',
+                'Nosepokes')
+  __slots__ = makePrivateSlots(attributes)
 
   def __init__(self, Start, Corner, End=None, Module=None, Cage=None,
-               CornerCondition=None, PlaceError=None, AntennaNumber=None,
-               AntennaDuration=None, PresenceNumber=None, PresenceDuration=None,
-               VisitSolution=None, **kwargs):
-    super(Visit, self).__init__(**kwargs)
-    self.Start = toDt(Start)
-    self.Corner = int(Corner)
-    self.End = toDt(End)
-    self.Module = unicode(Module) if Module is not None else None
-    self.Cage = int(Cage) if Cage is not None else None
-    self.CornerCondition = float(CornerCondition) if CornerCondition is not None else None
-    self.PlaceError = float(PlaceError) if PlaceError is not None else None
-    self.AntennaNumber = int(AntennaNumber) if AntennaNumber is not None else None
-    self.AntennaDuration = float(AntennaDuration) if AntennaDuration is not None else None
-    self.PresenceNumber = int(PresenceNumber) if PresenceNumber is not None else None
-    self.PresenceDuration = float(PresenceDuration) if PresenceDuration is not None else None
-    self.VisitSolution = int(VisitSolution) if VisitSolution is not None else None
+               CornerCondition=None, PlaceError=None,
+               AntennaNumber=None, AntennaDuration=None,
+               PresenceNumber=None, PresenceDuration=None,
+               VisitSolution=None,
+               _source=None, _line=None,
+               Nosepokes=None):
+    self.__Start = Start
+    self.__Corner = Corner
+    self.__End = End
+    self.__Module = Module
+    self.__Cage = Cage
+    self.__CornerCondition = CornerCondition
+    self.__PlaceError = PlaceError
+    self.__AntennaNumber = AntennaNumber
+    self.__AntennaDuration = AntennaDuration
+    self.__PresenceNumber = PresenceNumber
+    self.__PresenceDuration = PresenceDuration
+    self.__VisitSolution = VisitSolution
+    self.___source = _source
+    self.___line = _line
+    self.__Nosepokes = Nosepokes
+    if Nosepokes is not None:
+      for nosepoke in Nosepokes:
+        nosepoke._bindToVisit(self)
 
+  def _del_(self):
+    if self.__Nosepokes:
+      for nosepoke in self.__Nosepokes:
+        nosepoke._del_()
+
+    for attr in self.__slots__:
+      delattr(self, '_Visit' + attr)
 
   # derivatives
   @property
   def Duration(self):
-    return self.End - self.Start
+    return self.__End - self.__Start
 
-  @property
-  def NosepokeNumber(self):
-    if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
-      return len(self.__dict__['Nosepokes'])
+makeReadOnlyAttributes(Visit)
 
-    if 'NosepokeNumber' in self.__dict__:
-      return self.__dict__['NosepokeNumber']
+# class Visit(DataNode):
+#   # derivatives
+#
+#   @property
+#   def NosepokeNumber(self):
+#     if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
+#       return len(self.__dict__['Nosepokes'])
+#
+#     if 'NosepokeNumber' in self.__dict__:
+#       return self.__dict__['NosepokeNumber']
+#
+#   @NosepokeNumber.setter
+#   def NosepokeNumber(self, value):
+#     self.__dict__['NosepokeNumber'] = int(value) if value is not None else None
+#
+#   @property
+#   def NosepokeDuration(self):
+#     if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
+#       return float(sum(n.Duration for n in self.__dict__['Nosepokes']))
+#
+#     if 'NosepokeDuration' in self.__dict__:
+#       return self.__dict__['NosepokeDuration']
+#
+#   @NosepokeDuration.setter
+#   def NosepokeDuration(self, value):
+#     self.__dict__['NosepokeDuration'] = float(value) if value is not None else None
+#
+#   @property
+#   def LickNumber(self):
+#     if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
+#       return sum(n.LickNumber for n in self.__dict__['Nosepokes'])
+#
+#     if 'LickNumber' in self.__dict__:
+#       return self.__dict__['LickNumber']
+#
+#   @LickNumber.setter
+#   def LickNumber(self, value):
+#     self.__dict__['LickNumber'] = int(value) if value is not None else None
+#
+#   @property
+#   def LickDuration(self):
+#     if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
+#       return float(sum(n.LickDuration for n in self.__dict__['Nosepokes']))
+#
+#     if 'LickDuration' in self.__dict__:
+#       return self.__dict__['LickDuration']
+#
+#   @LickDuration.setter
+#   def LickDuration(self, value):
+#     self.__dict__['LickDuration'] = float(value) if value is not None else None
+#
+#   @property
+#   def LickContactTime(self):
+#     if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
+#       return float(sum(n.LickContactTime for n in self.__dict__['Nosepokes']))
+#
+#     if 'LickContactTime' in self.__dict__:
+#       return self.__dict__['LickContactTime']
+#
+#   @LickContactTime.setter
+#   def LickContactTime(self, value):
+#     self.__dict__['LickContactTime'] = float(value) if value is not None else None
+#
+#   def __repr__(self):
+#     return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
+#            (self.Animal, self.Corner, self.Cage, getTimeString(self.Start))
+#
 
-  @NosepokeNumber.setter
-  def NosepokeNumber(self, value):
-    self.__dict__['NosepokeNumber'] = int(value) if value is not None else None
-
-  @property
-  def NosepokeDuration(self):
-    if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
-      return float(sum(n.Duration for n in self.__dict__['Nosepokes']))
-
-    if 'NosepokeDuration' in self.__dict__:
-      return self.__dict__['NosepokeDuration']
-
-  @NosepokeDuration.setter
-  def NosepokeDuration(self, value):
-    self.__dict__['NosepokeDuration'] = float(value) if value is not None else None
-
-  @property
-  def LickNumber(self):
-    if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
-      return sum(n.LickNumber for n in self.__dict__['Nosepokes'])
-
-    if 'LickNumber' in self.__dict__:
-      return self.__dict__['LickNumber']
-
-  @LickNumber.setter
-  def LickNumber(self, value):
-    self.__dict__['LickNumber'] = int(value) if value is not None else None
-
-  @property
-  def LickDuration(self):
-    if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
-      return float(sum(n.LickDuration for n in self.__dict__['Nosepokes']))
-
-    if 'LickDuration' in self.__dict__:
-      return self.__dict__['LickDuration']
-
-  @LickDuration.setter
-  def LickDuration(self, value):
-    self.__dict__['LickDuration'] = float(value) if value is not None else None
-
-  @property
-  def LickContactTime(self):
-    if 'Nosepokes' in self.__dict__ and self.__dict__['Nosepokes'] is not None:
-      return float(sum(n.LickContactTime for n in self.__dict__['Nosepokes']))
-
-    if 'LickContactTime' in self.__dict__:
-      return self.__dict__['LickContactTime']
-
-  @LickContactTime.setter
-  def LickContactTime(self, value):
-    self.__dict__['LickContactTime'] = float(value) if value is not None else None
-
-  def __repr__(self):
-    return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
-           (self.Animal, self.Corner, self.Cage, getTimeString(self.Start))
-
-  def _del_(self):
-    if self.Nosepokes:
-      for npNode in self.Nosepokes:
-        npNode._del_()
-
-    super(Visit, self)._del_()
 
 
 class Nosepoke(SideAware):
