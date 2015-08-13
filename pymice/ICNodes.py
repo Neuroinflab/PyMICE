@@ -37,6 +37,8 @@ def makePrivateSlots(attributes):
 
 
 class BaseNode(object):
+  __slots__ = ()
+
   def _del_(self):
     privatePrefix = '_' + self.__class__.__name__
     for attr in self.__slots__:
@@ -86,10 +88,23 @@ class Animal(BaseNode):
   __slots__ = makePrivateSlots(attributes)
 
   def __init__(self, Name, Tag, Sex=None, Notes=None):
-    self.__Name = unicode(Name)
-    self.__Tag = frozenset({long(Tag)})
-    self.__Sex = None if Sex is None else unicode(Sex)
-    self.__Notes = frozenset() if Notes is None else frozenset({unicode(Notes)})
+    self.__Name = Name
+    self.__Tag = Tag
+    self.__Sex = Sex
+    self.__Notes = Notes if isinstance(Notes, frozenset) else frozenset() if Notes is None else frozenset({unicode(Notes)})
+
+  @classmethod
+  def fromRow(cls, Name, Tag, Sex=None, Notes=None):
+    return cls(unicode(Name),
+               frozenset({long(Tag)}),
+               None if Sex is None else unicode(Sex),
+               Notes)
+
+  def clone(self):
+    return self.__class__(self.__Name,
+                          self.__Tag,
+                          self.__Sex,
+                          self.__Notes)
 
   def __eq__(self, other):
     if isinstance(other, basestring):
@@ -181,6 +196,20 @@ class Visit(BaseNode, DurationAware):
       for nosepoke in Nosepokes:
         nosepoke._bindToVisit(self)
 
+  def clone(self, cageManager, animalManager, sourceManager):
+    sideManager = cageManager.getSideManager(self.__Cage, self.__Corner)
+    nosepokes = tuple(n.clone(sideManager, sourceManager) for n in self.__Nosepokes)
+    source = sourceManager.get(self.___source)
+    animal = animalManager.get(self.__Animal)
+    cage, corner = cageManager.getCageCorner(self.__Cage, self.__Corner)
+    return self.__class__(self.__Start, corner, animal,
+                          self.__End, self.__Module, cage,
+                          self.__CornerCondition, self.__PlaceError,
+                          self.__AntennaNumber, self.__AntennaDuration,
+                          self.__PresenceNumber, self.__PresenceDuration,
+                          self.__VisitSolution, source,
+                          self.___line, nosepokes)
+
   def _del_(self):
     if self.__Nosepokes:
       for nosepoke in self.__Nosepokes:
@@ -235,13 +264,15 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
                 'LickNumber', 'LickContactTime', 'LickDuration',
                 'SideCondition', 'SideError', 'TimeError', 'ConditionError',
                 'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',
+                '_source', '_line',
                 'Visit',
                 )
   __slots__ = makePrivateSlots(attributes)
   def __init__(self, Start, End, Side,
                LickNumber, LickContactTime, LickDuration,
                SideCondition, SideError, TimeError, ConditionError,
-               AirState, DoorState, LED1State, LED2State, LED3State):
+               AirState, DoorState, LED1State, LED2State, LED3State,
+               _source, _line):
     self.__Start = Start
     self.__End = End
     self.__Side = Side
@@ -257,6 +288,17 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
     self.__LED1State = LED1State
     self.__LED2State = LED2State
     self.__LED3State = LED3State
+    self.___source = _source
+    self.___line = _line
+
+  def clone(self, sideManager, sourceManager):
+    side = sideManager.get(self.__Side)
+    source = sourceManager.get(self.___source)
+    return self.__class__(self.__Start, self.__End, side,
+                          self.__LickNumber, self.__LickContactTime, self.__LickDuration,
+                          self.__SideCondition, self.__SideError, self.__TimeError, self.__ConditionError,
+                          self.__AirState, self.__DoorState, self.__LED1State, self.__LED2State, self.__LED3State,
+                          source, self.___line)
 
   def _bindToVisit(self, Visit):
     self.__Visit = Visit
