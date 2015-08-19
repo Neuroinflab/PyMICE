@@ -1799,7 +1799,7 @@ if __name__ == '__main__':
   import doctest
   testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../test'))
   TEST_GLOBALS = {
-    #XXX: ml_l1 - not sure if data formad is valid
+    #XXX: ml_l1 - not sure if data format is valid
     'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip')),
     #'ml_a1': Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
     'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'),
