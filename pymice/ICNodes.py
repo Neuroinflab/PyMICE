@@ -24,7 +24,7 @@
 
 import operator
 from itertools import imap
-import collections
+from datetime import timedelta
 from _Tools import toDt
 
 def getTimeString(time):
@@ -65,10 +65,17 @@ class BaseNode(object):
 
 
 class DurationAware(object):
+  class DurationCannotBeCalculatedError(AttributeError):
+    pass
+
   __slots__ = ()
   @property
   def Duration(self):
-    return self.End - self.Start
+    try:
+      return self.End - self.Start
+
+    except TypeError:
+      raise self.DurationCannotBeCalculatedError
 
 
 class SideAware(object):
@@ -96,7 +103,7 @@ class Animal(BaseNode):
   @classmethod
   def fromRow(cls, Name, Tag, Sex=None, Notes=None):
     return cls(unicode(Name),
-               frozenset({long(Tag)}),
+               frozenset({unicode(Tag.strip())}),
                None if Sex is None else unicode(Sex),
                Notes)
 
@@ -231,25 +238,25 @@ class Visit(BaseNode, DurationAware):
 
   @classmethod
   def _makeNosepokeAggregativeProperties(cls):
-    for propertyAttr in [('NosepokeDuration', 'Duration'),
-                         'LickNumber',
-                         'LickDuration',
-                         'LickContactTime',
+    for propertyAttr in [(('NosepokeDuration', 'Duration'), timedelta(0)),
+                         ('LickNumber', 0),
+                         ('LickDuration', timedelta(0)),
+                         ('LickContactTime', timedelta(0)),
                         ]:
-      cls.__setNosepokeAggregativeProperty(propertyAttr)
+      cls.__setNosepokeAggregativeProperty(*propertyAttr)
 
   @classmethod
-  def __setNosepokeAggregativeProperty(cls, arg):
+  def __setNosepokeAggregativeProperty(cls, arg, start):
     propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
-    setattr(cls, propName, cls.__makeNosepokeAggregativeProperty(attrName))
+    setattr(cls, propName, cls.__makeNosepokeAggregativeProperty(attrName, start))
 
   @staticmethod
-  def __makeNosepokeAggregativeProperty(attr):
+  def __makeNosepokeAggregativeProperty(attr, start):
     npAttrGetter = operator.attrgetter(attr)
     def propertyGetter(self):
       nosepokes = self._Visit__Nosepokes
       if nosepokes is not None:
-        return sum(imap(npAttrGetter, nosepokes))
+        return sum(imap(npAttrGetter, nosepokes), start)
 
     return property(propertyGetter)
 
@@ -442,64 +449,64 @@ class Session(DataNode):
 
 
 # TODO
-# class LogEntry(SideAware):
-#   _baseAttrs = ['DateTime', 'Category', 'Type',
-#                 'Cage', 'Corner', 'Side', 'Notes']
-#
-#   def __init__(self, DateTime, Category=None, Type=None, Cage=None,
-#                Corner=None, Side=None, Notes=None, **kwargs):
-#     DataNode.__init__(self, **kwargs)
-#     self.DateTime = toDt(DateTime)
-#     self.Category = unicode(Category) if Category is not None else None
-#     self.Type = unicode(Type) if Type is not None else None
-#     self.Cage = int(Cage) if Cage is not None else None
-#     self.Corner = int(Corner) if Corner is not None else None
-#     self.Side = int(Side) if Side is not None else None
-#     self.Notes = unicode(Notes) if Notes is not None else None
-#
-#   def __repr__(self):
-#     return '< Log %s, %s (at %s) >' % \
-#            (self.Category, self.Type, getTimeString(self.DateTime))
-#
-#
-# class EnvironmentalConditions(DataNode):
-#   _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
-#
-#   def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
-#                **kwargs):
-#     DataNode.__init__(self, **kwargs)
-#     self.DateTime = toDt(DateTime)
-#     self.Temperature = float(Temperature) if Temperature is not None else None
-#     self.Illumination = int(Illumination) if Illumination is not None else None
-#     self.Cage = int(Cage) if Cage is not None else None
-#
-#   def __repr__(self):
-#     return '< Illumination: %d, Temperature: %f (at %s) >' % \
-#            (self.Illumination, self.Temperature, getTimeString(self.DateTime))
-#
-#
-# class HardwareEvent(SideAware):
-#   _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
-#   __typeMapping = {0: 'Air',
-#                    1: 'Door',
-#                    2: 'LED',
-#                    }
-#
-#   def __init__(self, DateTime, Type=None, Cage=None, Corner=None, Side=None, State=None,
-#                **kwargs):
-#     DataNode.__init__(self, **kwargs)
-#     self.DateTime = toDt(DateTime)
-#     self.Type = self.__typeMapping[int(Type)] if Type is not None else None
-#     self.Cage = int(Cage) if Cage is not None else None
-#     self.Corner = int(Corner) if Corner is not None else None
-#     self.Side = int(Side) if Side is not None else None
-#     self.State = int(State) if State is not None else None
-#
-#   def __repr__(self):
-#     side = '' if self.Side is None else ', %5s side' % self.Door
-#     return '< HardwareEvent %s: %d in cage #%d, corner #%d%s (at %s) >' % \
-#            (self.Type, self.State, self.Cage, self.Corner, side,
-#             getTimeString(self.DateTime))
+class LogEntry(SideAware):
+  _baseAttrs = ['DateTime', 'Category', 'Type',
+                'Cage', 'Corner', 'Side', 'Notes']
+
+  def __init__(self, DateTime, Category=None, Type=None, Cage=None,
+               Corner=None, Side=None, Notes=None, **kwargs):
+    DataNode.__init__(self, **kwargs)
+    self.DateTime = toDt(DateTime)
+    self.Category = unicode(Category) if Category is not None else None
+    self.Type = unicode(Type) if Type is not None else None
+    self.Cage = int(Cage) if Cage is not None else None
+    self.Corner = int(Corner) if Corner is not None else None
+    self.Side = int(Side) if Side is not None else None
+    self.Notes = unicode(Notes) if Notes is not None else None
+
+  def __repr__(self):
+    return '< Log %s, %s (at %s) >' % \
+           (self.Category, self.Type, getTimeString(self.DateTime))
+
+
+class EnvironmentalConditions(DataNode):
+  _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
+
+  def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
+               **kwargs):
+    DataNode.__init__(self, **kwargs)
+    self.DateTime = toDt(DateTime)
+    self.Temperature = float(Temperature) if Temperature is not None else None
+    self.Illumination = int(Illumination) if Illumination is not None else None
+    self.Cage = int(Cage) if Cage is not None else None
+
+  def __repr__(self):
+    return '< Illumination: %d, Temperature: %f (at %s) >' % \
+           (self.Illumination, self.Temperature, getTimeString(self.DateTime))
+
+
+class HardwareEvent(SideAware):
+  _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
+  __typeMapping = {0: 'Air',
+                   1: 'Door',
+                   2: 'LED',
+                   }
+
+  def __init__(self, DateTime, Type=None, Cage=None, Corner=None, Side=None, State=None,
+               **kwargs):
+    DataNode.__init__(self, **kwargs)
+    self.DateTime = toDt(DateTime)
+    self.Type = self.__typeMapping[int(Type)] if Type is not None else None
+    self.Cage = int(Cage) if Cage is not None else None
+    self.Corner = int(Corner) if Corner is not None else None
+    self.Side = int(Side) if Side is not None else None
+    self.State = int(State) if State is not None else None
+
+  def __repr__(self):
+    side = '' if self.Side is None else ', %5s side' % self.Door
+    return '< HardwareEvent %s: %d in cage #%d, corner #%d%s (at %s) >' % \
+           (self.Type, self.State, self.Cage, self.Corner, side,
+            getTimeString(self.DateTime))
 
 
 

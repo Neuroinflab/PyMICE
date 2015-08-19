@@ -1794,6 +1794,41 @@ class Merger(Data):
     return map(copy.copy, nodes)
 
 
+class ZipLoader(object):
+  def __init__(self, source, cageManager, animalManager):
+    self.__animalManager = animalManager
+    self.__cageManager = cageManager
+    self.__source = source
+
+  def __makeVisit(self, AnimalTag, Start, End, ModuleName, Cage, Corner,
+                CornerCondition, PlaceError,
+                AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
+                VisitSolution, _line):
+    animal = self.__animalManager.getByTag(AnimalTag)
+    cage, corner = self.__cageManager.getCageCorner(int(Cage), int(Corner))
+    return Visit(Start, corner, animal, End,
+                 unicode(ModuleName) if ModuleName is not None else None,
+                 cage,
+                 int(CornerCondition) if CornerCondition is not None else None,
+                 int(PlaceError) if PlaceError is not None else None,
+                 int(AntennaNumber) if AntennaNumber is not None else None,
+                 timedelta(seconds=float(AntennaDuration)) if AntennaDuration is not None else None,
+                 int(PresenceNumber) if PresenceNumber is not None else None,
+                 timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None ,
+                 int(VisitSolution) if VisitSolution is not None else None,
+                 self.__source, _line)
+
+  def loadVisits(self, collumns):
+    collumnValues = map(collumns.get,
+                    ['AnimalTag', 'Start', 'End', 'ModuleName', 'Cage', 'Corner',
+                     'CornerCondition', 'PlaceError', 'AntennaNumber',
+                     'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
+                     'VisitSolution', ])
+    _lines = range(1, 1 + max(map(len, collumnValues)))
+    collumnValues.append(_lines)
+    return map(self.__makeVisit, *collumnValues)
+
+
 
 if __name__ == '__main__':
   import doctest
