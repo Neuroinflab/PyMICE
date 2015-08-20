@@ -32,10 +32,24 @@ from _TestTools import Mock, MockIntDictManager, MockCageManager, \
                        MockStrDictManager, MockAnimalManager, BaseTest
 
 
+def toStrings(seq):
+  return [str(x) if x is not None else None for x in seq]
+
+
+def floatToStrings(seq):
+  return ['%.3f' % x if x is not None else None for x in seq]
+
+
+def floatToTimedelta(seq):
+  return [timedelta(seconds=x) if x is not None else None for x in seq]
+
+
+
 class TestZipLoader(BaseTest):
   def setUp(self):
-    self.sideManager = MockIntDictManager()
-    self.cageManager = MockCageManager({'getSideManager': {(4, 2): self.sideManager}})
+    self.sideManagers = dict(((cage, corner), MockIntDictManager()) \
+                             for cage in [1, 4] for corner in [1, 2])
+    self.cageManager = MockCageManager({'getSideManager': self.sideManagers})
     self.animalManager = MockAnimalManager()
     self.source = Mock()
     self.loader = ZipLoader(self.source,
@@ -107,21 +121,14 @@ class TestZipLoader(BaseTest):
 
   #@unittest.skip('botak')
   def testLoadManyVisitsWithMissingValues(self):
-    def toStrings(seq):
-      return [str(x) if x is not None else None for x in seq]
 
-    def floatToStrings(seq):
-      return ['%.3f' % x if x is not None else None for x in seq]
-
-    def floatToTimedelta(seq):
-      return [timedelta(seconds=x) if x is not None else None for x in seq]
 
     nVisits = 10
     vNumbers = range(1, nVisits + 1)
     animals = [str(1 + i % 2) for i in vNumbers]
     start = datetime(1970, 1, 1, tzinfo=utc)
     starts = [start + timedelta(seconds=10 * i) for i in vNumbers]
-    ends = [start + timedelta(seconds=15 + 10 * i) for i in vNumbers]
+    ends = [None if i == 1 else start + timedelta(seconds=15 + 10 * i) for i in vNumbers]
     modules = [None if i == 2 else str(i) for i in vNumbers]
     cages = [1 + (i % 2) * 4 for i in vNumbers]
     corners = [1 + (i / 2) % 4 for i in vNumbers]
@@ -132,43 +139,189 @@ class TestZipLoader(BaseTest):
     pNumbers = [None if i == 7 else i % 4 for i in vNumbers]
     pDurations = [None if i == 8 else i % 4 * 0.125 for i in vNumbers]
     solutions = [None if i == 9 else i % 4 for i in vNumbers]
+    nones = [None] * nVisits
 
-    visits = self.loader.loadVisits({'VisitID': toStrings(vNumbers),
-                                     'AnimalTag': toStrings(animals),
-                                     'Start': starts,
-                                     'End': ends,
-                                     'ModuleName': modules,
-                                     'Cage': toStrings(cages),
-                                     'Corner': toStrings(corners),
-                                     'CornerCondition': toStrings(conditions),
-                                     'PlaceError': toStrings(errors),
-                                     'AntennaNumber': toStrings(aNumbers),
-                                     'AntennaDuration': floatToStrings(aDurations),
-                                     'PresenceNumber': toStrings(pNumbers),
-                                     'PresenceDuration': floatToStrings(pDurations),
-                                     'VisitSolution': toStrings(solutions),
+    inputCollumns = {'VisitID': toStrings(vNumbers),
+                     'AnimalTag': toStrings(animals),
+                     'Start': starts,
+                     'End': ends,
+                     'ModuleName': modules,
+                     'Cage': toStrings(cages),
+                     'Corner': toStrings(corners),
+                     'CornerCondition': toStrings(conditions),
+                     'PlaceError': toStrings(errors),
+                     'AntennaNumber': toStrings(aNumbers),
+                     'AntennaDuration': floatToStrings(aDurations),
+                     'PresenceNumber': toStrings(pNumbers),
+                     'PresenceDuration': floatToStrings(pDurations),
+                     'VisitSolution': toStrings(solutions),
+                     }
+    outputColumns = {'Animal': toStrings(animals),
+                     'Start': starts,
+                     'End': ends,
+                     'Module': modules,
+                     'Cage': cages,
+                     'Corner': corners,
+                     'CornerCondition': conditions,
+                     'PlaceError': errors,
+                     'AntennaNumber': aNumbers,
+                     'AntennaDuration': floatToTimedelta(aDurations),
+                     'PresenceNumber': pNumbers,
+                     'PresenceDuration': floatToTimedelta(pDurations),
+                     'VisitSolution': solutions,
+                     '_source': [self.source] * nVisits,
+                     '_line': vNumbers,
+                     'Nosepokes': nones,
+                     }
+    for descCol in [None,
+                    'End',
+                    ('ModuleName', 'Module'),
+                    'CornerCondition',
+                    'PlaceError',
+                    'AntennaNumber',
+                    'AntennaDuration',
+                    'PresenceNumber',
+                    'PresenceDuration',
+                    'VisitSolution']:
+      inCols = dict(inputCollumns)
+      outCols = dict(outputColumns)
+      if descCol is not None:
+        inCol, outCol = (descCol, descCol) if isinstance(descCol, basestring) else descCol
+        inCols.pop(inCol)
+        outCols.pop(outCol)
+
+      visits = self.loader.loadVisits(inCols)
+      for name, tests in outCols.items():
+        self.checkAttributeSeq(visits, name, tests)
+
+  def testLoadOneVisitNoNosepokes(self):
+    start = datetime(1970, 1, 1, tzinfo=utc)
+    visits = self.loader.loadVisits({'VisitID': ['1'],
+                                     'AnimalTag': ['10'],
+                                     'Start': [start],
+                                     'End': [start],
+                                     'ModuleName': ['Default'],
+                                     'Cage': ['1'],
+                                     'Corner': ['2']},
+                                    {'VisitID': [],
+                                     'Start': [],
+                                     'End': [],
+                                     'Side': [],
+                                     'SideCondition': [],
+                                     'SideError': [],
+                                     'TimeError': [],
+                                     'ConditionError': [],
+                                     'LickNumber': [],
+                                     'LickContactTime': [],
+                                     'LickDuration': [],
+                                     'AirState': [],
+                                     'DoorState': [],
+                                     'LED1State': [],
+                                     'LED2State': [],
+                                     'LED3State': []
                                      })
-    for name, tests in [('Animal', toStrings(animals)),
-                        ('Start', starts),
-                        ('End', ends),
-                        ('Module', modules),
-                        ('Cage', cages),
-                        ('Corner', corners),
-                        ('CornerCondition', conditions),
-                        ('PlaceError', errors),
-                        ('AntennaNumber', aNumbers),
-                        ('AntennaDuration', floatToTimedelta(aDurations)),
-                        ('PresenceNumber', pNumbers),
-                        ('PresenceDuration', floatToTimedelta(pDurations)),
-                        ('VisitSolution', solutions),
-                        ('_source', [self.source] * nVisits),
-                        ('_line', vNumbers),
-                        ('Nosepokes', [None] * nVisits),
-                        ]:
-      self.checkAttributeSeq(visits, name, tests)
+    self.assertEqual(visits[0].Nosepokes, ())
 
-    #self.assertEqual(self.animalManager.sequence, [('getByTag', '10')])
-    #self.assertEqual(self.cageManager.sequence[0], ('getCageCorner', 1, 2))
+  def testLoadOneVisitOneNosepoke(self):
+    start = datetime(1970, 1, 1, tzinfo=utc)
+    end = start + timedelta(seconds=12)
+    visits = self.loader.loadVisits({'VisitID': ['1'],
+                                     'AnimalTag': ['10'],
+                                     'Start': [start],
+                                     'End': [end],
+                                     'Cage': ['4'],
+                                     'Corner': ['2']},
+                                    {'VisitID': ['1'],
+                                     'Start': [start],
+                                     'End': [end],
+                                     'Side': ['4'],
+                                     'SideCondition': ['1'],
+                                     'SideError': ['0'],
+                                     'TimeError': ['1'],
+                                     'ConditionError': ['1'],
+                                     'LickNumber': ['0'],
+                                     'LickContactTime': ['0.500'],
+                                     'LickDuration': ['1.5'],
+                                     'AirState': ['0'],
+                                     'DoorState': ['1'],
+                                     'LED1State': ['0'],
+                                     'LED2State': ['1'],
+                                     'LED3State': ['0']
+                                     })
+    nosepoke = visits[0].Nosepokes[0]
+    self.checkAttributes(nosepoke,
+                         [('Start', start),
+                          ('End', end),
+                          ('Side', 4, self.sideManagers[4, 2].Cls),
+                          ('SideCondition', 1, int),
+                          ('SideError', 0, int),
+                          ('TimeError', 1, int),
+                          ('ConditionError', 1, int),
+                          ('LickNumber', 0, int),
+                          ('LickContactTime', timedelta(seconds=0.5)),
+                          ('LickDuration', timedelta(seconds=1.5)),
+                          ('AirState', 0, int),
+                          ('DoorState', 1, int),
+                          ('LED1State', 0, int),
+                          ('LED2State', 1, int),
+                          ('LED3State', 0, int),
+                          ('_source', self.source),
+                          ('_line', 1)])
+    self.assertEqual(self.sideManagers[4, 2].sequence, [('get', 4)])
+
+  def testManyVisitsManyNosepokes(self):
+    nVisits = 4
+    vIds = range(1, nVisits + 1)
+    start = datetime(1970, 1, 1, tzinfo=utc)
+    end = start + timedelta(seconds=12)
+    corners = [1 + (i - 1) % 2 for i in vIds]
+    cages = [1 + 3 * ((i - 1) / 2) for i in vIds]
+    inputVColumns = {'VisitID': toStrings(vIds),
+                     'AnimalTag': toStrings(vIds),
+                     'Start': [start] * nVisits,
+                     'End': [end] * nVisits,
+                     'Cage': toStrings(cages),
+                     'Corner': toStrings(corners)}
+
+    nIds = [i for i in vIds for _ in range(1, i)]
+    nNps = len(nIds)
+    _line = range(1, nNps + 1)
+    nStarts = [start + timedelta(seconds=2 + 10 * i) for i in _line]
+    nEnds = [start + timedelta(seconds=7 + 10 * i) for i in _line]
+    sides = [vId * 2 - i % 2 for i, vId in enumerate(nIds, 1)]
+    sideConditions = [i % 3 - 1 for i in _line]
+    sideErrors = [1 if c < 0 else 0 for c in sideConditions]
+    timeErrors = [(i + 1) % 3 - 1 for i in _line]
+    conditionErrors = [(i + 2) % 3 - 1 for i in _line]
+    lickNumbers = [i * j for i, j in zip(nIds, _line)]
+    lickContactTimes = [0.03125 * i for i in lickNumbers]
+    lickDurations = [3. * i for i in lickContactTimes]
+    airState = [i % 2 for i in _line]
+    doorState = [1 - i % 2 for i in _line]
+    led1state = [i / 2 % 2 for i in _line]
+    led2state = [1 - i / 2 % 2 for i in _line]
+    led3state = [i / 3 % 2 for i in _line]
+    inputNColumns = {'VisitID': toStrings(nIds),
+                     'Start': nStarts,
+                     'End': nEnds,
+                     'Side': toStrings(sides),
+                     'SideCondition': toStrings(sideConditions),
+                     'SideError': toStrings(sideErrors),
+                     'TimeError': toStrings(timeErrors),
+                     'ConditionError': toStrings(conditionErrors),
+                     'LickNumber': toStrings(lickNumbers),
+                     'LickContactTime': floatToStrings(lickContactTimes),
+                     'LickDuration': floatToStrings(lickDurations),
+                     'AirState': toStrings(airState),
+                     'DoorState': toStrings(doorState),
+                     'LED1State': toStrings(led1state),
+                     'LED2State': toStrings(led2state),
+                     'LED3State': toStrings(led3state),
+                     }
+    visits = self.loader.loadVisits(inputVColumns, inputNColumns)
+    self.assertEqual([len(v.Nosepokes) for v in visits],
+                     [i - 1 for i in vIds])
+
 
 if __name__ == '__main__':
   unittest.main()

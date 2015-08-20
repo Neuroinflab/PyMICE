@@ -1800,10 +1800,10 @@ class ZipLoader(object):
     self.__cageManager = cageManager
     self.__source = source
 
-  def __makeVisit(self, AnimalTag, Start, End, ModuleName, Cage, Corner,
+  def __makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
                 CornerCondition, PlaceError,
                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-                VisitSolution, _line):
+                VisitSolution, _line, Nosepokes):
     animal = self.__animalManager.getByTag(AnimalTag)
     cage, corner = self.__cageManager.getCageCorner(int(Cage), int(Corner))
     return Visit(Start, corner, animal, End,
@@ -1816,17 +1816,65 @@ class ZipLoader(object):
                  int(PresenceNumber) if PresenceNumber is not None else None,
                  timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None ,
                  int(VisitSolution) if VisitSolution is not None else None,
-                 self.__source, _line)
+                 self.__source, _line,
+                 Nosepokes)
 
-  def loadVisits(self, collumns):
-    collumnValues = map(collumns.get,
-                    ['AnimalTag', 'Start', 'End', 'ModuleName', 'Cage', 'Corner',
-                     'CornerCondition', 'PlaceError', 'AntennaNumber',
-                     'AntennaDuration', 'PresenceNumber', 'PresenceDuration',
-                     'VisitSolution', ])
-    _lines = range(1, 1 + max(map(len, collumnValues)))
-    collumnValues.append(_lines)
-    return map(self.__makeVisit, *collumnValues)
+  def __makeNosepoke(self, Side, Start, End,
+                     SideCondition, SideError, TimeError, ConditionError,
+                     LickNumber, LickContactTime, LickDuration,
+                     AirState, DoorState, LED1State, LED2State, LED3State):
+    return Nosepoke(Start, End, Side,
+                    int(LickNumber), timedelta(seconds=float(LickContactTime)),
+                    timedelta(seconds=float(LickDuration)),
+                    int(SideCondition), int(SideError), int(TimeError), int(ConditionError),
+                    int(AirState), int(DoorState),
+                    int(LED1State), int(LED2State), int(LED3State),
+                    self.__source, 1)
+
+  def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
+    cages = visitsCollumns['Cage']
+    corners = visitsCollumns['Corner']
+    vColValues = [cages, corners] + [visitsCollumns.get(x, ()) \
+                  for x in ['AnimalTag', 'Start', 'End', 'ModuleName',
+                            'CornerCondition', 'PlaceError',
+                            'AntennaNumber', 'AntennaDuration',
+                            'PresenceNumber', 'PresenceDuration',
+                            'VisitSolution',]]
+    nRows = max(map(len, vColValues))
+    _lines = range(1, 1 + nRows)
+    vColValues.append(_lines)
+
+
+    if nosepokesCollumns is not None:
+
+      vIDs = visitsCollumns['VisitID']
+
+      sideManagers = dict((vId, self.__cageManager.getSideManager(int(cage), int(corner)))\
+                           for vId, cage, corner in zip(vIDs, cages, corners))
+      nIDs = nosepokesCollumns['VisitID']
+      sides = [sideManagers[vId].get(int(side)) \
+               for (vId, side) in zip(vIDs, nosepokesCollumns['Side'])]
+
+      nColValues = [sides] + map(nosepokesCollumns.get,
+                       ['Start', 'End',
+                        'SideCondition', 'SideError', 'TimeError', 'ConditionError',
+                        'LickNumber', 'LickContactTime', 'LickDuration',
+                        'AirState', 'DoorState',
+                        'LED1State', 'LED2State', 'LED3State'])
+
+      nosepokes = map(self.__makeNosepoke, *nColValues)
+
+      visitToNosepokes = dict((vId, []) for vId in vIDs)
+      for vId, nosepoke in izip(nIDs, nosepokes):
+        visitToNosepokes[vId].append(nosepoke)
+
+      vNosepokes = [tuple(visitToNosepokes[vId]) for vId in vIDs]
+
+    else:
+      vNosepokes = ()
+
+    vColValues.append(vNosepokes)
+    return map(self.__makeVisit, *vColValues)
 
 
 
