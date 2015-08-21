@@ -78,7 +78,6 @@ class Data(object):
     self._getHw = getHw
 
     # change to
-    self.__animals = []
     self.__animalsByName = {}
 
     self.__visits = ObjectBase({
@@ -263,29 +262,16 @@ class Data(object):
   def _insertHardware(self, hNodes):
     self.__hardware.put(self._newNodes(hNodes, HardwareEvent))
 
-  def _insertVisits(self, vNodes):
-    vNodes = self._newNodes(vNodes, Visit) # callCopy might be faster but requires vNodes to be Visit-s
-    for (vid, vNode) in enumerate(vNodes, start=len(self.__visits)):
-      vNode._vid = vid
+  def _insertVisits(self, visits):
+    newVisits = map(methodcaller('clone', IntCageManager(),
+                                 self.__animalsByName,
+                                 IdentityManager()),
+                    visits)
+    self._insertNewVisits(newVisits)
 
-      animal = self.getAnimal(vNode.Animal)
-      vNode.Animal = animal
+  def _insertNewVisits(self, visits):
+    self.__visits.put(visits)
 
-      nosepokes = vNode.pop('Nosepokes', None)
-      if self._getNp and nosepokes is not None:
-        nosepokes = tuple(self._newNodes(nosepokes, Nosepoke))
-        vNode.Nosepokes = nosepokes
-        for nid, npNode in enumerate(nosepokes, start=len(self.__nosepokes)):
-          npNode.Visit = vNode
-          npNode._nid = nid
-
-        self.__nosepokes.extend(nosepokes)
-
-      else:
-        vNode.Nosepokes = None
-
-    self.__visits.put(vNodes)
-  
   def getGroup(self, name = None):
     if name != None:
       return self.__name2group[name]
@@ -311,13 +297,10 @@ class Data(object):
     animal = self.getAnimal(animal) # XXX sanity
     group.addMember(animal)
 
-  def getAnimal(self, name=None, aid=None):
+  def getAnimal(self, name=None):
     """
     @param name: name of the animal
     @type name: basestring
-
-    @param aid: internal ID of the animal
-    @type aid: int
 
     @return: animal data if name or aid given else names of animals
     @rtype: Animal if name or aid given else frozenset([unicode, ...])
@@ -325,60 +308,23 @@ class Data(object):
     if name is not None:
       return self.__animalsByName[unicode(name)]
 
-    if aid is not None:
-      return self.__animals[aid]
-
     return frozenset(self.__animalsByName)
 
-  def _registerAnimal(self, animal):
-    aNode = Animal(animal['Name'], Tag=animal.get('Tag'),
-                       Sex=animal.get('Sex'),
-                       Notes=animal.get('Notes'))
-    return self._registerAnimalNode(aNode)
+  def _registerAnimal(self, aNode):
+    try:
+      animal = self.__animalsByName[aNode.Name]
 
-  def _registerAnimalNode(self, aNode):
-    name = aNode.Name
-    if name in self.__animalsByName:
-      animal = self.__animalsByName[name]
-      self._mergeAnimal(animal, **aNode)
-      return animal
+    except KeyError:
+      animal = aNode.clone()
+      self.__animalsByName[animal.Name] = animal
 
-    aid = len(self.__animals)
-    aNode._aid = aid
-    self.__animals.append(aNode)
-    self.__animalsByName[unicode(name)] = aNode
-    return aNode
+    else:
+      animal.merge(aNode)
+
+    return animal
 
   # TODO or not TODO
 #  def _unregisterAnimal(self, Name = None, aid = None):
-
-  def _mergeAnimal(self, animal, **updates):
-    updated = animal.merge(**updates)
-
-  def _updateAnimal(self, animal, **updates):
-    if len(updates) == 0: return
-    assert '_aid' not in updates
-
-    KEY_CACHE = [('Name', self.__animalsByName)]
-    errors = []
-    for key, cache in KEY_CACHE:
-      if key in updates and updates[key] != animal[key] and updates[key] in cache:
-        errors.append('%s = %s already registered for other animal!' %\
-                      (key, updates[key]))
-
-    if len(errors) > 0:
-      raise ValueError('\n'.join(errors))
-
-    for key, cache in KEY_CACHE:
-      if key in updates:
-        del cache[animal[key]]
-        cache[updates[key]] = animal
-
-    for key in updates:
-      animal[key] = None
-
-    self._mergeAnimal(animal, **updates)
-
 
   # is anyone using it?
   def newGroup(self, group, mice=set()):
@@ -781,7 +727,7 @@ class Data(object):
     buf = cStringIO.StringIO()
     keys = set()
     animals = {}
-    for animal in self.__animals:
+    for animal in self.__animals: # FIXME: __animals nor _aid is no longer valid
       keys.update(animal.keys())
       name = unicode(animal)
       assert name not in animals
@@ -1000,15 +946,15 @@ class Loader(Data):
                              'GroupName': 'Group',
                              'AnimalNotes': 'Notes',
                             },
-                 'IntelliCage/Visits': {'AnimalTag': 'Tag',
-                                        'Animal': 'Tag', 
-                                        'ID': '_vid',
-                                        'VisitID': '_vid',
+                 'IntelliCage/Visits': {#'AnimalTag': 'AnimalTag',
+                                        'Animal': 'AnimalTag',
+                                        'ID': 'VisitID',
+                                        #'VisitID': '_vid',
                                         'ModuleName': 'Module',
                                        },
                  'IntelliCage/Nosepokes': {'LicksNumber': 'LickNumber',
                                            'LicksDuration': 'LickDuration',
-                                           'VisitID': '_vid',
+                                           #'VisitID': '_vid',
                                           },
                  'IntelliCage/Log': {'LogType': 'Type',
                                      'Log': 'Type',
@@ -1018,10 +964,10 @@ class Loader(Data):
                  'IntelliCage/HardwareEvents': {'HardwareType': 'Type',
                                                },
                 }
-  _convertZip = {'Animals': {'Tag': int,
+  _convertZip = {'Animals': {#'Tag': int,
                             },
-                 'IntelliCage/Visits': {'Tag': int,
-                                        '_vid': int,
+                 'IntelliCage/Visits': {#'Tag': int,
+                                        #'_vid': int,
                                         'Start': timeToList,
                                         'End': timeToList,
                                         'CornerCondition': convertFloat,
@@ -1029,7 +975,7 @@ class Loader(Data):
                                         'AntennaDuration': convertFloat,
                                         'PresenceDuration': convertFloat,
                                        },
-                 'IntelliCage/Nosepokes': {'_vid': int,
+                 'IntelliCage/Nosepokes': {#'_vid': int,
                                            'Start': timeToList,
                                            'End': timeToList,
                                            'LickContactTime': convertFloat,
@@ -1119,39 +1065,9 @@ class Loader(Data):
 
 
 
-  def _loadZip(self, fname, getNp=True, getLog=False, getEnv=False,
+  def _loadZip(self, zf, getNp=True, getLog=False, getEnv=False,
                getHw=False, source=None):
-    if isinstance(fname, basestring) and os.path.isdir(fname):
-      zf = PathZipFile(fname)
-
-    else:
-      zf = zipfile.ZipFile(fname)
-
-    animalsLabels = set()
-    animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
-    legacyFormat = 'Tag' in animalsLabels
-
-    animalGroup = animals.pop('Group')
-    animals = self._makeDicts(animals)
-
-    animalNames = set()
-    groups = {}
-    tag2Animal = {}
-    for group, animal in zip(animalGroup, animals):
-      tag = animal['Tag']
-      assert tag not in tag2Animal
-      name = animal['Name']
-      assert name not in animalNames
-      tag2Animal[tag] = name
-      animalNames.add(name)
-
-      if group is not None:
-        try:
-          groups[group]['Animals'].append(name)
-
-        except KeyError:
-          groups[group] = {'Animals': [name],
-                           'Name': group}
+    tagToAnimal = AnimalManager(self._loadAnimals(zf))
 
     try:
       fh = zf.open('Sessions.xml')
@@ -1201,8 +1117,7 @@ class Loader(Data):
     timeOrderer = LatticeOrderer()
 
     visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
-    tags = visits.pop('Tag')
-    vids = visits.pop('_vid')
+    vids = visits['VisitID']
 
     if sessions is not None:
       # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
@@ -1222,17 +1137,13 @@ class Loader(Data):
     else: #XXX
       timeToFix = visits['End'] + visits['Start'] 
 
-    visits['Animal'] = map(tag2Animal.__getitem__, tags)
-
-    orphans = []
+    nosepokes = None
     if getNp:
-      visitNosepokes = [[] for vid in vids]
-      vid2nps = dict(zip(vids, visitNosepokes))
-      vid2tag = dict(zip(vids, tags))
+      vid2tag = dict(zip(vids, visits['AnimalTag']))
 
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
 
-      npVids = nosepokes.pop('_vid')
+      npVids = nosepokes['VisitID']
 
       if sessions is not None:
         # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
@@ -1253,7 +1164,7 @@ class Loader(Data):
         npSides = np.array(map(int, nosepokes['Side'])) % 2 # no bilocation assumed
         # XXX                   ^ - ugly... possibly duplicated
 
-        for tag in tag2Animal:
+        for tag in tagToAnimal:
           for side in (0, 1): # tailpokes correction
             timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
 
@@ -1261,32 +1172,11 @@ class Loader(Data):
         timeToFix.extend(nosepokes['End'])
         timeToFix.extend(nosepokes['Start'])
 
-      nosepokes = self._makeDicts(nosepokes)
+      for vid in npVids:
+        if vid not in vid2tag:
+          warn.warn('Unmatched nosepokes: %s' % vid)
 
-      for vid, nosepoke in zip(npVids, nosepokes):
-        try:
-          vid2nps[vid].append(nosepoke)
-
-        except KeyError:
-          nosepoke['VisitID'] = vid
-          orphans.append(nosepoke)
-
-      # XXX!!!
-      #map(methodcaller('sort', key=itemgetter('Start', 'End')),
-      #    visitNosepokes)
-      visits['Nosepokes'] = visitNosepokes
-
-
-    else:
-      visits['Nosepokes'] = [None] * len(tags)
-      
-    visits = self._makeDicts(visits)
-
-    result = {'animals': animals,
-              'groups': groups.values(),
-              'visits': visits,
-              'nosepokes': orphans,
-             }
+    result = {}
 
     if getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
@@ -1339,6 +1229,15 @@ class Loader(Data):
     else:
       map(methodcaller('append', pytz.utc), timeToFix) # UTC assumed
 
+    visits['Start'] = [datetime(*t) for t in visits['Start']]
+    visits['End'] = [datetime(*t) for t in visits['End']]
+    if getNp:
+      nosepokes['Start'] = [datetime(*t) for t in nosepokes['Start']]
+      nosepokes['End'] = [datetime(*t) for t in  nosepokes['End']]
+
+    visitLoader = ZipLoader(source, IntCageManager(), tagToAnimal)
+    vNodes = visitLoader.loadVisits(visits, nosepokes)
+    self._insertNewVisits(vNodes)
     return result
 
   @staticmethod
@@ -1413,6 +1312,45 @@ class Loader(Data):
                self._fnames.__str__()
     return mystring
 
+  def _loadAnimals(self, zf):
+    animalsLabels = set()
+    animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
+
+    animalGroup = animals.pop('Group')
+    #animals = self._makeDicts(animals )
+    tags = animals['Tag']
+    animals = map(Animal.fromRow,
+                  animals['Name'],
+                  tags,
+                  animals.get('Sex', ()),
+                  animals.get('Notes', ()))
+
+    animalNames = set()
+    groups = {}
+    tag2Animal = {}
+    for group, animal, tag in zip(animalGroup, animals, tags):
+      assert tag not in tag2Animal
+      name = animal.Name
+      assert name not in animalNames
+      tag2Animal[tag] = name
+      animalNames.add(name)
+
+      if group is not None:
+        try:
+          groups[group]['Animals'].append(name)
+
+        except KeyError:
+          groups[group] = {'Animals': [name],
+                           'Name': group}
+
+    for animal in animals:
+      self._registerAnimal(animal)
+
+    for group in groups.values():
+      self._registerGroup(**group)
+
+    return dict((t, self.getAnimal(n)) for t, n in tag2Animal.items())
+
   def appendData(self, fname):
     """
     Process one input file and append data to self.data
@@ -1422,31 +1360,18 @@ class Loader(Data):
     #sid = self._registerSource(fname.decode('utf-8'))
 
     if fname.endswith('.zip') or os.path.isdir(fname):
-      data = self._loadZip(fname,
+      if isinstance(fname, basestring) and os.path.isdir(fname):
+        zf = PathZipFile(fname)
+
+      else:
+        zf = zipfile.ZipFile(fname)
+
+      data = self._loadZip(zf,
                            getNp=self._getNp,
                            getLog=self._getLog,
                            getEnv=self._getEnv,
                            getHw=self._getHw,
                            source=fname.decode('utf-8'))
-      animals = data['animals']
-      groups = data['groups']
-      visits = data['visits']
-      orphans = data['nosepokes']
-
-      if len(orphans) > 0:
-        warn.warn('Unmatched nosepokes: %s' % orphans)
-
-
-      for animal in animals:
-        self._registerAnimal(animal)
-
-      for group in groups:
-        self._registerGroup(**group)
-        #members = group['Animals']
-        #for animal in members:
-        #  self._addMember(group['Name'], animal)
-
-      self._insertVisits(visits)
 
       if self._getLog:
         self._insertLog(data['logs'])
@@ -1501,7 +1426,7 @@ class Merger(Data):
   """
   >>> mm = Merger(ml_icp3, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
-  ...   print '%s %d %d' % (str(v.Animal), len(v.Nosepokes), v.Animal.Tag)
+  ...   print '%s %d %s' % (str(v.Animal), len(v.Nosepokes), list(v.Animal.Tag)[0])
   Minnie 0 1337
   Mickey 1 42
   Jerry 2 69
@@ -1519,20 +1444,17 @@ class Merger(Data):
   >>> mm = Merger(ml_retagged, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
   ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
-  ...   if isinstance(v.Animal.Tag, set):
-  ...     print "  %s" % (', '.join(map(str, sorted(v.Animal.Tag))))
-  ...   else:
-  ...     print "  %d" % v.Animal.Tag
+  ...   print "  %s" % (', '.join(sorted(v.Animal.Tag)))
   Mickey 0
-    42, 1337
+    1337, 42
   Minnie 1
-    42, 1337
+    1337, 42
   Jerry 2
     69
   Minnie 1
-    42, 1337
+    1337, 42
   Mickey 1
-    42, 1337
+    1337, 42
   Jerry 2
     69
   """
@@ -1794,6 +1716,27 @@ class Merger(Data):
     return map(copy.copy, nodes)
 
 
+class IntCageManager(object):
+  get = staticmethod(int)
+
+  def getSideManager(self, cage, corner):
+    return self
+
+  def getCageCorner(self, cage, corner):
+    return int(cage), int(corner)
+
+
+class IdentityManager(object):
+  @staticmethod
+  def get(x):
+    return x
+
+
+class AnimalManager(dict):
+  def get(self, key):
+    return self[key]
+
+
 class ZipLoader(object):
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
@@ -1804,7 +1747,7 @@ class ZipLoader(object):
                 CornerCondition, PlaceError,
                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
                 VisitSolution, _line, nosepokeRows):
-    animal = self.__animalManager.getByTag(AnimalTag)
+    animal = self.__animalManager.get(AnimalTag)
     cage, corner = self.__cageManager.getCageCorner(int(Cage), int(Corner))
 
     Nosepokes = None
@@ -1833,12 +1776,19 @@ class ZipLoader(object):
                      _line)):
 
     return Nosepoke(Start, End,
-                    sideManager.get(int(Side)),
-                    int(LickNumber), timedelta(seconds=float(LickContactTime)),
-                    timedelta(seconds=float(LickDuration)),
-                    int(SideCondition), int(SideError), int(TimeError), int(ConditionError),
-                    int(AirState), int(DoorState),
-                    int(LED1State), int(LED2State), int(LED3State),
+                    sideManager.get(int(Side)) if Side is not None else None,
+                    int(LickNumber) if LickNumber is not None else None,
+                    timedelta(seconds=float(LickContactTime)) if LickContactTime is not None else None,
+                    timedelta(seconds=float(LickDuration)) if LickDuration is not None else None,
+                    int(SideCondition) if SideCondition is not None else None,
+                    int(SideError) if SideError is not None else None,
+                    int(TimeError) if TimeError is not None else None,
+                    int(ConditionError) if ConditionError is not None else None,
+                    int(AirState) if AirState is not None else None,
+                    int(DoorState) if DoorState is not None else None,
+                    int(LED1State) if LED1State is not None else None,
+                    int(LED2State) if LED2State is not None else None,
+                    int(LED3State) if LED3State is not None else None,
                     self.__source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
@@ -1868,17 +1818,20 @@ class ZipLoader(object):
     vNosepokes = [[] for _ in vIDs]
     vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
 
+    nColValues = [nosepokesCollumns.get(x, repeat(None)) \
+                  for x in  ['Start', 'End', 'Side',
+                             'SideCondition', 'SideError',
+                             'TimeError', 'ConditionError',
+                             'LickNumber', 'LickContactTime',
+                             'LickDuration',
+                             'AirState', 'DoorState',
+                             'LED1State', 'LED2State',
+                             'LED3State']]
     nIDs = nosepokesCollumns['VisitID']
     nRows = len(nIDs)
     nLines = range(1, 1 + nRows)
-    nColValues = map(nosepokesCollumns.get,
-                     ['Start', 'End', 'Side',
-                      'SideCondition', 'SideError', 'TimeError',
-                      'ConditionError',
-                      'LickNumber', 'LickContactTime', 'LickDuration',
-                      'AirState', 'DoorState',
-                      'LED1State', 'LED2State', 'LED3State'])
     nColValues.append(nLines)
+
     for vId, row in izip(nIDs, izip(*nColValues)):
       vidToNosepokes[vId].append(row)
 

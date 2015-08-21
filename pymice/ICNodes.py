@@ -321,15 +321,11 @@ BaseNode._finishSubclassesDefinitions()
 # TODO
 
 class DataNode(object):
-  __slots__ = []
   _baseAttrs = []
   _keys = []
 
   def __init__(self, **kwargs):
-    for k, v in kwargs.items():
-      self.__setattr__(k, v)
-
-      #self.__dict__.update(kwargs)
+    self.__dict__.update(kwargs)
 
   @classmethod
   def fromDict(cls, d):
@@ -341,102 +337,64 @@ class DataNode(object):
   #   kwargs.update(updates)
   #   return cls(**kwargs)
   #
-  # def merge(self, **kwargs):
-  #   updated = {}
-  #   for k in self._keys:
-  #     v = kwargs.pop(k, None)
-  #     if v is not None:
-  #       current = self.__dict__.get(v)
-  #       if current is None:
-  #         updated[k] = v
-  #
-  #       elif v != current:
-  #         raise ValueError("%s conflict: %s != %s." % (k, current, v))
-  #
-  #   for k, v in kwargs.items():
-  #     if v is not None:
-  #       current = self.__dict__.get(k)
-  #       if current is None:
-  #         updated[k] = v
-  #
-  #       elif current != v:
-  #         warnings.warn("%s conflict: %s != %s. Update ignored." %\
-  #                       (k, current, v))
-  #
-  #   self.__dict__.update(updated)
-  #   return updated
-  #
-  #
+  def merge(self, **kwargs):
+    updated = {}
+    for k in self._keys:
+      v = kwargs.pop(k, None)
+      if v is not None:
+        current = self.__dict__.get(v)
+        if current is None:
+          updated[k] = v
+
+        elif v != current:
+          raise ValueError("%s conflict: %s != %s." % (k, current, v))
+
+    for k, v in kwargs.items():
+      if v is not None:
+        current = self.__dict__.get(k)
+        if current is None:
+          updated[k] = v
+
+        elif current != v:
+          warnings.warn("%s conflict: %s != %s. Update ignored." %\
+                        (k, current, v))
+
+    self.__dict__.update(updated)
+    return updated
+
+
   def __getitem__(self, key):
-    try:
-      return self.__getattribute__(key)
+    return self.__dict__[key]
 
-    except AttributeError:
-      raise KeyError(key)
-  #
   def get(self, key, default=None):
-    try:
-      return self.__getattribute__(key)
+    return self.__dict__(key, default)
 
-    except AttributeError:
-      return default
+  def __setitem__(self, key, value):
+    return self.__dict__.__setitem__(key, value)
 
-  #   #return self.__dict__.get(key, default)
-  #   # not very Pythonic but fast
-  #   return self.__dict__[key] if key in self.__dict__ else default
-  #
-  # def __setitem__(self, key, value):
-  #   return self.__setattr__(key, value)
-  #   #return self.__dict__.__setitem__(key, value)
-  #
-  # def __delitem__(self, key):
-  #   return self.__delattr__(key)
-  #   #return self.__dict__.__delitem__(key)
-  #
-  # def __contains__(self, item):
-  #   return hasattr(self, item)
-  #   #return item in self.__dict__
-  #
+  def __delitem__(self, key):
+    return self.__dict__.__delitem__(key)
+
+  def __contains__(self, item):
+    return item in self.__dict__
+
   def keys(self):
-    keys = []
-    for key in self.__slots__:
-      try:
-        self.__getattribute__(key)
+    return self.__dict__.keys()
 
-      except AttributeError:
-        pass
-
-      else:
-        keys.append(key)
-
-    return keys
-
-  #
   def pop(self, key, *args, **kwargs):
-    try:
-      value = self.__getattribute__(key)
+    return self.__dict__.pop(key, *args, **kwargs)
 
-    except AttributeError:
-      raise KeyError(key)
+  def update(self, *args, **kwargs):
+    return self.__dict__.update(*args, **kwargs)
 
-    self.__delattr__(key)
-    return value
+  def copy(self):
+    return self.__class__(**self.__dict__)
 
-    #   return self.__dict__.pop(key, *args, **kwargs)
-    #
-    # def update(self, *args, **kwargs):
-    #   return self.__dict__.update(*args, **kwargs)
-    #
-    # def copy(self):
-    #   return self.__class__(**self.__dict__)
-    #
-    # def _del_(self):
-    #   self.__dict__.clear()
-    #
-    # def select(self, query):
-    #   return map(self.__dict__.get, query)
+  def _del_(self):
+    self.__dict__.clear()
 
-
+  def select(self, query):
+    return map(self.__dict__.get, query)
 
 
 class Session(DataNode):
@@ -449,7 +407,7 @@ class Session(DataNode):
 
 
 # TODO
-class LogEntry(SideAware):
+class LogEntry(DataNode, SideAware):
   _baseAttrs = ['DateTime', 'Category', 'Type',
                 'Cage', 'Corner', 'Side', 'Notes']
 
@@ -485,7 +443,7 @@ class EnvironmentalConditions(DataNode):
            (self.Illumination, self.Temperature, getTimeString(self.DateTime))
 
 
-class HardwareEvent(SideAware):
+class HardwareEvent(DataNode, SideAware):
   _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
   __typeMapping = {0: 'Air',
                    1: 'Door',
@@ -507,8 +465,6 @@ class HardwareEvent(SideAware):
     return '< HardwareEvent %s: %d in cage #%d, corner #%d%s (at %s) >' % \
            (self.Type, self.State, self.Cage, self.Corner, side,
             getTimeString(self.DateTime))
-
-
 
 
 class Group(DataNode):

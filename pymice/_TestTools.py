@@ -78,10 +78,10 @@ class MockStrDictManager(MockDictManager):
     pass
 
 
-class MockAnimalManager(MockStrDictManager):
-  def getByTag(self, tag):
-    self._registerCall(('getByTag', tag))
-    return self.Cls(tag)
+# class MockAnimalManager(MockStrDictManager):
+#   def getByTag(self, tag):
+#     self._registerCall(('getByTag', tag))
+#     return self.Cls(tag)
 
 
 class MockCloneable(Mock):

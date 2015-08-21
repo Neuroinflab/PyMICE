@@ -29,7 +29,7 @@ from pytz import utc
 from Data import ZipLoader
 
 from _TestTools import Mock, MockIntDictManager, MockCageManager, \
-                       MockStrDictManager, MockAnimalManager, BaseTest
+                       MockStrDictManager, BaseTest
 
 
 def toStrings(seq):
@@ -50,7 +50,7 @@ class TestZipLoader(BaseTest):
     self.sideManagers = dict(((cage, corner), MockIntDictManager()) \
                              for cage in [1, 4] for corner in [1, 2])
     self.cageManager = MockCageManager({'getSideManager': self.sideManagers})
-    self.animalManager = MockAnimalManager()
+    self.animalManager = MockStrDictManager()
     self.source = Mock()
     self.loader = ZipLoader(self.source,
                             self.cageManager,
@@ -116,13 +116,11 @@ class TestZipLoader(BaseTest):
                         ]:
       self.checkAttributeSeq(visits, name, tests)
 
-    self.assertEqual(self.animalManager.sequence, [('getByTag', '10')])
+    self.assertEqual(self.animalManager.sequence, [('get', '10')])
     self.assertEqual(self.cageManager.sequence[0], ('getCageCorner', 1, 2))
 
   #@unittest.skip('botak')
   def testLoadManyVisitsWithMissingValues(self):
-
-
     nVisits = 10
     vNumbers = range(1, nVisits + 1)
     animals = [str(1 + i % 2) for i in vNumbers]
@@ -318,11 +316,6 @@ class TestZipLoader(BaseTest):
                      'LED2State': toStrings(led2state),
                      'LED3State': toStrings(led3state),
                      }
-    visits = self.loader.loadVisits(inputVColumns, inputNColumns)
-    self.assertEqual([len(v.Nosepokes) for v in visits],
-                     [i - 1 for i in vIds])
-
-    nosepokes = [n for v in visits for n in sorted(v.Nosepokes, key=lambda x: x._line)]
     outputNColumns = {'Start': nStarts,
                       'End': nEnds,
                       'Side': sides,
@@ -340,11 +333,38 @@ class TestZipLoader(BaseTest):
                       'LED3State': led3state,
                       '_line': _lines
                       }
-    for name, values in outputNColumns.items():
-      self.checkAttributeSeq(nosepokes, name, values)
 
-    self.assertEqual([n._line for v in visits for n in v.Nosepokes],
-                     [x[2] for x in sorted(zip(nIds, nStarts, _lines))])
+    for descCol in [None,
+                    'End',
+                    'Side',
+                    'SideCondition',
+                    'SideError',
+                    'TimeError',
+                    'ConditionError',
+                    'LickNumber',
+                    'LickContactTime',
+                    'LickDuration',
+                    'AirState',
+                    'DoorState',
+                    'LED1State',
+                    'LED2State',
+                    'LED3State',]:
+        inCols = dict(inputNColumns)
+        outCols = dict(outputNColumns)
+        if descCol is not None:
+            inCols.pop(descCol)
+            outCols.pop(descCol)
+
+        visits = self.loader.loadVisits(inputVColumns, inCols)
+        self.assertEqual([len(v.Nosepokes) for v in visits],
+                         [i - 1 for i in vIds])
+
+        nosepokes = [n for v in visits for n in sorted(v.Nosepokes, key=lambda x: x._line)]
+        for name, values in outCols.items():
+          self.checkAttributeSeq(nosepokes, name, values)
+
+        self.assertEqual([n._line for v in visits for n in v.Nosepokes],
+                         [x[2] for x in sorted(zip(nIds, nStarts, _lines))])
 
 if __name__ == '__main__':
   unittest.main()
