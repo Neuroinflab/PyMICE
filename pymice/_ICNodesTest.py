@@ -477,6 +477,10 @@ class TestLogEntry(ICNodeTest):
             self.assertTrue(('get', log.Side) in sideManager.sequence)
             self.assertIsInstance(clone.Side, sideManager.Cls)
 
+  def testDel(self):
+    for log in self.logs:
+      self.checkDel(log)
+
 
 if __name__ == '__main__':
   unittest.main()
