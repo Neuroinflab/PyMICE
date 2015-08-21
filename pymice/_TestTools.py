@@ -39,7 +39,12 @@ class Mock(object):
     def method(*args):
       self._registerCall(((item,) + args) if args else item)
       if item in self.__callers:
-        return self.__callers[item][args]
+        try:
+          return self.__callers[item][args]
+
+        except TypeError:
+          print item, args
+          raise
 
     return method
 
