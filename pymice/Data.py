@@ -40,7 +40,7 @@ import numpy as np
 from xml.dom import minidom
 
 from operator import itemgetter, methodcaller, attrgetter
-from itertools import izip, repeat, islice
+from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import DataNode, Animal, Group, Visit, Nosepoke,\
                     LogEntry, EnvironmentalConditions, HardwareEvent, Session
@@ -1803,9 +1803,16 @@ class ZipLoader(object):
   def __makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
                 CornerCondition, PlaceError,
                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-                VisitSolution, _line, Nosepokes):
+                VisitSolution, _line, nosepokeRows):
     animal = self.__animalManager.getByTag(AnimalTag)
     cage, corner = self.__cageManager.getCageCorner(int(Cage), int(Corner))
+
+    Nosepokes = None
+    if nosepokeRows is not None:
+      sideManager = self.__cageManager.getSideManager(cage, corner)
+      Nosepokes = tuple(self.__makeNosepoke(sideManager, row)\
+                        for row in sorted(nosepokeRows))
+
     return Visit(Start, corner, animal, End,
                  unicode(ModuleName) if ModuleName is not None else None,
                  cage,
@@ -1819,63 +1826,63 @@ class ZipLoader(object):
                  self.__source, _line,
                  Nosepokes)
 
-  def __makeNosepoke(self, Side, Start, End,
+  def __makeNosepoke(self, sideManager, (Start, End, Side,
                      SideCondition, SideError, TimeError, ConditionError,
                      LickNumber, LickContactTime, LickDuration,
-                     AirState, DoorState, LED1State, LED2State, LED3State):
-    return Nosepoke(Start, End, Side,
+                     AirState, DoorState, LED1State, LED2State, LED3State,
+                     _line)):
+
+    return Nosepoke(Start, End,
+                    sideManager.get(int(Side)),
                     int(LickNumber), timedelta(seconds=float(LickContactTime)),
                     timedelta(seconds=float(LickDuration)),
                     int(SideCondition), int(SideError), int(TimeError), int(ConditionError),
                     int(AirState), int(DoorState),
                     int(LED1State), int(LED2State), int(LED3State),
-                    self.__source, 1)
+                    self.__source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
-    cages = visitsCollumns['Cage']
-    corners = visitsCollumns['Corner']
+    cages = map(int, visitsCollumns['Cage'])
+    corners = map(int, visitsCollumns['Corner'])
+
+    if nosepokesCollumns is not None:
+      vIDs = visitsCollumns['VisitID']
+      vNosepokes = self.__assignNosepokesToVisits(nosepokesCollumns, vIDs)
+
+    else:
+      vNosepokes = ()
+
     vColValues = [cages, corners] + [visitsCollumns.get(x, ()) \
                   for x in ['AnimalTag', 'Start', 'End', 'ModuleName',
                             'CornerCondition', 'PlaceError',
                             'AntennaNumber', 'AntennaDuration',
                             'PresenceNumber', 'PresenceDuration',
                             'VisitSolution',]]
-    nRows = max(map(len, vColValues))
-    _lines = range(1, 1 + nRows)
-    vColValues.append(_lines)
-
-
-    if nosepokesCollumns is not None:
-
-      vIDs = visitsCollumns['VisitID']
-
-      sideManagers = dict((vId, self.__cageManager.getSideManager(int(cage), int(corner)))\
-                           for vId, cage, corner in zip(vIDs, cages, corners))
-      nIDs = nosepokesCollumns['VisitID']
-      sides = [sideManagers[vId].get(int(side)) \
-               for (vId, side) in zip(vIDs, nosepokesCollumns['Side'])]
-
-      nColValues = [sides] + map(nosepokesCollumns.get,
-                       ['Start', 'End',
-                        'SideCondition', 'SideError', 'TimeError', 'ConditionError',
-                        'LickNumber', 'LickContactTime', 'LickDuration',
-                        'AirState', 'DoorState',
-                        'LED1State', 'LED2State', 'LED3State'])
-
-      nosepokes = map(self.__makeNosepoke, *nColValues)
-
-      visitToNosepokes = dict((vId, []) for vId in vIDs)
-      for vId, nosepoke in izip(nIDs, nosepokes):
-        visitToNosepokes[vId].append(nosepoke)
-
-      vNosepokes = [tuple(visitToNosepokes[vId]) for vId in vIDs]
-
-    else:
-      vNosepokes = ()
-
+    vRows = max(map(len, vColValues))
+    vLines = range(1, 1 + vRows)
+    vColValues.append(vLines)
     vColValues.append(vNosepokes)
     return map(self.__makeVisit, *vColValues)
 
+  def __assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
+    vNosepokes = [[] for _ in vIDs]
+    vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
+
+    nIDs = nosepokesCollumns['VisitID']
+    nRows = len(nIDs)
+    nLines = range(1, 1 + nRows)
+    nColValues = map(nosepokesCollumns.get,
+                     ['Start', 'End', 'Side',
+                      'SideCondition', 'SideError', 'TimeError',
+                      'ConditionError',
+                      'LickNumber', 'LickContactTime', 'LickDuration',
+                      'AirState', 'DoorState',
+                      'LED1State', 'LED2State', 'LED3State'])
+    nColValues.append(nLines)
+    for vId, row in izip(nIDs, izip(*nColValues)):
+      vidToNosepokes[vId].append(row)
+
+    return vNosepokes
 
 
 if __name__ == '__main__':

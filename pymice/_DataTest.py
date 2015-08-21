@@ -285,22 +285,22 @@ class TestZipLoader(BaseTest):
 
     nIds = [i for i in vIds for _ in range(1, i)]
     nNps = len(nIds)
-    _line = range(1, nNps + 1)
-    nStarts = [start + timedelta(seconds=2 + 10 * i) for i in _line]
-    nEnds = [start + timedelta(seconds=7 + 10 * i) for i in _line]
+    _lines = range(1, nNps + 1)
+    nStarts = [start + timedelta(seconds=2002 - 10 * i) for i in _lines]
+    nEnds = [start + timedelta(seconds=2007 - 10 * i) for i in _lines]
     sides = [vId * 2 - i % 2 for i, vId in enumerate(nIds, 1)]
-    sideConditions = [i % 3 - 1 for i in _line]
+    sideConditions = [i % 3 - 1 for i in _lines]
     sideErrors = [1 if c < 0 else 0 for c in sideConditions]
-    timeErrors = [(i + 1) % 3 - 1 for i in _line]
-    conditionErrors = [(i + 2) % 3 - 1 for i in _line]
-    lickNumbers = [i * j for i, j in zip(nIds, _line)]
-    lickContactTimes = [0.03125 * i for i in lickNumbers]
+    timeErrors = [(i + 1) % 3 - 1 for i in _lines]
+    conditionErrors = [(i + 2) % 3 - 1 for i in _lines]
+    lickNumbers = [i * j for i, j in zip(nIds, _lines)]
+    lickContactTimes = [0.125 * i for i in lickNumbers]
     lickDurations = [3. * i for i in lickContactTimes]
-    airState = [i % 2 for i in _line]
-    doorState = [1 - i % 2 for i in _line]
-    led1state = [i / 2 % 2 for i in _line]
-    led2state = [1 - i / 2 % 2 for i in _line]
-    led3state = [i / 3 % 2 for i in _line]
+    airState = [i % 2 for i in _lines]
+    doorState = [1 - i % 2 for i in _lines]
+    led1state = [i / 2 % 2 for i in _lines]
+    led2state = [1 - i / 2 % 2 for i in _lines]
+    led3state = [i / 3 % 2 for i in _lines]
     inputNColumns = {'VisitID': toStrings(nIds),
                      'Start': nStarts,
                      'End': nEnds,
@@ -322,6 +322,29 @@ class TestZipLoader(BaseTest):
     self.assertEqual([len(v.Nosepokes) for v in visits],
                      [i - 1 for i in vIds])
 
+    nosepokes = [n for v in visits for n in sorted(v.Nosepokes, key=lambda x: x._line)]
+    outputNColumns = {'Start': nStarts,
+                      'End': nEnds,
+                      'Side': sides,
+                      'SideCondition': sideConditions,
+                      'SideError': sideErrors,
+                      'TimeError': timeErrors,
+                      'ConditionError': conditionErrors,
+                      'LickNumber': lickNumbers,
+                      'LickContactTime': floatToTimedelta(lickContactTimes),
+                      'LickDuration': floatToTimedelta(lickDurations),
+                      'AirState': airState,
+                      'DoorState': doorState,
+                      'LED1State': led1state,
+                      'LED2State': led2state,
+                      'LED3State': led3state,
+                      '_line': _lines
+                      }
+    for name, values in outputNColumns.items():
+      self.checkAttributeSeq(nosepokes, name, values)
+
+    self.assertEqual([n._line for v in visits for n in v.Nosepokes],
+                     [x[2] for x in sorted(zip(nIds, nStarts, _lines))])
 
 if __name__ == '__main__':
   unittest.main()
