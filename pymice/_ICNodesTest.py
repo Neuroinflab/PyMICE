@@ -43,8 +43,19 @@ class ICNodeTest(BaseTest):
         print attr
         raise
 
-  def checkDel(self, obj):
+  def checkDel(self, obj, skip=()):
     attrPrefix = '_' + obj.__class__.__name__
+    for attr in obj.__slots__:
+      if attr in skip:
+        continue
+
+      try:
+        getattr(obj, attrPrefix + attr)
+
+      except AttributeError:
+        print attr
+        raise
+
     obj._del_()
 
     for attr in obj.__slots__:
@@ -399,7 +410,7 @@ class TestNosepoke(ICNodeTest):
                       lambda: setattr(self.nosepoke, 'Visit', 12))
 
   def testDel(self):
-    self.checkDel(self.nosepoke)
+    self.checkDel(self.nosepoke, skip={'__Visit'})
 
   def testDuration(self):
     self.assertEqual(self.nosepoke.Duration, timedelta(seconds=315))
