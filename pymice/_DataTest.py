@@ -47,9 +47,7 @@ def floatToTimedelta(seq):
 
 class TestZipLoader(BaseTest):
   def setUp(self):
-    self.sideManagers = dict(((cage, corner), MockIntDictManager()) \
-                             for cage in [1, 4] for corner in [1, 2])
-    self.cageManager = MockCageManager({'getSideManager': self.sideManagers})
+    self.cageManager = MockCageManager()
     self.animalManager = MockStrDictManager()
     self.source = Mock()
     self.loader = ZipLoader(self.source,
@@ -101,7 +99,7 @@ class TestZipLoader(BaseTest):
                                    ]),
                         ('Cage', [(1, self.cageManager.Cls),
                                   ]),
-                        ('Corner', [(2, self.cageManager.Cls),
+                        ('Corner', [(2, self.cageManager.managers[1].Cls),
                                     ]),
                         ('CornerCondition', [(1, int)]),
                         ('PlaceError',  [(0, int)]),
@@ -117,7 +115,10 @@ class TestZipLoader(BaseTest):
       self.checkAttributeSeq(visits, name, tests)
 
     self.assertEqual(self.animalManager.sequence, [('get', '10')])
-    self.assertEqual(self.cageManager.sequence[0], ('getCageCorner', 1, 2))
+    #self.assertEqual(self.cageManager.sequence[0], ('getCageCorner', 1, 2))
+    self.assertTrue(('get', 1) in self.cageManager.sequence)
+    self.assertTrue(('getManager', 1) in self.cageManager.sequence)
+    self.assertTrue(('get', 2) in self.cageManager.managers[1].sequence)
 
   #@unittest.skip('botak')
   def testLoadManyVisitsWithMissingValues(self):
@@ -250,7 +251,7 @@ class TestZipLoader(BaseTest):
     self.checkAttributes(nosepoke,
                          [('Start', start),
                           ('End', end),
-                          ('Side', 4, self.sideManagers[4, 2].Cls),
+                          ('Side', 4, self.cageManager.managers[4].managers[2].Cls),
                           ('SideCondition', 1, int),
                           ('SideError', 0, int),
                           ('TimeError', 1, int),
@@ -265,7 +266,7 @@ class TestZipLoader(BaseTest):
                           ('LED3State', 0, int),
                           ('_source', self.source),
                           ('_line', 1)])
-    self.assertEqual(self.sideManagers[4, 2].sequence, [('get', 4)])
+    self.assertEqual(self.cageManager.managers[4].managers[2].sequence, [('get', 4)])
 
   def testManyVisitsManyNosepokes(self):
     nVisits = 4

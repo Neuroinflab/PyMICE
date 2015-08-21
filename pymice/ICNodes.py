@@ -80,6 +80,7 @@ class DurationAware(object):
 
 class SideAware(object):
   __slots__ = ()
+
   @property
   def Door(self):
     side = self.Side
@@ -275,6 +276,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
                 'Visit',
                 )
   __slots__ = makePrivateSlots(attributes)
+
   def __init__(self, Start, End, Side,
                LickNumber, LickContactTime, LickDuration,
                SideCondition, SideError, TimeError, ConditionError,
@@ -299,7 +301,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
     self.___line = _line
 
   def clone(self, sideManager, sourceManager):
-    side = sideManager.get(self.__Side)
+    side = sideManager.get(self.__Side) if self.__Side is not None else None
     source = sourceManager.get(self.___source)
     return self.__class__(self.__Start, self.__End, side,
                           self.__LickNumber, self.__LickContactTime, self.__LickDuration,
@@ -313,6 +315,47 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
   def __repr__(self):
     return '< Nosepoke to %5s door (at %s) >' % \
            (self.Door, getTimeString(self.Start))
+
+
+class LogEntry(BaseNode, SideAware):
+  attributes = ('DateTime', 'Category', 'Type',
+                'Cage', 'Corner', 'Side', 'Notes',
+                '_source', '_line')
+  __slots__ = makePrivateSlots(attributes)
+
+  def __init__(self, DateTime, Category, Type,
+                     Cage, Corner, Side, Notes, _source, _line):
+    self.__DateTime = DateTime
+    self.__Category = Category
+    self.__Type = Type
+    self.__Cage = Cage
+    self.__Corner = Corner
+    self.__Side = Side
+    self.__Notes = Notes
+    self.___source = _source
+    self.___line = _line
+
+  def clone(self, sourceManager, cageManager):
+    cage, corner, side = None, None, None
+    if self.__Cage is not None:
+      cage = cageManager.get(self.__Cage)
+
+      if self.__Corner is not None:
+        cornerManager = cageManager.getManager(self.__Cage)
+        corner = cornerManager.get(self.__Corner)
+
+        if self.__Side is not None:
+          side = cornerManager.getManager(corner).get(self.__Side)
+
+    return LogEntry(self.__DateTime,
+                    self.__Category,
+                    self.__Type,
+                    cage,
+                    corner,
+                    side,
+                    self.__Notes,
+                    sourceManager.get(self.___source),
+                    self.___line)
 
 
 BaseNode._finishSubclassesDefinitions()

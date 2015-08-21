@@ -53,29 +53,53 @@ class Mock(object):
 
 
 class MockDictManager(Mock):
+  def __init__(self, *args, **kwargs):
+    super(MockDictManager, self).__init__(*args, **kwargs)
+    self.managers = {}
+
+  def getManager(self, item):
+    self._registerCall(('getManager', item))
+    try:
+      return self.managers[item]
+
+    except KeyError:
+      manager = self.Manager()
+      self.managers[item] = manager
+      return manager
+
   def get(self, item):
     self._registerCall(('get', item))
     return self.Cls(item)
 
 
 class MockIntDictManager(MockDictManager):
-  class Cls(int):
-    pass
+  def __init__(self, *args, **kwargs):
+    super(MockIntDictManager, self).__init__(*args, **kwargs)
+    self.Manager = MockIntDictManager
+
+    class Cls(int):
+      pass
+
+    self.Cls = Cls
 
 
 class MockCageManager(MockIntDictManager):
-  def getCage(self, cage):
-    self._registerCall(('getCage', cage))
-    return self.Cls(cage)
-
   def getCageCorner(self, cage, corner):
-    self._registerCall(('getCageCorner', cage, corner))
-    return self.Cls(cage), self.Cls(corner)
+    return (self.get(cage),
+            self.getManager(cage).get(corner))
+
+  def getSideManager(self, cage, corner):
+    return self.getManager(cage).getManager(corner)
 
 
 class MockStrDictManager(MockDictManager):
-  class Cls(str):
-    pass
+  def __init__(self, *args, **kwargs):
+    super(MockStrDictManager, self).__init__(*args, **kwargs)
+
+    class Cls(str):
+      pass
+
+    self.Cls = Cls
 
 
 # class MockAnimalManager(MockStrDictManager):

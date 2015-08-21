@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 
 import pytz
 
-from ICNodes import Animal, Visit, Nosepoke
+from ICNodes import Animal, Visit, Nosepoke, LogEntry
 from _TestTools import allInstances, Mock, MockIntDictManager, \
                        MockCageManager, MockStrDictManager, MockCloneable, \
                        BaseTest
@@ -239,8 +239,7 @@ class TestVisit(ICNodeTest):
                                       ])
 
   def testClone(self):
-    sideManager = MockIntDictManager()
-    cageManager = MockCageManager({'getSideManager': {(4, 2): sideManager}})
+    cageManager = MockCageManager()
     sourceManager = MockStrDictManager()
     animalManager = MockStrDictManager()
     visit = self.visit.clone(cageManager, animalManager, sourceManager)
@@ -252,12 +251,15 @@ class TestVisit(ICNodeTest):
 
     for nosepoke, clonedNosepoke in zip(self.visit.Nosepokes,
                                         visit.Nosepokes):
-      self.assertEqual(nosepoke.sequence[-1], ('clone', sideManager, sourceManager))
+      self.assertEqual(nosepoke.sequence[-1], ('clone', cageManager.managers[4].managers[2], sourceManager))
       self.assertIs(clonedNosepoke._cloneOf, nosepoke)
 
-    self.assertTrue(('getCageCorner', 4, 2) in cageManager.sequence)
+    self.assertTrue(('get', 4) in cageManager.sequence)
+    self.assertTrue(('getManager', 4) in cageManager.sequence)
+    self.assertTrue(('get', 2) in cageManager.managers[4].sequence)
+    self.assertTrue(('getManager', 2) in cageManager.managers[4].sequence)
     self.assertIsInstance(visit.Cage, cageManager.Cls)
-    self.assertIsInstance(visit.Corner, cageManager.Cls)
+    self.assertIsInstance(visit.Corner, cageManager.managers[4].Cls)
 
     self.assertEqual(animalManager.sequence, [('get', 'animal')])
     self.assertIsInstance(visit.Animal, animalManager.Cls)
@@ -366,6 +368,22 @@ class TestNosepoke(ICNodeTest):
     self.assertEqual(sourceManager.sequence, [('get', 'src')])
     self.assertIsInstance(nosepoke._source, sourceManager.Cls)
 
+    sideManager = MockIntDictManager()
+    sourceManager = MockStrDictManager()
+    noSideNosepoke = Nosepoke(self.start, *[None]*14 + ['src', 123])
+    nosepoke = noSideNosepoke.clone(sideManager, sourceManager)
+    self.checkAttributes(nosepoke, [('Start', self.start),
+                                    'End', 'Side',
+                                    'LickNumber', 'LickContactTime', 'LickDuration',
+                                    'SideCondition', 'SideError', 'TimeError', 'ConditionError',
+                                    'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',
+                                    ('_source', 'src', sourceManager.Cls),
+                                    ('_line', 123),
+                                    'Door'
+                                    ])
+    self.assertEqual(sideManager.sequence, [])
+    self.assertEqual(sourceManager.sequence, [('get', 'src')])
+
   def testReadOnly(self):
     self.checkReadOnly(self.nosepoke)
 
@@ -392,6 +410,73 @@ class TestNosepoke(ICNodeTest):
   def testRepr(self):
     self.assertEqual(repr(self.nosepoke),
                      u'< Nosepoke to right door (at 1970-01-01 00:00:00.000) >')
+
+
+class TestLogEntry(ICNodeTest):
+  attributes = ('DateTime', 'Category', 'Type',
+                'Cage', 'Corner', 'Side', 'Notes')
+  def setUp(self):
+    self.time = datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+    self.logs = [LogEntry(*row) for row in [
+      (self.time, 'cat1', 'tpe1', 3, 2, 3, None, 'src1', 123),
+      (self.time, 'cat2', 'tpe2', 3, 1, 2, 'nts2', 'src2', 124),
+      (self.time, 'cat3', 'tpe3', 3, 1, None, 'nts3', 'src3', 125),
+      (self.time, 'cat4', 'tpe4', 1, None, None, 'nts4', 'src4', 126),
+      (self.time, 'cat5', 'tpe5', None, None, None, 'nts5', 'src5', 127),
+    ]]
+
+  def testCreate(self):
+    n = len(self.logs)
+    ns = range(1, n + 1)
+    for name, tests in [('DateTime', [self.time] * n),
+                        ('Category', ['cat%d' % i for i in ns]),
+                        ('Type', ['tpe%d' % i for i in ns]),
+                        ('Cage', [3, 3, 3, 1, None]),
+                        ('Corner', [2, 1, 1, None, None]),
+                        ('Side', [3, 2, None, None, None]),
+                        ('Notes', ['nts%d' % i if i != 1 else None for i in ns]),
+                        ('_source', ['src%d' %i for i in ns]),
+                        ('_line', [122 + i for i in ns])]:
+      self.checkAttributeSeq(self.logs, name, tests)
+
+  def testReadOnly(self):
+    for log in self.logs:
+      self.checkReadOnly(log)
+
+  def testSlots(self):
+    for log in self.logs:
+      self.checkSlots(log)
+
+  def testDoor(self):
+    self.checkAttributeSeq(self.logs, 'Door', ['left', 'right', None, None, None])
+
+  def testClone(self):
+    for log in self.logs:
+      cageManager = MockCageManager()
+      sourceManager = MockStrDictManager()
+      clone = log.clone(sourceManager, cageManager)
+      for attr in self.attributes:
+        self.assertEqual(getattr(log, attr), getattr(clone, attr))
+
+      self.assertEqual(sourceManager.sequence, [('get', log._source)])
+      self.assertIsInstance(clone._source, sourceManager.Cls)
+
+      if log.Cage is not None:
+        self.assertTrue(('get', log.Cage) in cageManager.sequence)
+        self.assertIsInstance(clone.Cage, cageManager.Cls)
+
+        if log.Corner is not None:
+          self.assertTrue(('getManager', log.Cage) in cageManager.sequence)
+          cornerManager = cageManager.managers[log.Cage]
+          self.assertTrue(('get', log.Corner) in cornerManager.sequence)
+          self.assertIsInstance(clone.Corner, cornerManager.Cls)
+
+          if log.Side is not None:
+            self.assertTrue(('getManager', log.Corner) in cornerManager.sequence)
+            sideManager = cornerManager.managers[log.Corner]
+            self.assertTrue(('get', log.Side) in sideManager.sequence)
+            self.assertIsInstance(clone.Side, sideManager.Cls)
+
 
 if __name__ == '__main__':
   unittest.main()
