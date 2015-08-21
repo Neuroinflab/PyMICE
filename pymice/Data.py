@@ -22,7 +22,6 @@
 #                                                                             #
 ###############################################################################
 
-import sys
 import os
 import zipfile
 import csv
@@ -42,8 +41,8 @@ from xml.dom import minidom
 from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
-from ICNodes import DataNode, Animal, Group, Visit, Nosepoke,\
-                    LogEntry, EnvironmentalConditions, HardwareEvent, Session
+from ICNodes import Animal, Group, Visit, Nosepoke,\
+                    oldLogEntry, oldEnvironmentalConditions, oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
@@ -254,13 +253,13 @@ class Data(object):
     return map(cls.fromDict, nodes)
 
   def _insertLog(self, lNodes):
-    self.__log.put(self._newNodes(lNodes, LogEntry))
+    self.__log.put(self._newNodes(lNodes, oldLogEntry))
 
   def _insertEnvironment(self, eNodes):
-    self.__environment.put(self._newNodes(eNodes, EnvironmentalConditions))
+    self.__environment.put(self._newNodes(eNodes, oldEnvironmentalConditions))
 
   def _insertHardware(self, hNodes):
-    self.__hardware.put(self._newNodes(hNodes, HardwareEvent))
+    self.__hardware.put(self._newNodes(hNodes, oldHardwareEvent))
 
   def _insertVisits(self, visits):
     newVisits = map(methodcaller('clone', IntCageManager(),

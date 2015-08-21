@@ -407,7 +407,7 @@ class Session(DataNode):
 
 
 # TODO
-class LogEntry(DataNode, SideAware):
+class oldLogEntry(DataNode, SideAware):
   _baseAttrs = ['DateTime', 'Category', 'Type',
                 'Cage', 'Corner', 'Side', 'Notes']
 
@@ -427,7 +427,7 @@ class LogEntry(DataNode, SideAware):
            (self.Category, self.Type, getTimeString(self.DateTime))
 
 
-class EnvironmentalConditions(DataNode):
+class oldEnvironmentalConditions(DataNode):
   _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
 
   def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
@@ -443,7 +443,7 @@ class EnvironmentalConditions(DataNode):
            (self.Illumination, self.Temperature, getTimeString(self.DateTime))
 
 
-class HardwareEvent(DataNode, SideAware):
+class oldHardwareEvent(DataNode, SideAware):
   _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
   __typeMapping = {0: 'Air',
                    1: 'Door',
