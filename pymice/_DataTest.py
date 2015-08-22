@@ -26,7 +26,7 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc
 
-from Data import ZipLoader
+from Data import ZipLoader, Data, Merger, LogEntry
 
 from _TestTools import Mock, MockCageManager, \
                        MockStrDictManager, BaseTest
@@ -422,6 +422,23 @@ class TestZipLoader(BaseTest):
             self.assertIs(entry.Side, entry.Corner.items[side])
 
 
+class MergerTest(unittest.TestCase):
+  def testLogMerge(self):
+    d1 = Data()
+    d2 = Data()
+    d1.insertLog([LogEntry(datetime(1970, 1, 1, tzinfo=utc),
+                           u'Test', u'D1',
+                           1, 2, 3,
+                           u'Note',
+                           u'D1', 1)])
+    d2.insertLog([LogEntry(datetime(1970, 1, 1, 1, tzinfo=utc),
+                           u'Test', u'D2',
+                           1, 2, 3,
+                           u'Note',
+                           u'D2', 1)])
+    mm = Merger(d1, d2, getLog=True)
+    self.assertEqual([u'D1', u'D2'],
+                     [l.Type for l in mm.getLog(order='DateTime')])
 
 if __name__ == '__main__':
   unittest.main()

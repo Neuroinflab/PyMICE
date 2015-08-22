@@ -58,6 +58,7 @@ class Data(object):
   """
   A base class for objects containing behavioural data.
   """
+
   def __init__(self, getNp=True, getLog=False,
                getEnv=False, getHw=False):
     """
@@ -86,6 +87,7 @@ class Data(object):
     self.__log = ObjectBase({'DateTime': toTimestampUTC})
     self.__environment = ObjectBase({'DateTime': toTimestampUTC})
     self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
+    self._initCache()
 
   @property
   def _get_npokes(self):
@@ -252,8 +254,14 @@ class Data(object):
   def _newNodes(nodes, cls=None):
     return map(cls.fromDict, nodes)
 
-  def _insertLog(self, lNodes):
-    self.__log.put(self._newNodes(lNodes, oldLogEntry))
+  def insertLog(self, log):
+    newLog = map(methodcaller('clone', IdentityManager(),
+                              IntCageManager()),
+                 log)
+    self._insertNewLog(newLog)
+
+  def _insertNewLog(self, lNodes):
+    self.__log.put(lNodes)
 
   def _insertEnvironment(self, eNodes):
     self.__environment.put(self._newNodes(eNodes, oldEnvironmentalConditions))
@@ -949,16 +957,16 @@ class Loader(Data):
                                         'Animal': 'AnimalTag',
                                         'ID': 'VisitID',
                                         #'VisitID': '_vid',
-                                        'ModuleName': 'Module',
+                                        #'ModuleName': 'Module',
                                        },
                  'IntelliCage/Nosepokes': {'LicksNumber': 'LickNumber',
                                            'LicksDuration': 'LickDuration',
                                            #'VisitID': '_vid',
                                           },
-                 'IntelliCage/Log': {'LogType': 'Type',
-                                     'Log': 'Type',
-                                     'LogCategory': 'Category',
-                                     'LogNotes': 'Notes',
+                 'IntelliCage/Log': {#'LogType': 'Type',
+                                     #'Log': 'Type',
+                                     #'LogCategory': 'Category',
+                                     #'LogNotes': 'Notes',
                                     },
                  'IntelliCage/HardwareEvents': {'HardwareType': 'Type',
                                                },
@@ -1041,8 +1049,6 @@ class Loader(Data):
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
 
-    self._initCache()
-
     self._fnames = (fname,)
 
     self.appendData(fname)
@@ -1064,7 +1070,7 @@ class Loader(Data):
 
 
 
-  def _loadZip(self, zf, getNp=True, getLog=False, getEnv=False,
+  def _loadZip(self, zf, getEnv=False,
                getHw=False, source=None):
     tagToAnimal = AnimalManager(self._loadAnimals(zf))
 
@@ -1137,7 +1143,7 @@ class Loader(Data):
       timeToFix = visits['End'] + visits['Start'] 
 
     nosepokes = None
-    if getNp:
+    if self._getNp:
       vid2tag = dict(zip(vids, visits['AnimalTag']))
 
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
@@ -1177,17 +1183,13 @@ class Loader(Data):
 
     result = {}
 
-    if getLog:
+    if self._getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       if sessions is not None:
         timeOrderer.addOrderedSequence(log['DateTime'])
 
       else: #XXX
         timeToFix.extend(log['DateTime'])
-
-      log = self._makeDicts(log)
-
-      result['logs'] = log
 
     if getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
@@ -1230,13 +1232,19 @@ class Loader(Data):
 
     visits['Start'] = [datetime(*t) for t in visits['Start']]
     visits['End'] = [datetime(*t) for t in visits['End']]
-    if getNp:
+    if self._getNp:
       nosepokes['Start'] = [datetime(*t) for t in nosepokes['Start']]
       nosepokes['End'] = [datetime(*t) for t in  nosepokes['End']]
 
     visitLoader = ZipLoader(source, IntCageManager(), tagToAnimal)
     vNodes = visitLoader.loadVisits(visits, nosepokes)
     self._insertNewVisits(vNodes)
+
+    if self._getLog:
+      log['DateTime'] = [datetime(*x) for x in log['DateTime']]
+      lNodes = visitLoader.loadLog(log)
+      self._insertNewLog(lNodes)
+
     return result
 
   @staticmethod
@@ -1366,14 +1374,9 @@ class Loader(Data):
         zf = zipfile.ZipFile(fname)
 
       data = self._loadZip(zf,
-                           getNp=self._getNp,
-                           getLog=self._getLog,
                            getEnv=self._getEnv,
                            getHw=self._getHw,
                            source=fname.decode('utf-8'))
-
-      if self._getLog:
-        self._insertLog(data['logs'])
 
       if self._getEnv:
         self._insertEnvironment(data['environment'])
@@ -1513,7 +1516,6 @@ class Merger(Data):
 
     self._dataSources = map(str, dataSources)
 
-    self._initCache()
     self.__topTime = datetime(MINYEAR, 1, 1, tzinfo=pytz.timezone('Etc/GMT-14'))
 
     for dataSource in self._sortDataSources(dataSources):
@@ -1687,7 +1689,7 @@ class Merger(Data):
     if self._getLog:
       log = dataSource.getLog()
       if log is not None:
-        self._insertLog(log)
+        self.insertLog(log)
 
     ## XXX more data loading here
 
