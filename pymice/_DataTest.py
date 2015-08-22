@@ -28,13 +28,15 @@ from pytz import utc
 
 from Data import ZipLoader
 
-from _TestTools import Mock, MockIntDictManager, MockCageManager, \
+from _TestTools import Mock, MockCageManager, \
                        MockStrDictManager, BaseTest
 
 
 def toStrings(seq):
   return [str(x) if x is not None else None for x in seq]
 
+def toUnicodes(seq):
+  return [(unicode(x), unicode) if x is not None else None for x in seq]
 
 def floatToStrings(seq):
   return ['%.3f' % x if x is not None else None for x in seq]
@@ -156,7 +158,7 @@ class TestZipLoader(BaseTest):
     outputColumns = {'Animal': toStrings(animals),
                      'Start': starts,
                      'End': ends,
-                     'Module': modules,
+                     'Module': toUnicodes(modules),
                      'Cage': cages,
                      'Corner': corners,
                      'CornerCondition': conditions,
@@ -364,6 +366,53 @@ class TestZipLoader(BaseTest):
 
         self.assertEqual([n._line for v in visits for n in v.Nosepokes],
                          [x[2] for x in sorted(zip(nIds, nStarts, _lines))])
+
+
+  def testLoadEmptyLog(self):
+    log = self.loader.loadLog({'DateTime': [],
+                               'LogCategory': [],
+                               'LogType': [],
+                               'Cage': [],
+                               'Corner': [],
+                               'Side': [],
+                               'LogNotes': [],
+                               })
+    self.assertEqual(log, [])
+
+  def testLoadLog(self):
+    nLog = 5
+    times = [datetime(1970, 1, 1, i, tzinfo=utc) for i in range(nLog)]
+    categories = ['Info', 'Warning', 'Warning', 'Fake', 'Fake']
+    types = ['Application', 'Presence', 'Lickometer', 'Fake', 'Fake']
+    cages = [None, 2, 3, 1, 1]
+    corners = [None, 4, 1, None, 1]
+    sides = [None, None, 2, None, 1]
+    notes = ['Session is started',
+             'Presence signal without antenna registration.',
+             'Lickometer is active but nosepoke is inactive',
+             'Fake note',
+             None]
+    log = self.loader.loadLog({'DateTime': times,
+                               'LogCategory': categories,
+                               'LogType': types,
+                               'Cage': toStrings(cages),
+                               'Corner': toStrings(corners),
+                               'Side': toStrings(sides),
+                               'LogNotes': notes,
+                               })
+    self.assertEqual(len(log), nLog)
+    for name, tests in [('DateTime', times),
+                        ('Category', toUnicodes(categories)),
+                        ('Type', toUnicodes(types)),
+                        ('Cage', cages),
+                        ('Corner', corners),
+                        ('Side', sides),
+                        ('Notes', toUnicodes(notes)),
+                        ('_source', [self.source] * nLog),
+                        ('_line', range(1, nLog + 1)),
+                        ]:
+      self.checkAttributeSeq(log, name, tests)
+
 
 if __name__ == '__main__':
   unittest.main()

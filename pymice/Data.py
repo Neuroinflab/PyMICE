@@ -41,7 +41,7 @@ from xml.dom import minidom
 from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
-from ICNodes import Animal, Group, Visit, Nosepoke,\
+from ICNodes import Animal, Group, Visit, Nosepoke, LogEntry,\
                     oldLogEntry, oldEnvironmentalConditions, oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
@@ -1835,6 +1835,28 @@ class ZipLoader(object):
 
     return vNosepokes
 
+  def __makeLog(self, DateTime, Category, Type,
+                Cage, Corner, Side, Notes, _line):
+    return LogEntry(DateTime, unicode(Category), unicode(Type),
+                    int(Cage) if Cage is not None else None,
+                    int(Corner) if Corner is not None else None,
+                    int(Side) if Side is not None else None,
+                    unicode(Notes) if Notes is not None else None,
+                    self.__source,
+                    _line)
+
+  def loadLog(self, columns):
+    colValues = map(columns.get,
+                    ['DateTime',
+                     'LogCategory',
+                     'LogType',
+                     'Cage',
+                     'Corner',
+                     'Side',
+                     'LogNotes'])
+    n = max(map(len, colValues))
+    colValues.append(range(1, n+1))
+    return map(self.__makeLog, *colValues)
 
 if __name__ == '__main__':
   import doctest
