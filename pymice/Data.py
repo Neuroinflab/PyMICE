@@ -1715,14 +1715,14 @@ class Merger(Data):
     return map(copy.copy, nodes)
 
 
-class IntCageManager(object):
-  get = staticmethod(int)
-
-  def getSideManager(self, cage, corner):
-    return self
+class IntCageManager(int):
+  @classmethod
+  def get(cls, val):
+    return cls(val)
 
   def getCageCorner(self, cage, corner):
-    return int(cage), int(corner)
+    cg = self.get(cage)
+    return cg, cg.get(corner)
 
 
 class IdentityManager(object):
@@ -1751,8 +1751,7 @@ class ZipLoader(object):
 
     Nosepokes = None
     if nosepokeRows is not None:
-      sideManager = self.__cageManager.getSideManager(cage, corner)
-      Nosepokes = tuple(self.__makeNosepoke(sideManager, row)\
+      Nosepokes = tuple(self.__makeNosepoke(corner, row)\
                         for row in sorted(nosepokeRows))
 
     return Visit(Start, corner, animal, End,

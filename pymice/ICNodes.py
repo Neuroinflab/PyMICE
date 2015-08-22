@@ -205,11 +205,10 @@ class Visit(BaseNode, DurationAware):
         nosepoke._bindToVisit(self)
 
   def clone(self, cageManager, animalManager, sourceManager):
-    sideManager = cageManager.getSideManager(self.__Cage, self.__Corner)
-    nosepokes = tuple(n.clone(sideManager, sourceManager) for n in self.__Nosepokes)
     source = sourceManager.get(self.___source)
     animal = animalManager.get(self.__Animal)
     cage, corner = cageManager.getCageCorner(self.__Cage, self.__Corner)
+    nosepokes = tuple(n.clone(corner, sourceManager) for n in self.__Nosepokes)
     return self.__class__(self.__Start, corner, animal,
                           self.__End, self.__Module, cage,
                           self.__CornerCondition, self.__PlaceError,
@@ -341,11 +340,10 @@ class LogEntry(BaseNode, SideAware):
       cage = cageManager.get(self.__Cage)
 
       if self.__Corner is not None:
-        cornerManager = cageManager.getManager(self.__Cage)
-        corner = cornerManager.get(self.__Corner)
+        corner = cage.get(self.__Corner)
 
         if self.__Side is not None:
-          side = cornerManager.getManager(corner).get(self.__Side)
+          side = corner.get(self.__Side)
 
     return LogEntry(self.__DateTime,
                     self.__Category,

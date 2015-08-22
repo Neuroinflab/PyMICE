@@ -262,15 +262,13 @@ class TestVisit(ICNodeTest):
 
     for nosepoke, clonedNosepoke in zip(self.visit.Nosepokes,
                                         visit.Nosepokes):
-      self.assertEqual(nosepoke.sequence[-1], ('clone', cageManager.managers[4].managers[2], sourceManager))
+      self.assertEqual(nosepoke.sequence[-1], ('clone', cageManager.items[4].items[2], sourceManager))
       self.assertIs(clonedNosepoke._cloneOf, nosepoke)
 
     self.assertTrue(('get', 4) in cageManager.sequence)
-    self.assertTrue(('getManager', 4) in cageManager.sequence)
-    self.assertTrue(('get', 2) in cageManager.managers[4].sequence)
-    self.assertTrue(('getManager', 2) in cageManager.managers[4].sequence)
-    self.assertIsInstance(visit.Cage, cageManager.Cls)
-    self.assertIsInstance(visit.Corner, cageManager.managers[4].Cls)
+    self.assertTrue(('get', 2) in cageManager.items[4].sequence)
+    self.assertIs(visit.Cage, cageManager.items[4])
+    self.assertIs(visit.Corner, cageManager.items[4].items[2])
 
     self.assertEqual(animalManager.sequence, [('get', 'animal')])
     self.assertIsInstance(visit.Animal, animalManager.Cls)
@@ -474,19 +472,15 @@ class TestLogEntry(ICNodeTest):
 
       if log.Cage is not None:
         self.assertTrue(('get', log.Cage) in cageManager.sequence)
-        self.assertIsInstance(clone.Cage, cageManager.Cls)
+        self.assertIs(clone.Cage, cageManager.items[log.Cage])
 
         if log.Corner is not None:
-          self.assertTrue(('getManager', log.Cage) in cageManager.sequence)
-          cornerManager = cageManager.managers[log.Cage]
-          self.assertTrue(('get', log.Corner) in cornerManager.sequence)
-          self.assertIsInstance(clone.Corner, cornerManager.Cls)
+          self.assertTrue(('get', log.Corner) in clone.Cage.sequence)
+          self.assertIs(clone.Corner, clone.Cage.items[log.Corner])
 
           if log.Side is not None:
-            self.assertTrue(('getManager', log.Corner) in cornerManager.sequence)
-            sideManager = cornerManager.managers[log.Corner]
-            self.assertTrue(('get', log.Side) in sideManager.sequence)
-            self.assertIsInstance(clone.Side, sideManager.Cls)
+            self.assertTrue(('get', log.Side) in clone.Corner.sequence)
+            self.assertIs(clone.Side, clone.Corner.items[log.Side])
 
   def testDel(self):
     for log in self.logs:
