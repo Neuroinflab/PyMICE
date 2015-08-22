@@ -75,11 +75,11 @@ class MockIntDictManager(int, MockDictManager):
   def get(self, item):
     self._registerCall(('get', item))
     try:
-      return self.items[item]
+      return self.items[int(item)]
 
     except KeyError:
       output = self.Cls(item)
-      self.items[item] = output
+      self.items[output] = output
       return output
 
 

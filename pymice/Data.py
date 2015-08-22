@@ -1747,7 +1747,7 @@ class ZipLoader(object):
                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
                 VisitSolution, _line, nosepokeRows):
     animal = self.__animalManager.get(AnimalTag)
-    cage, corner = self.__cageManager.getCageCorner(int(Cage), int(Corner))
+    cage, corner = self.__cageManager.getCageCorner(Cage, Corner)
 
     Nosepokes = None
     if nosepokeRows is not None:
@@ -1774,7 +1774,7 @@ class ZipLoader(object):
                      _line)):
 
     return Nosepoke(Start, End,
-                    sideManager.get(int(Side)) if Side is not None else None,
+                    sideManager.get(Side) if Side is not None else None,
                     int(LickNumber) if LickNumber is not None else None,
                     timedelta(seconds=float(LickContactTime)) if LickContactTime is not None else None,
                     timedelta(seconds=float(LickDuration)) if LickDuration is not None else None,
@@ -1790,8 +1790,8 @@ class ZipLoader(object):
                     self.__source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
-    cages = map(int, visitsCollumns['Cage'])
-    corners = map(int, visitsCollumns['Corner'])
+    cages = visitsCollumns['Cage']
+    corners = visitsCollumns['Corner']
 
     if nosepokesCollumns is not None:
       vIDs = visitsCollumns['VisitID']
