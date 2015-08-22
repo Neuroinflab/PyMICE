@@ -413,6 +413,15 @@ class TestZipLoader(BaseTest):
                         ]:
       self.checkAttributeSeq(log, name, tests)
 
+    for entry, cage, corner, side in zip(log, cages, corners, sides):
+      if cage is not None:
+        self.assertIs(entry.Cage, self.cageManager.items[cage])
+        if corner is not None:
+          self.assertIs(entry.Corner, entry.Cage.items[corner])
+          if side is not None:
+            self.assertIs(entry.Side, entry.Corner.items[side])
+
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -1837,10 +1837,16 @@ class ZipLoader(object):
 
   def __makeLog(self, DateTime, Category, Type,
                 Cage, Corner, Side, Notes, _line):
+    cage, corner, side = None, None, None
+    if Cage is not None:
+      cage = self.__cageManager.get(Cage)
+      if Corner is not None:
+        corner = cage.get(Corner)
+        if Side is not None:
+          side = corner.get(Side)
+
     return LogEntry(DateTime, unicode(Category), unicode(Type),
-                    int(Cage) if Cage is not None else None,
-                    int(Corner) if Corner is not None else None,
-                    int(Side) if Side is not None else None,
+                    cage, corner, side,
                     unicode(Notes) if Notes is not None else None,
                     self.__source,
                     _line)
