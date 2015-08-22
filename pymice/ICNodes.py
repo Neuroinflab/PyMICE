@@ -454,26 +454,6 @@ class Session(DataNode):
 
 
 # TODO
-class oldLogEntry(DataNode, SideAware):
-  _baseAttrs = ['DateTime', 'Category', 'Type',
-                'Cage', 'Corner', 'Side', 'Notes']
-
-  def __init__(self, DateTime, Category=None, Type=None, Cage=None,
-               Corner=None, Side=None, Notes=None, **kwargs):
-    DataNode.__init__(self, **kwargs)
-    self.DateTime = toDt(DateTime)
-    self.Category = unicode(Category) if Category is not None else None
-    self.Type = unicode(Type) if Type is not None else None
-    self.Cage = int(Cage) if Cage is not None else None
-    self.Corner = int(Corner) if Corner is not None else None
-    self.Side = int(Side) if Side is not None else None
-    self.Notes = unicode(Notes) if Notes is not None else None
-
-  def __repr__(self):
-    return '< Log %s, %s (at %s) >' % \
-           (self.Category, self.Type, getTimeString(self.DateTime))
-
-
 class oldEnvironmentalConditions(DataNode):
   _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
 

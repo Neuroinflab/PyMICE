@@ -42,7 +42,7 @@ from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, LogEntry,\
-                    oldLogEntry, oldEnvironmentalConditions, oldHardwareEvent, Session
+                    oldEnvironmentalConditions, oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
