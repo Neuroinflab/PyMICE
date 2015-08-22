@@ -355,6 +355,12 @@ class LogEntry(BaseNode, SideAware):
                     sourceManager.get(self.___source),
                     self.___line)
 
+  def __repr__(self):
+    return '< Log %s, %s (at %s) >' % \
+           (self.__Category, self.__Type,
+            getTimeString(self.__DateTime))
+
+
 
 BaseNode._finishSubclassesDefinitions()
 

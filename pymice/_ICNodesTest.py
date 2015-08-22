@@ -399,6 +399,9 @@ class TestNosepoke(ICNodeTest):
   def testSlots(self):
     self.checkSlots(self.nosepoke)
 
+  def testDel(self):
+    self.checkDel(self.nosepoke, skip={'__Visit'})
+
   def testVisit(self):
     self.assertRaises(AttributeError, lambda: self.nosepoke.Visit)
     visit = object()
@@ -406,9 +409,6 @@ class TestNosepoke(ICNodeTest):
     self.assertIs(self.nosepoke.Visit, visit)
     self.assertRaises(AttributeError,
                       lambda: setattr(self.nosepoke, 'Visit', 12))
-
-  def testDel(self):
-    self.checkDel(self.nosepoke, skip={'__Visit'})
 
   def testDuration(self):
     self.assertEqual(self.nosepoke.Duration, timedelta(seconds=315))
@@ -448,17 +448,6 @@ class TestLogEntry(ICNodeTest):
                         ('_line', [122 + i for i in ns])]:
       self.checkAttributeSeq(self.logs, name, tests)
 
-  def testReadOnly(self):
-    for log in self.logs:
-      self.checkReadOnly(log)
-
-  def testSlots(self):
-    for log in self.logs:
-      self.checkSlots(log)
-
-  def testDoor(self):
-    self.checkAttributeSeq(self.logs, 'Door', ['left', 'right', None, None, None])
-
   def testClone(self):
     for log in self.logs:
       cageManager = MockCageManager()
@@ -482,10 +471,25 @@ class TestLogEntry(ICNodeTest):
             self.assertTrue(('get', log.Side) in clone.Corner.sequence)
             self.assertIs(clone.Side, clone.Corner.items[log.Side])
 
+  def testReadOnly(self):
+    for log in self.logs:
+      self.checkReadOnly(log)
+
+  def testSlots(self):
+    for log in self.logs:
+      self.checkSlots(log)
+
   def testDel(self):
     for log in self.logs:
       self.checkDel(log)
 
+  def testDoor(self):
+    self.checkAttributeSeq(self.logs, 'Door', ['left', 'right', None, None, None])
+
+  def testRepr(self):
+    self.assertEqual(map(repr, self.logs),
+                     ['< Log cat%d, tpe%d (at 1970-01-01 00:00:00.000) >' % (i, i)\
+                      for i in range(1, len(self.logs) + 1)])
 
 if __name__ == '__main__':
   unittest.main()
