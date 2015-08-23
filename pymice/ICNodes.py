@@ -204,11 +204,11 @@ class Visit(BaseNode, DurationAware):
       for nosepoke in Nosepokes:
         nosepoke._bindToVisit(self)
 
-  def clone(self, cageManager, animalManager, sourceManager):
+  def clone(self, sourceManager, cageManager, animalManager):
     source = sourceManager.get(self.___source)
     animal = animalManager.get(self.__Animal)
     cage, corner = cageManager.getCageCorner(self.__Cage, self.__Corner)
-    nosepokes = tuple(n.clone(corner, sourceManager) for n in self.__Nosepokes)
+    nosepokes = tuple(n.clone(sourceManager, corner) for n in self.__Nosepokes)
     return self.__class__(self.__Start, corner, animal,
                           self.__End, self.__Module, cage,
                           self.__CornerCondition, self.__PlaceError,
@@ -299,7 +299,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
     self.___source = _source
     self.___line = _line
 
-  def clone(self, sideManager, sourceManager):
+  def clone(self, sourceManager, sideManager):
     side = sideManager.get(self.__Side) if self.__Side is not None else None
     source = sourceManager.get(self.___source)
     return self.__class__(self.__Start, self.__End, side,
@@ -360,6 +360,33 @@ class LogEntry(BaseNode, SideAware):
            (self.__Category, self.__Type,
             getTimeString(self.__DateTime))
 
+
+class EnvironmentalConditions(BaseNode):
+  attributes = ('DateTime', 'Temperature', 'Illumination', 'Cage',
+                '_source', '_line')
+  __slots__ = makePrivateSlots(attributes)
+
+  def __init__(self, DateTime, Temperature, Illumination, Cage,
+               _source, _line):
+    self.__DateTime = DateTime
+    self.__Temperature = Temperature
+    self.__Illumination = Illumination
+    self.__Cage = Cage
+    self.___source = _source
+    self.___line = _line
+
+  def clone(self, sourceManager, cageManager):
+    return self.__class__(self.__DateTime,
+                          self.__Temperature,
+                          self.__Illumination,
+                          cageManager.get(self.__Cage),
+                          sourceManager.get(self.___source),
+                          self.___line)
+
+  def __repr__(self):
+    return '< Illumination: %3d, Temperature: %4.1f (at %s) >' % \
+           (self.__Illumination, self.__Temperature,
+            getTimeString(self.__DateTime))
 
 
 BaseNode._finishSubclassesDefinitions()

@@ -270,9 +270,9 @@ class Data(object):
     self.__hardware.put(self._newNodes(hNodes, oldHardwareEvent))
 
   def _insertVisits(self, visits):
-    newVisits = map(methodcaller('clone', IntCageManager(),
-                                 self.__animalsByName,
-                                 IdentityManager()),
+    newVisits = map(methodcaller('clone', IdentityManager(),
+                                 IntCageManager(),
+                                 self.__animalsByName),
                     visits)
     self._insertNewVisits(newVisits)
 

@@ -25,9 +25,9 @@
 import unittest
 from datetime import datetime, timedelta
 
-import pytz
+from pytz import utc
 
-from ICNodes import Animal, Visit, Nosepoke, LogEntry
+from ICNodes import Animal, Visit, Nosepoke, LogEntry, EnvironmentalConditions
 from _TestTools import allInstances, Mock, MockIntDictManager, \
                        MockCageManager, MockStrDictManager, MockCloneable, \
                        BaseTest
@@ -200,8 +200,8 @@ class TestVisit(ICNodeTest):
                 'Nosepokes')
 
   def setUp(self):
-    self.start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-    self.end = datetime(1970, 1, 1, 0, 5, 15, tzinfo=pytz.utc)
+    self.start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)
+    self.end = datetime(1970, 1, 1, 0, 5, 15, tzinfo=utc)
     self.nosepokes = tuple(MockCloneable(Duration = timedelta(seconds=10.25 * i),
                                          LickNumber = i - 1,
                                          LickDuration = timedelta(seconds=0.25 * i),
@@ -253,16 +253,13 @@ class TestVisit(ICNodeTest):
     cageManager = MockCageManager()
     sourceManager = MockStrDictManager()
     animalManager = MockStrDictManager()
-    visit = self.visit.clone(cageManager, animalManager, sourceManager)
-    for attr in self.attributes:
-      if attr != 'Nosepokes':
-        self.assertEqual(getattr(visit, attr),
-                         getattr(self.visit, attr))
-
+    visit = self.visit.clone(sourceManager, cageManager, animalManager)
+    self.checkObjectsEquals(visit, self.visit,
+                            skip=['Nosepokes'])
 
     for nosepoke, clonedNosepoke in zip(self.visit.Nosepokes,
                                         visit.Nosepokes):
-      self.assertEqual(nosepoke.sequence[-1], ('clone', cageManager.items[4].items[2], sourceManager))
+      self.assertEqual(nosepoke.sequence[-1], ('clone', sourceManager, cageManager.items[4].items[2]))
       self.assertIs(clonedNosepoke._cloneOf, nosepoke)
 
     self.assertTrue(('get', 4) in cageManager.sequence)
@@ -331,8 +328,8 @@ class TestNosepoke(ICNodeTest):
                 )
 
   def setUp(self):
-    self.start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-    self.end = datetime(1970, 1, 1, 0, 5, 15, tzinfo=pytz.utc)
+    self.start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)
+    self.end = datetime(1970, 1, 1, 0, 5, 15, tzinfo=utc)
     self.nosepoke = Nosepoke(self.start, self.end, 2,
                              2, timedelta(seconds=0.125), timedelta(seconds=0.5),
                              -1, 1, 0, 1,
@@ -365,11 +362,10 @@ class TestNosepoke(ICNodeTest):
     sourceManager = MockStrDictManager()
     visit = Mock(Cage=7, Corner=1)
     self.nosepoke._bindToVisit(visit)
-    nosepoke = self.nosepoke.clone(sideManager, sourceManager)
-    for attr in self.attributes:
-      if attr != 'Visit':
-        self.assertEqual(getattr(nosepoke, attr),
-                         getattr(self.nosepoke, attr))
+    nosepoke = self.nosepoke.clone(sourceManager, sideManager)
+
+    self.checkObjectsEquals(nosepoke, self.nosepoke,
+                            skip=['Visit'])
 
     self.assertEqual(sideManager.sequence, [('get', 2)])
     self.assertIsInstance(nosepoke.Side, sideManager.Cls)
@@ -380,7 +376,7 @@ class TestNosepoke(ICNodeTest):
     sideManager = MockIntDictManager()
     sourceManager = MockStrDictManager()
     noSideNosepoke = Nosepoke(self.start, *[None]*14 + ['src', 123])
-    nosepoke = noSideNosepoke.clone(sideManager, sourceManager)
+    nosepoke = noSideNosepoke.clone(sourceManager, sideManager)
     self.checkAttributes(nosepoke, [('Start', self.start),
                                     'End', 'Side',
                                     'LickNumber', 'LickContactTime', 'LickDuration',
@@ -425,7 +421,7 @@ class TestLogEntry(ICNodeTest):
   attributes = ('DateTime', 'Category', 'Type',
                 'Cage', 'Corner', 'Side', 'Notes')
   def setUp(self):
-    self.time = datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+    self.time = datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)
     self.logs = [LogEntry(*row) for row in [
       (self.time, 'cat1', 'tpe1', 3, 2, 3, None, 'src1', 123),
       (self.time, 'cat2', 'tpe2', 3, 1, 2, 'nts2', 'src2', 124),
@@ -453,8 +449,7 @@ class TestLogEntry(ICNodeTest):
       cageManager = MockCageManager()
       sourceManager = MockStrDictManager()
       clone = log.clone(sourceManager, cageManager)
-      for attr in self.attributes:
-        self.assertEqual(getattr(log, attr), getattr(clone, attr))
+      self.checkObjectsEquals(log, clone)
 
       self.assertEqual(sourceManager.sequence, [('get', log._source)])
       self.assertIsInstance(clone._source, sourceManager.Cls)
@@ -490,6 +485,46 @@ class TestLogEntry(ICNodeTest):
     self.assertEqual(map(repr, self.logs),
                      ['< Log cat%d, tpe%d (at 1970-01-01 00:00:00.000) >' % (i, i)\
                       for i in range(1, len(self.logs) + 1)])
+
+
+class TestEnvironmentalConditions(ICNodeTest):
+  attributes = ('DateTime', 'Temperature', 'Illumination', 'Cage',
+                '_source', '_line')
+  def setUp(self):
+    self.time = datetime(1970, 1, 1, tzinfo=utc)
+    self.env = EnvironmentalConditions(self.time, 21.5, 255, 2, 'src', 1)
+
+  def testCreate(self):
+    self.checkAttributes(self.env, [('DateTime', self.time),
+                                    ('Temperature', 21.5),
+                                    ('Illumination', 255),
+                                    ('Cage', 2),
+                                    ('_source', 'src'),
+                                    ('_line', 1),])
+
+  def testClone(self):
+    cageManager = MockCageManager()
+    sourceManager = MockStrDictManager()
+    clone = self.env.clone(sourceManager, cageManager)
+    self.checkObjectsEquals(self.env, clone)
+    self.assertIs(clone.Cage, cageManager.items[2])
+    self.assertIsInstance(clone._source, sourceManager.Cls)
+
+  def testReadOnly(self):
+    self.checkReadOnly(self.env)
+
+  def testSlots(self):
+    self.checkSlots(self.env)
+
+  def testDel(self):
+    self.checkDel(self.env)
+
+  def testRepr(self):
+    self.assertEqual(repr(self.env),
+                     '< Illumination: 255, Temperature: 21.5 (at 1970-01-01 00:00:00.000) >')
+    self.assertEqual(repr(EnvironmentalConditions(self.time, 1.0, 0, 1, 'src', 1)),
+                     '< Illumination:   0, Temperature:  1.0 (at 1970-01-01 00:00:00.000) >')
+
 
 if __name__ == '__main__':
   unittest.main()

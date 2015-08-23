@@ -145,3 +145,15 @@ class BaseTest(TestCase):
 
       else:
         self.checkAttribute(obj, name, test)
+
+  def checkObjectsEquals(self, a, b, skip=()):
+    for attr in self.attributes:
+      if attr in skip:
+        continue
+
+      try:
+        self.assertEqual(getattr(a, attr), getattr(b, attr))
+
+      except AssertionError:
+        print attr
+        raise
