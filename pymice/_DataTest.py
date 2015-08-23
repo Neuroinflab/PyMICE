@@ -38,8 +38,8 @@ def toStrings(seq):
 def toUnicodes(seq):
   return [(unicode(x), unicode) if x is not None else None for x in seq]
 
-def floatToStrings(seq):
-  return ['%.3f' % x if x is not None else None for x in seq]
+def floatToStrings(seq, pattern='%.3f'):
+  return [pattern % x if x is not None else None for x in seq]
 
 
 def floatToTimedelta(seq):
@@ -420,6 +420,34 @@ class TestZipLoader(BaseTest):
           self.assertIs(entry.Corner, entry.Cage.items[corner])
           if side is not None:
             self.assertIs(entry.Side, entry.Corner.items[side])
+
+  def testLoadEmptyEnv(self):
+    self.assertEqual(self.loader.loadEnv({
+                     'DateTime': [],
+                     'Temperature': [],
+                     'Illumination': [],
+                     'Cage': [],
+                     }),
+                     [])
+
+  def testLoadEnv(self):
+    times = [datetime(1970, 1, 1, tzinfo=utc)] * 2
+    temperature = [20, 20.5]
+    illumination = [255, 0]
+    cages = [1, 2]
+    envs = self.loader.loadEnv({'DateTime': times,
+                                'Temperature': floatToStrings(temperature, '%.1f'),
+                                'Illumination': toStrings(illumination),
+                                'Cage': toStrings(cages)})
+    self.assertEquals(len(envs), 2)
+    for name, tests in [('DateTime', times),
+                        ('Temperature', temperature),
+                        ('Illumination', illumination),
+                        ('Cage', cages)]:
+      self.checkAttributeSeq(envs, name, tests)
+
+    for e in envs:
+      self.assertIs(e.Cage, self.cageManager.items[e.Cage])
 
 
 class MergerTest(unittest.TestCase):

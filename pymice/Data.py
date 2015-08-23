@@ -41,7 +41,8 @@ from xml.dom import minidom
 from operator import itemgetter, methodcaller, attrgetter
 from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
-from ICNodes import Animal, Group, Visit, Nosepoke, LogEntry,\
+from ICNodes import Animal, Group, Visit, Nosepoke, \
+                    LogEntry, EnvironmentalConditions, \
                     oldEnvironmentalConditions, oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
@@ -1865,6 +1866,23 @@ class ZipLoader(object):
     n = max(map(len, colValues))
     colValues.append(range(1, n+1))
     return map(self.__makeLog, *colValues)
+
+  def __makeEnv(self, DateTime, Temperature, Illumination, Cage,
+                _line):
+    return EnvironmentalConditions(DateTime,
+                                   float(Temperature),
+                                   int(Illumination),
+                                   self.__cageManager.get(Cage),
+                                   self.__source, _line)
+
+  def loadEnv(self, columns):
+    colValues = map(columns.get, ['DateTime',
+                                  'Temperature',
+                                  'Illumination',
+                                  'Cage'])
+    n = max(map(len, colValues))
+    colValues.append(range(1, n+1))
+    return map(self.__makeEnv, *colValues)
 
 if __name__ == '__main__':
   import doctest
