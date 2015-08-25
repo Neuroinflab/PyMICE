@@ -89,7 +89,7 @@ class SideAware(object):
 
 
 class Animal(BaseNode):
-  class DifferentMouse(ValueError):
+  class DifferentMouseError(ValueError):
     pass
 
   attributes = ('Name', 'Tag', 'Sex', 'Notes')
@@ -158,7 +158,7 @@ class Animal(BaseNode):
 
   def merge(self, other):
     if self != other:
-      raise self.DifferentMouse
+      raise self.DifferentMouseError
 
     if self.__Sex is None:
       self.__Sex = other.__Sex

@@ -162,9 +162,9 @@ class TestAnimal(ICNodeTest):
     self.assertEqual(mouse.Sex, 'male')
 
 
-    self.assertRaises(Animal.DifferentMouse,
+    self.assertRaises(Animal.DifferentMouseError,
                       lambda: Animal.fromRow('Minnie', '1').merge(self.mickey))
-    self.assertRaises(Animal.DifferentMouse,
+    self.assertRaises(Animal.DifferentMouseError,
                       lambda: Animal.fromRow('Mickey', '1', 'female').merge(self.mickey))
 
     mouse = Animal.fromRow('Mickey', '1', Notes='ble')

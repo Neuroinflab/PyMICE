@@ -22,6 +22,10 @@
 #                                                                             #
 ###############################################################################
 
+# original: 60.8%; 1:30 
+# refactored ICN: 17.4%; 1:14  
+# refactored ICN+Nodes: 17.3%; 1:12 
+
 import os
 import zipfile
 import csv
@@ -1468,25 +1472,31 @@ class Merger(Data):
     """
     Usage: Merger(data_1, [data_2, ...] [parameters])
 
-    @type data_X: Data
+    @type dataSources: [Data, ...]
 
-    @param getNp: whether to load nosepoke data (defaults to False).
+    @kwparam getNp: whether to load nosepoke data (defaults to False).
     @type getNp: bool
 
-    @param getLog: whether to load log (defaults to False).
+    @kwparam getLog: whether to load log (defaults to False).
     @type getLog: bool
 
-    @param getEnv: whether to load environmental data (defaults to False).
+    @kwparam getEnv: whether to load environmental data (defaults to False).
     @type getEnv: bool
 
-    @param getHw: whether to load hardware data (defaults to False).
+    @kwparam getHw: whether to load hardware data (defaults to False).
     @type getHw: bool
+
+    @kwparam ignoreMiceDifferences: whether to ignore encountered differences
+                                    in animal description (e.g. sex)
+    @type ignoreMiceDifferences: bool
     """
     getNp = kwargs.pop('getNp', True)
     getLog = kwargs.pop('getLog', False)
     getEnv = kwargs.pop('getEnv', False)
     getHw = kwargs.pop('getHw', False)
     logAnalyzers = kwargs.pop('logAnalyzers', [])
+
+    self._ignoreMiceDifferences = kwargs.pop('ignoreMiceDifferences', False)
 
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
@@ -1657,7 +1667,12 @@ class Merger(Data):
     # registering animals and groups (if necessary)
     for name in dataSource.getAnimal():
       animal = dataSource.getAnimal(name)
-      self._registerAnimal(animal)
+      try:
+        self._registerAnimal(animal)
+
+      except Animal.DifferentMouseError:
+        if not self._ignoreMiceDifferences:
+          raise
 
 
     for group in dataSource.getGroup():
