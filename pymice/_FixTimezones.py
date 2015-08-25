@@ -118,7 +118,8 @@ class TimezonesInferrer(object):
 
 class LatticeOrderer(object):
   class Node(list):
-    pass
+    __slots__ = ('__children', '__parents',
+                 '_source', '_type', '_line')
 
     def __init__(self, *args, **kwargs):
       self.__children = []

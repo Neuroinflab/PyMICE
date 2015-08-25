@@ -54,7 +54,6 @@ from _ObjectBase import ObjectBase
 
 callCopy = methodcaller('copy')
 
-
 class Data(object):
   """
   A base class for objects containing behavioural data.
@@ -1143,7 +1142,7 @@ class Loader(Data):
 
       timeOrderer.coupleTuples(vStarts, vEnds)
       timeOrderer.makeOrderedSequence(vEnds)
-      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(vids)])
+      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(map(int, vids))])
 
     else: #XXX
       timeToFix = visits['End'] + visits['Start'] 
@@ -1201,6 +1200,10 @@ class Loader(Data):
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       if environment is not None:
         if sessions is not None:
+          # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
+          #   ee._type = 'e.DateTime'
+          #   ee._source = ss
+          #   ee._line = ll
           timeOrderer.addOrderedSequence(environment['DateTime'])
 
         else:
