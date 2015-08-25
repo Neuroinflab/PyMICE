@@ -481,22 +481,6 @@ class Session(DataNode):
 
 
 # TODO
-class oldEnvironmentalConditions(DataNode):
-  _baseAttrs = ['DateTime', 'Temperature', 'Illumination', 'Cage']
-
-  def __init__(self, DateTime, Temperature=None, Illumination=None, Cage=None,
-               **kwargs):
-    DataNode.__init__(self, **kwargs)
-    self.DateTime = toDt(DateTime)
-    self.Temperature = float(Temperature) if Temperature is not None else None
-    self.Illumination = int(Illumination) if Illumination is not None else None
-    self.Cage = int(Cage) if Cage is not None else None
-
-  def __repr__(self):
-    return '< Illumination: %d, Temperature: %f (at %s) >' % \
-           (self.Illumination, self.Temperature, getTimeString(self.DateTime))
-
-
 class oldHardwareEvent(DataNode, SideAware):
   _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
   __typeMapping = {0: 'Air',

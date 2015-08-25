@@ -26,7 +26,7 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc
 
-from Data import ZipLoader, Data, Merger, LogEntry
+from Data import ZipLoader, Data, Merger, LogEntry, EnvironmentalConditions
 
 from _TestTools import Mock, MockCageManager, \
                        MockStrDictManager, BaseTest
@@ -467,6 +467,17 @@ class MergerTest(unittest.TestCase):
     mm = Merger(d1, d2, getLog=True)
     self.assertEqual([u'D1', u'D2'],
                      [l.Type for l in mm.getLog(order='DateTime')])
+
+  def testEnvMerge(self):
+    d1 = Data()
+    d2 = Data()
+    d1.insertEnv([EnvironmentalConditions(datetime(1970, 1, 1, tzinfo=utc),
+                                          12.5, 255, 1, u'D1', 1)])
+    d2.insertEnv([EnvironmentalConditions(datetime(1970, 1, 1, 1, tzinfo=utc),
+                                          11.5, 0, 3, u'D2', 1)])
+    mm = Merger(d1, d2, getEnv=True)
+    self.assertEqual([12.5, 11.5],
+                     [l.Temperature for l in mm.getEnvironment(order='DateTime')])
 
 if __name__ == '__main__':
   unittest.main()

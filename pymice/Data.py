@@ -43,7 +43,7 @@ from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
                     LogEntry, EnvironmentalConditions, \
-                    oldEnvironmentalConditions, oldHardwareEvent, Session
+                    oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
@@ -264,8 +264,14 @@ class Data(object):
   def _insertNewLog(self, lNodes):
     self.__log.put(lNodes)
 
-  def _insertEnvironment(self, eNodes):
-    self.__environment.put(self._newNodes(eNodes, oldEnvironmentalConditions))
+  def insertEnv(self, env):
+    newEnv = map(methodcaller('clone', IdentityManager(),
+                              IntCageManager()),
+                 env)
+    self._insertNewEnv(newEnv)
+
+  def _insertNewEnv(self, eNodes):
+    self.__environment.put(eNodes)
 
   def _insertHardware(self, hNodes):
     self.__hardware.put(self._newNodes(hNodes, oldHardwareEvent))
@@ -1071,8 +1077,7 @@ class Loader(Data):
 
 
 
-  def _loadZip(self, zf, getEnv=False,
-               getHw=False, source=None):
+  def _loadZip(self, zf, getHw=False, source=None):
     tagToAnimal = AnimalManager(self._loadAnimals(zf))
 
     try:
@@ -1192,7 +1197,7 @@ class Loader(Data):
       else: #XXX
         timeToFix.extend(log['DateTime'])
 
-    if getEnv:
+    if self._getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       if environment is not None:
         if sessions is not None:
@@ -1200,13 +1205,6 @@ class Loader(Data):
 
         else:
           timeToFix.extend(environment['DateTime'])
-
-        environment = self._makeDicts(environment)
-
-      else:
-        environment = []
-
-      result['environment'] = environment
 
     if getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
@@ -1245,6 +1243,11 @@ class Loader(Data):
       log['DateTime'] = [datetime(*x) for x in log['DateTime']]
       lNodes = visitLoader.loadLog(log)
       self._insertNewLog(lNodes)
+
+    if self._getEnv:
+      environment['DateTime'] = [datetime(*x) for x in environment['DateTime']]
+      eNodes = visitLoader.loadEnv(environment)
+      self._insertNewEnv(eNodes)
 
     return result
 
@@ -1375,12 +1378,8 @@ class Loader(Data):
         zf = zipfile.ZipFile(fname)
 
       data = self._loadZip(zf,
-                           getEnv=self._getEnv,
                            getHw=self._getHw,
                            source=fname.decode('utf-8'))
-
-      if self._getEnv:
-        self._insertEnvironment(data['environment'])
 
       if self._getHw:
         self._insertHardware(data['hardware'])
@@ -1685,7 +1684,7 @@ class Merger(Data):
     if self._getEnv:
       env = dataSource.getEnvironment()
       if env is not None:
-        self._insertEnvironment(env)
+        self.insertEnv(env)
 
     if self._getLog:
       log = dataSource.getLog()
