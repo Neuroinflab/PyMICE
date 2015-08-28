@@ -22,7 +22,7 @@
 #                                                                             #
 ###############################################################################
 
-import operator
+from operator import attrgetter
 from itertools import imap
 from datetime import timedelta
 from _Tools import toDt
@@ -37,13 +37,18 @@ def makePrivateSlots(attributes):
 
 
 class BaseNode(object):
-  attributes = ()
   __slots__ = ()
 
   class __metaclass__(type):
-    def __init__(cls, name, bases, dict):
-      type.__init__(cls, name, bases, dict)
-      cls._finishClassDefinition()
+    def __new__(mcl, name, bases, dict):
+
+      attributes = dict['__slots__']
+      slots = makePrivateSlots(attributes)
+      dict['__slots__'] = slots
+      dict.update(zip(attributes,
+                      (property(attrgetter('_' + name + s)) for s in slots)))
+
+      return type.__new__(mcl, name, bases, dict)
 
   def _del_(self):
     privatePrefix = '_' + self.__class__.__name__
@@ -53,21 +58,6 @@ class BaseNode(object):
 
       except AttributeError:
         pass
-
-  @classmethod
-  def _finishClassDefinition(cls):
-    cls._makeReadOnlyAttributes()
-
-  @classmethod
-  def _makeReadOnlyAttributes(cls):
-    privatePrefix = '_%s__' % cls.__name__
-    for attr in cls.attributes:
-      setattr(cls, attr, property(operator.attrgetter(privatePrefix + attr)))
-
-  @classmethod
-  def _finishSubclassesDefinitions(cls):
-    for subClass in cls.__subclasses__():
-      subClass._finishClassDefinition()
 
 
 class DurationAware(object):
@@ -98,8 +88,7 @@ class Animal(BaseNode):
   class DifferentMouseError(ValueError):
     pass
 
-  attributes = ('Name', 'Tag', 'Sex', 'Notes')
-  __slots__ = makePrivateSlots(attributes)
+  __slots__ = ('Name', 'Tag', 'Sex', 'Notes')
 
   def __init__(self, Name, Tag, Sex=None, Notes=None):
     self.__Name = Name
@@ -174,14 +163,43 @@ class Animal(BaseNode):
 
 
 class Visit(BaseNode, DurationAware):
-  attributes = ('Start', 'Corner', 'Animal', 'End', 'Module', 'Cage',
+  __slots__ = ('Start', 'Corner', 'Animal', 'End', 'Module', 'Cage',
                 'CornerCondition', 'PlaceError',
                 'AntennaNumber', 'AntennaDuration',
                 'PresenceNumber', 'PresenceDuration',
                 'VisitSolution',
                 '_source', '_line',
                 'Nosepokes')
-  __slots__ = makePrivateSlots(attributes)
+
+  class __metaclass__(BaseNode.__metaclass__):
+    __npSummaryProperties = [(('NosepokeDuration', 'Duration'), timedelta(0)),
+                             ('LickNumber', 0),
+                             ('LickDuration', timedelta(0)),
+                             ('LickContactTime', timedelta(0)),
+                             ]
+    def __new__(cls, name, bases, dict):
+      cls.__addNosepokeSummaryPropertiesToDict(dict)
+      return BaseNode.__metaclass__.__new__(cls, name, bases, dict)
+
+    @classmethod
+    def __addNosepokeSummaryPropertiesToDict(cls, dict):
+      dict.update(cls.__makeNosepokeSummaryPropertyPair(*propertyAttr)\
+                  for propertyAttr in cls.__npSummaryProperties)
+
+    @classmethod
+    def __makeNosepokeSummaryPropertyPair(cls, arg, start):
+      propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
+      return propName, cls.__makeNosepokeAggregativeProperty(attrName, start)
+
+    @staticmethod
+    def __makeNosepokeAggregativeProperty(attr, start):
+      npAttrGetter = attrgetter(attr)
+      def propertyGetter(self):
+        nosepokes = self._Visit__Nosepokes
+        if nosepokes is not None:
+          return sum(imap(npAttrGetter, nosepokes), start)
+
+      return property(propertyGetter)
 
   def __init__(self, Start, Corner, Animal, End=None, Module=None, Cage=None,
                CornerCondition=None, PlaceError=None,
@@ -237,34 +255,7 @@ class Visit(BaseNode, DurationAware):
       return len(self.__Nosepokes)
 
 
-  @classmethod
-  def _finishClassDefinition(cls):
-    cls._makeReadOnlyAttributes()
-    cls._makeNosepokeAggregativeProperties()
 
-  @classmethod
-  def _makeNosepokeAggregativeProperties(cls):
-    for propertyAttr in [(('NosepokeDuration', 'Duration'), timedelta(0)),
-                         ('LickNumber', 0),
-                         ('LickDuration', timedelta(0)),
-                         ('LickContactTime', timedelta(0)),
-                        ]:
-      cls.__setNosepokeAggregativeProperty(*propertyAttr)
-
-  @classmethod
-  def __setNosepokeAggregativeProperty(cls, arg, start):
-    propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
-    setattr(cls, propName, cls.__makeNosepokeAggregativeProperty(attrName, start))
-
-  @staticmethod
-  def __makeNosepokeAggregativeProperty(attr, start):
-    npAttrGetter = operator.attrgetter(attr)
-    def propertyGetter(self):
-      nosepokes = self._Visit__Nosepokes
-      if nosepokes is not None:
-        return sum(imap(npAttrGetter, nosepokes), start)
-
-    return property(propertyGetter)
 
   def __repr__(self):
     return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
@@ -273,14 +264,13 @@ class Visit(BaseNode, DurationAware):
 
 
 class Nosepoke(BaseNode, SideAware, DurationAware):
-  attributes = ('Start', 'End', 'Side',
+  __slots__ = ('Start', 'End', 'Side',
                 'LickNumber', 'LickContactTime', 'LickDuration',
                 'SideCondition', 'SideError', 'TimeError', 'ConditionError',
                 'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',
                 '_source', '_line',
                 'Visit',
                 )
-  __slots__ = makePrivateSlots(attributes)
 
   def __init__(self, Start, End, Side,
                LickNumber, LickContactTime, LickDuration,
@@ -323,10 +313,9 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
 
 
 class LogEntry(BaseNode, SideAware):
-  attributes = ('DateTime', 'Category', 'Type',
+  __slots__ = ('DateTime', 'Category', 'Type',
                 'Cage', 'Corner', 'Side', 'Notes',
                 '_source', '_line')
-  __slots__ = makePrivateSlots(attributes)
 
   def __init__(self, DateTime, Category, Type,
                      Cage, Corner, Side, Notes, _source, _line):
@@ -368,9 +357,8 @@ class LogEntry(BaseNode, SideAware):
 
 
 class EnvironmentalConditions(BaseNode):
-  attributes = ('DateTime', 'Temperature', 'Illumination', 'Cage',
+  __slots__ = ('DateTime', 'Temperature', 'Illumination', 'Cage',
                 '_source', '_line')
-  __slots__ = makePrivateSlots(attributes)
 
   def __init__(self, DateTime, Temperature, Illumination, Cage,
                _source, _line):
