@@ -40,15 +40,15 @@ class BaseNode(object):
   __slots__ = ()
 
   class __metaclass__(type):
-    def __new__(mcl, name, bases, dict):
+    def __new__(mcl, name, bases, attrs):
 
-      attributes = dict['__slots__']
+      attributes = attrs['__slots__']
       slots = makePrivateSlots(attributes)
-      dict['__slots__'] = slots
-      dict.update(zip(attributes,
+      attrs['__slots__'] = slots
+      attrs.update(zip(attributes,
                       (property(attrgetter('_' + name + s)) for s in slots)))
 
-      return type.__new__(mcl, name, bases, dict)
+      return type.__new__(mcl, name, bases, attrs)
 
   def _del_(self):
     privatePrefix = '_' + self.__class__.__name__
@@ -177,9 +177,9 @@ class Visit(BaseNode, DurationAware):
                              ('LickDuration', timedelta(0)),
                              ('LickContactTime', timedelta(0)),
                              ]
-    def __new__(cls, name, bases, dict):
-      cls.__addNosepokeSummaryPropertiesToDict(dict)
-      return BaseNode.__metaclass__.__new__(cls, name, bases, dict)
+    def __new__(cls, name, bases, attrs):
+      cls.__addNosepokeSummaryPropertiesToDict(attrs)
+      return BaseNode.__metaclass__.__new__(cls, name, bases, attrs)
 
     @classmethod
     def __addNosepokeSummaryPropertiesToDict(cls, dict):
@@ -383,8 +383,58 @@ class EnvironmentalConditions(BaseNode):
             getTimeString(self.__DateTime))
 
 
-class HardwareEvent():
-  pass
+class HardwareEvent(BaseNode, SideAware):
+  class HEType(int):
+    __objectCache = {}
+    __toString = {0: 'Air',
+                  1: 'Door',
+                  2: 'Led',}
+    __fromString = dict((v, k) for k, v in __toString.items())
+
+    def __new__(cls, value):
+      try:
+        return cls.__objectCache[value]
+
+      except KeyError:
+        try:
+          iValue = int(value)
+
+        except ValueError:
+          iValue = cls.__fromString[value]
+
+        try:
+          obj = cls.__objectCache[iValue]
+
+        except KeyError:
+          obj = int.__new__(cls, iValue)
+          cls.__objectCache[iValue] = obj
+
+        cls.__objectCache[value] = obj
+        return obj
+
+    def __str__(self):
+      try:
+        return self.__toString[self]
+
+      except KeyError:
+        return '_Unknown'
+
+    def __repr__(self):
+      return '< %s(%d): %s >' % (self.__class__.__name__, self, self)
+
+  __slots__ = ('DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State',
+               '_source', '_line')
+
+  def __init__(self, DateTime, Type, Cage, Corner, Side, State,
+               _source, _line):
+    self.__DateTime = DateTime
+    self.__Type = self.HEType(Type)
+    self.__Cage = Cage
+    self.__Corner = Corner
+    self.__Side = Side
+    self.__State = State
+    self.___source = _source
+    self.___line = _line
 
 
 

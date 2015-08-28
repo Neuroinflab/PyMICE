@@ -527,5 +527,67 @@ class TestEnvironmentalConditions(ICNodeTest):
                      '< Illumination:   0, Temperature:  1.0 (at 1970-01-01 00:00:00.000) >')
 
 
+class HardwareEventTest(ICNodeTest):
+  attributes = ('DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State',
+               '_source', '_line')
+  def setUp(self):
+    self.time = datetime(1970, 1, 1, tzinfo=utc)
+    self.hws = [HardwareEvent(self.time, 0, 2, 1, 1, 0,
+                              'src1', 123),
+                HardwareEvent(self.time, 1, 3, 2, 4, 1,
+                              'src2', 124),
+                HardwareEvent(self.time, 2, 4, 3, None, 0,
+                              'src3', 125),
+                HardwareEvent(self.time, 3, 5, 4, None, 1,
+                              'src4', 126)]
+
+  def testCreate(self):
+    n = len(self.hws)
+    ns = range(1, n + 1)
+    for name, tests in [('DateTime', [self.time] * n),
+                        ('Type', range(n)),
+                        ('Cage', [1 + i for i in ns]),
+                        ('Corner', ns),
+                        ('Side', [1, 4, None, None]),
+                        ('State', [0, 1, 0, 1]),
+                        ('_source', ['src%d' %i for i in ns]),
+                        ('_line', [122 + i for i in ns])]:
+      self.checkAttributeSeq(self.hws, name, tests)
+
+  def testSlots(self):
+    for hw in self.hws:
+      self.checkSlots(hw)
+
+  def testReadOnly(self):
+    for hw in self.hws:
+      self.checkReadOnly(hw)
+
+  def testDel(self):
+    for hw in self.hws:
+      self.checkDel(hw)
+
+  def testDoor(self):
+    self.checkAttributeSeq(self.hws, 'Door', ['left', 'right', None, None])
+
+  # TODO: move to FromRow
+  def testType(self):
+    types = [h.Type for h in self.hws]
+    self.assertEqual(map(str, types), ['Air', 'Door', 'Led', '_Unknown'])
+    self.assertEqual(map(unicode, types), ['Air', 'Door', 'Led', '_Unknown'])
+    self.assertEqual(map(repr, types), ['< HEType(0): Air >',
+                                        '< HEType(1): Door >',
+                                        '< HEType(2): Led >',
+                                        '< HEType(3): _Unknown >'])
+    newTypes = map(HardwareEvent.HEType, range(4))
+    for a, b in zip(types, newTypes):
+      self.assertIs(a, b)
+
+    self.assertIs(HardwareEvent.HEType(1), HardwareEvent.HEType('1'))
+    newTypes = map(HardwareEvent.HEType, ['Air', 'Door', 'Led',])
+    for a, b in zip(types, newTypes):
+      self.assertIs(a, b)
+
+
+
 if __name__ == '__main__':
   unittest.main()
