@@ -37,7 +37,13 @@ def makePrivateSlots(attributes):
 
 
 class BaseNode(object):
+  attributes = ()
   __slots__ = ()
+
+  class __metaclass__(type):
+    def __init__(cls, name, bases, dict):
+      type.__init__(cls, name, bases, dict)
+      cls._finishClassDefinition()
 
   def _del_(self):
     privatePrefix = '_' + self.__class__.__name__
@@ -389,7 +395,9 @@ class EnvironmentalConditions(BaseNode):
             getTimeString(self.__DateTime))
 
 
-BaseNode._finishSubclassesDefinitions()
+class HardwareEvent():
+  pass
+
 
 
 # TODO

@@ -27,7 +27,8 @@ from datetime import datetime, timedelta
 
 from pytz import utc
 
-from ICNodes import Animal, Visit, Nosepoke, LogEntry, EnvironmentalConditions
+from ICNodes import Animal, Visit, Nosepoke, \
+                    LogEntry, EnvironmentalConditions, HardwareEvent
 from _TestTools import allInstances, Mock, MockIntDictManager, \
                        MockCageManager, MockStrDictManager, MockCloneable, \
                        BaseTest
