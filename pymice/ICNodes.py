@@ -51,13 +51,18 @@ class BaseNode(object):
       return type.__new__(mcl, name, bases, attrs)
 
   def _del_(self):
-    privatePrefix = '_' + self.__class__.__name__
-    for attr in self.__slots__:
-      try:
-        delattr(self, privatePrefix + attr)
+    for cls in self.__class__.__mro__:
+      if not hasattr(cls, '__slots__'):
+        continue
 
-      except AttributeError:
-        pass
+      privatePrefix = '_' + cls.__name__
+
+      for attr in cls.__slots__:
+        try:
+          delattr(self, privatePrefix + attr if attr.startswith('__') else attr)
+
+        except AttributeError:
+          pass
 
 
 class DurationAware(object):
@@ -384,43 +389,19 @@ class EnvironmentalConditions(BaseNode):
 
 
 class HardwareEvent(BaseNode, SideAware):
-  class HEType(int):
-    __objectCache = {}
-    __toString = {0: 'Air',
-                  1: 'Door',
-                  2: 'Led',}
-    __fromString = dict((v, k) for k, v in __toString.items())
-
-    def __new__(cls, value):
-      try:
-        return cls.__objectCache[value]
-
-      except KeyError:
-        try:
-          iValue = int(value)
-
-        except ValueError:
-          iValue = cls.__fromString[value]
-
-        try:
-          obj = cls.__objectCache[iValue]
-
-        except KeyError:
-          obj = int.__new__(cls, iValue)
-          cls.__objectCache[iValue] = obj
-
-        cls.__objectCache[value] = obj
-        return obj
-
-    def __str__(self):
-      try:
-        return self.__toString[self]
-
-      except KeyError:
-        return '_Unknown'
-
-    def __repr__(self):
-      return '< %s(%d): %s >' % (self.__class__.__name__, self, self)
+  # class HEType(int):
+  #   __slots__ = ('__text',)
+  #
+  #   def __new__(cls, value, text='_Unknown'):
+  #     obj = int.__new__(cls, value)
+  #     obj.__text = text
+  #     return obj
+  #
+  #   def __str__(self):
+  #     return self.__text
+  #
+  #   def __repr__(self):
+  #     return '< %s(%d): %s >' % (self.__class__.__name__, self, self)
 
   __slots__ = ('DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State',
                '_source', '_line')
@@ -428,7 +409,7 @@ class HardwareEvent(BaseNode, SideAware):
   def __init__(self, DateTime, Type, Cage, Corner, Side, State,
                _source, _line):
     self.__DateTime = DateTime
-    self.__Type = self.HEType(Type)
+    self.__Type = Type
     self.__Cage = Cage
     self.__Corner = Corner
     self.__Side = Side
@@ -436,7 +417,53 @@ class HardwareEvent(BaseNode, SideAware):
     self.___source = _source
     self.___line = _line
 
+  def clone(self, sourceManager, cageManager):
+    return self.__class__(self.__DateTime,
+                          self.__Type,
+                          cageManager.get(self.__Cage),
+                          self.__Corner,
+                          self.__Side,
+                          self.__State,
+                          sourceManager.get(self.___source),
+                          self.___line)
 
+  def __repr__(self):
+    return '< HardwareEvent %s: %d (at %s) >' % \
+           (self.Type, self.State, getTimeString(self.DateTime))
+
+
+class AirHardwareEvent(HardwareEvent):
+  Type = 0 #HardwareEvent.HEType(0, 'Air')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< AirEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class DoorHardwareEvent(HardwareEvent):
+  Type = 1 #HardwareEvent.HEType(1, 'Door')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< DoorEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class LedHardwareEvent(HardwareEvent):
+  Type = 2 #HardwareEvent.HEType(2, 'Led')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< LedEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class UnknownHardwareEvent(HardwareEvent):
+  __slots__ = ()
+  def __repr__(self):
+    return '< UnknownHardwareEvent(%d): %d (at %s) >' % \
+           (self.Type, self.State, getTimeString(self.DateTime))
 
 # TODO
 

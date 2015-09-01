@@ -26,7 +26,10 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc
 
-from Data import ZipLoader, Data, Merger, LogEntry, EnvironmentalConditions
+from Data import ZipLoader, Data, Merger, LogEntry, EnvironmentalConditions, \
+                 AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent, \
+                 UnknownHardwareEvent
+
 
 from _TestTools import Mock, MockCageManager, \
                        MockStrDictManager, BaseTest
@@ -443,11 +446,56 @@ class TestZipLoader(BaseTest):
     for name, tests in [('DateTime', times),
                         ('Temperature', temperature),
                         ('Illumination', illumination),
-                        ('Cage', cages)]:
+                        ('Cage', cages),
+                        ('_source', [self.source] * 2),
+                        ('_line', [1, 2])]:
       self.checkAttributeSeq(envs, name, tests)
 
     for e in envs:
       self.assertIs(e.Cage, self.cageManager.items[e.Cage])
+
+
+  def testLoadEmptyHw(self):
+    self.assertEqual(self.loader.loadHw({
+                     'DateTime': [],
+                     'Type': [],
+                     'Cage': [],
+                     'Corner': [],
+                     'Side': [],
+                     'State': [],
+                     }),
+                     [])
+
+  def testLoadHw(self):
+    n = 4
+    times = [datetime(1970, 1, 1, tzinfo=utc)] * n
+    types = range(n)
+    cages = range(1, n + 1)
+    corners = [1 + i % 4 for i in range(n)]
+    sides = [None] + [(1 + i % 4) * 2 - i % 2 for i in range(1, n)]
+    states = [i % 2 for i in range(n)]
+    hwTypes = [AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent] \
+              + [UnknownHardwareEvent] * (n - 3)
+    hws = self.loader.loadHw({'DateTime': times,
+                              'Type': toStrings(types),
+                              'Cage': toStrings(cages),
+                              'Corner': toStrings(corners),
+                              'Side': toStrings(sides),
+                              'State': toStrings(states),
+                              })
+    self.assertEquals(len(hws), n)
+    for name, tests in [('DateTime', times),
+                        ('Type', types),
+                        ('Cage', cages),
+                        ('Corner', corners),
+                        ('Side', sides),
+                        ('State', states),
+                        ('_source', [self.source] * n),
+                        ('_line', range(1, n + 1))]:
+      self.checkAttributeSeq(hws, name, tests)
+
+    for hw, hwType in zip(hws, hwTypes):
+      self.assertIsInstance(hw, hwType)
 
 
 class MergerTest(unittest.TestCase):

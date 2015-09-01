@@ -47,7 +47,8 @@ from itertools import izip, repeat, islice, imap
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
                     LogEntry, EnvironmentalConditions, \
-                    oldHardwareEvent, Session
+                    AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,\
+                    UnknownHardwareEvent, oldHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
@@ -1872,16 +1873,13 @@ class ZipLoader(object):
                     _line)
 
   def loadLog(self, columns):
-    colValues = map(columns.get,
-                    ['DateTime',
-                     'LogCategory',
-                     'LogType',
-                     'Cage',
-                     'Corner',
-                     'Side',
-                     'LogNotes'])
-    n = max(map(len, colValues))
-    colValues.append(range(1, n+1))
+    colValues = self._getColumnValues(['DateTime',
+                                       'LogCategory',
+                                       'LogType',
+                                       'Cage',
+                                       'Corner',
+                                       'Side',
+                                       'LogNotes'], columns)
     return map(self.__makeLog, *colValues)
 
   def __makeEnv(self, DateTime, Temperature, Illumination, Cage,
@@ -1893,13 +1891,44 @@ class ZipLoader(object):
                                    self.__source, _line)
 
   def loadEnv(self, columns):
-    colValues = map(columns.get, ['DateTime',
-                                  'Temperature',
-                                  'Illumination',
-                                  'Cage'])
-    n = max(map(len, colValues))
-    colValues.append(range(1, n+1))
+    colValues = self._getColumnValues(['DateTime',
+                                       'Temperature',
+                                       'Illumination',
+                                       'Cage'], columns)
     return map(self.__makeEnv, *colValues)
+
+  __hwClass = {'0': AirHardwareEvent,
+               '1': DoorHardwareEvent,
+               '2': LedHardwareEvent,
+               }
+
+  def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
+    try:
+      cls = self.__hwClass[Type]
+
+    except KeyError:
+      cls = UnknownHardwareEvent
+
+    return cls(DateTime, int(Type), int(Cage), int(Corner),
+               int(Side) if Side is not None else None,
+               int(State), self.__source, _line)
+
+  def loadHw(self, columns):
+    colValues = self._getColumnValues(['DateTime',
+                                       'Type',
+                                       'Cage',
+                                       'Corner',
+                                       'Side',
+                                       'State'], columns)
+    return map(self.__makeHw, *colValues)
+
+  def _getColumnValues(self, columnNames, columns):
+    colValues = map(columns.get,
+                    columnNames)
+    n = max(map(len, colValues))
+    colValues.append(range(1, n + 1))
+    return colValues
+
 
 if __name__ == '__main__':
   import doctest
