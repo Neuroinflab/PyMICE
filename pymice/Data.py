@@ -48,7 +48,7 @@ from datetime import datetime, timedelta, MINYEAR
 from ICNodes import Animal, Group, Visit, Nosepoke, \
                     LogEntry, EnvironmentalConditions, \
                     AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,\
-                    UnknownHardwareEvent, oldHardwareEvent, Session
+                    UnknownHardwareEvent, Session
 
 from _Tools import timeString, ensureFloat, ensureInt, \
                    convertTime, timeToList, \
@@ -277,8 +277,14 @@ class Data(object):
   def _insertNewEnv(self, eNodes):
     self.__environment.put(eNodes)
 
-  def _insertHardware(self, hNodes):
-    self.__hardware.put(self._newNodes(hNodes, oldHardwareEvent))
+  def insertHw(self, hardwareEvents):
+    newHw = map(methodcaller('clone', IdentityManager(),
+                              IntCageManager()),
+                hardwareEvents)
+    self._insertNewHw(newHw)
+
+  def _insertNewHw(self, hNodes):
+    self.__hardware.put(hNodes)
 
   def _insertVisits(self, visits):
     newVisits = map(methodcaller('clone', IdentityManager(),
@@ -1080,7 +1086,6 @@ class Loader(Data):
     self._logAnalysis(logAnalyzers)
 
 
-
   def _loadZip(self, zf, getHw=False, source=None):
     tagToAnimal = AnimalManager(self._loadAnimals(zf))
 
@@ -1214,7 +1219,7 @@ class Loader(Data):
         else:
           timeToFix.extend(environment['DateTime'])
 
-    if getHw:
+    if self._getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
       if hardware is not None:
         if sessions is not None:
@@ -1223,12 +1228,12 @@ class Loader(Data):
         else: #XXX
           timeToFix.extend(hardware['DateTime'])
 
-        hardware = self._makeDicts(hardware)
+        #hardware = self._makeDicts(hardware)
 
-      else:
-        hardware = []
+      #else:
+      #  hardware = []
 
-      result['hardware'] = hardware
+      #result['hardware'] = hardware
 
     #XXX important only when timezone changes!
     if sessions is not None:
@@ -1257,14 +1262,12 @@ class Loader(Data):
       eNodes = visitLoader.loadEnv(environment)
       self._insertNewEnv(eNodes)
 
+    if self._getHw:
+      hardware['DateTime'] = [datetime(*x) for x in hardware['DateTime']]
+      hNodes = visitLoader.loadHw(hardware)
+      self._insertNewHw(hNodes)
+
     return result
-
-  @staticmethod
-  def _makeDicts(data):
-    keys = data.keys()
-    data = [data[k] for k in keys]
-    return [dict(zip(keys, values)) for values in zip(*data)]
-
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     try:
@@ -1698,7 +1701,7 @@ class Merger(Data):
     if self._getHw:
       hardware = dataSource.getHardwareEvents()
       if hardware is not None:
-        self._insertHardware(hardware)
+        self.insertHw(hardware)
 
     if self._getEnv:
       env = dataSource.getEnvironment()
@@ -1904,14 +1907,15 @@ class ZipLoader(object):
 
   def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
     try:
-      cls = self.__hwClass[Type]
+      return self.__hwClass[Type](DateTime, int(Cage), int(Corner),
+                                  int(Side) if Side is not None else None,
+                                  int(State), self.__source, _line)
 
     except KeyError:
-      cls = UnknownHardwareEvent
+      return UnknownHardwareEvent(DateTime, int(Type), int(Cage), int(Corner),
+                                  int(Side) if Side is not None else None,
+                                  int(State), self.__source, _line)
 
-    return cls(DateTime, int(Type), int(Cage), int(Corner),
-               int(Side) if Side is not None else None,
-               int(State), self.__source, _line)
 
   def loadHw(self, columns):
     colValues = self._getColumnValues(['DateTime',

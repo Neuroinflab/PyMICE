@@ -499,33 +499,42 @@ class TestZipLoader(BaseTest):
 
 
 class MergerTest(unittest.TestCase):
+  def setUp(self):
+    self.d1 = Data()
+    self.d2 = Data()
+    self.time1 = datetime(1970, 1, 1, tzinfo=utc)
+    self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
+
   def testLogMerge(self):
-    d1 = Data()
-    d2 = Data()
-    d1.insertLog([LogEntry(datetime(1970, 1, 1, tzinfo=utc),
-                           u'Test', u'D1',
-                           1, 2, 3,
-                           u'Note',
-                           u'D1', 1)])
-    d2.insertLog([LogEntry(datetime(1970, 1, 1, 1, tzinfo=utc),
-                           u'Test', u'D2',
-                           1, 2, 3,
-                           u'Note',
-                           u'D2', 1)])
-    mm = Merger(d1, d2, getLog=True)
+    self.d1.insertLog([LogEntry(self.time1,
+                                u'Test', u'D1',
+                                1, 2, 3,
+                                u'Note',
+                                u'D1', 1)])
+    self.d2.insertLog([LogEntry(self.time2,
+                                u'Test', u'D2',
+                                1, 2, 3,
+                                u'Note',
+                                u'D2', 1)])
+    mm = Merger(self.d1, self.d2, getLog=True)
     self.assertEqual([u'D1', u'D2'],
                      [l.Type for l in mm.getLog(order='DateTime')])
 
   def testEnvMerge(self):
-    d1 = Data()
-    d2 = Data()
-    d1.insertEnv([EnvironmentalConditions(datetime(1970, 1, 1, tzinfo=utc),
-                                          12.5, 255, 1, u'D1', 1)])
-    d2.insertEnv([EnvironmentalConditions(datetime(1970, 1, 1, 1, tzinfo=utc),
-                                          11.5, 0, 3, u'D2', 1)])
-    mm = Merger(d1, d2, getEnv=True)
+    self.d1.insertEnv([EnvironmentalConditions(self.time1,
+                                               12.5, 255, 1, u'D1', 1)])
+    self.d2.insertEnv([EnvironmentalConditions(self.time2,
+                                               11.5, 0, 3, u'D2', 1)])
+    mm = Merger(self.d1, self.d2, getEnv=True)
     self.assertEqual([12.5, 11.5],
                      [l.Temperature for l in mm.getEnvironment(order='DateTime')])
+
+  def testHwMerge(self):
+    self.d1.insertHw([UnknownHardwareEvent(self.time2, 42, 1, 2, 3, 44, u'D1', 1)])
+    self.d2.insertHw([AirHardwareEvent(self.time1, 1, 2, 3, 1, u'D2', 1)])
+    mm = Merger(self.d1, self.d2, getHw=True)
+    self.assertEqual([u'D2', u'D1'],
+                     [h._source for h in mm.getHardwareEvents(order='DateTime')])
 
 if __name__ == '__main__':
   unittest.main()

@@ -389,20 +389,75 @@ class EnvironmentalConditions(BaseNode):
 
 
 class HardwareEvent(BaseNode, SideAware):
-  # class HEType(int):
-  #   __slots__ = ('__text',)
-  #
-  #   def __new__(cls, value, text='_Unknown'):
-  #     obj = int.__new__(cls, value)
-  #     obj.__text = text
-  #     return obj
-  #
-  #   def __str__(self):
-  #     return self.__text
-  #
-  #   def __repr__(self):
-  #     return '< %s(%d): %s >' % (self.__class__.__name__, self, self)
+  __slots__ = ()
 
+
+class NamedInt(int):
+  __slots__ = ('__text',)
+
+  def __new__(cls, value, text='_Unknown'):
+    obj = int.__new__(cls, value)
+    obj.__text = text
+    return obj
+
+  def __str__(self):
+    return self.__text
+
+  def __repr__(self):
+    return '%s(%d, %s)' % (self.__class__.__name__, self, repr(self.__text))
+
+
+class KnownHardwareEvent(HardwareEvent):
+  __slots__ = ('DateTime', 'Cage', 'Corner', 'Side', 'State',
+               '_source', '_line')
+
+  def __init__(self, DateTime, Cage, Corner, Side, State, _source, _line):
+    self.__DateTime = DateTime
+    self.__Cage = Cage
+    self.__Corner = Corner
+    self.__Side = Side
+    self.__State = State
+    self.___source = _source
+    self.___line = _line
+
+  def clone(self, sourceManager, cageManager):
+    return self.__class__(self.__DateTime,
+                          cageManager.get(self.__Cage),
+                          self.__Corner,
+                          self.__Side,
+                          self.__State,
+                          sourceManager.get(self.___source),
+                          self.___line)
+
+
+class AirHardwareEvent(KnownHardwareEvent):
+  Type = NamedInt(0, 'Air')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< AirEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class DoorHardwareEvent(KnownHardwareEvent):
+  Type = NamedInt(1, 'Door')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< DoorEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class LedHardwareEvent(KnownHardwareEvent):
+  Type = NamedInt(2, 'LED')
+  __slots__ = ()
+
+  def __repr__(self):
+    return '< LedEvent: %d (at %s) >' % \
+           (self.State, getTimeString(self.DateTime))
+
+
+class UnknownHardwareEvent(HardwareEvent):
   __slots__ = ('DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State',
                '_source', '_line')
 
@@ -418,49 +473,15 @@ class HardwareEvent(BaseNode, SideAware):
     self.___line = _line
 
   def clone(self, sourceManager, cageManager):
-    return self.__class__(self.__DateTime,
-                          self.__Type,
-                          cageManager.get(self.__Cage),
-                          self.__Corner,
-                          self.__Side,
-                          self.__State,
-                          sourceManager.get(self.___source),
-                          self.___line)
+    return UnknownHardwareEvent(self.__DateTime,
+                                self.__Type,
+                                cageManager.get(self.__Cage),
+                                self.__Corner,
+                                self.__Side,
+                                self.__State,
+                                sourceManager.get(self.___source),
+                                self.___line)
 
-  def __repr__(self):
-    return '< HardwareEvent %s: %d (at %s) >' % \
-           (self.Type, self.State, getTimeString(self.DateTime))
-
-
-class AirHardwareEvent(HardwareEvent):
-  Type = 0 #HardwareEvent.HEType(0, 'Air')
-  __slots__ = ()
-
-  def __repr__(self):
-    return '< AirEvent: %d (at %s) >' % \
-           (self.State, getTimeString(self.DateTime))
-
-
-class DoorHardwareEvent(HardwareEvent):
-  Type = 1 #HardwareEvent.HEType(1, 'Door')
-  __slots__ = ()
-
-  def __repr__(self):
-    return '< DoorEvent: %d (at %s) >' % \
-           (self.State, getTimeString(self.DateTime))
-
-
-class LedHardwareEvent(HardwareEvent):
-  Type = 2 #HardwareEvent.HEType(2, 'Led')
-  __slots__ = ()
-
-  def __repr__(self):
-    return '< LedEvent: %d (at %s) >' % \
-           (self.State, getTimeString(self.DateTime))
-
-
-class UnknownHardwareEvent(HardwareEvent):
-  __slots__ = ()
   def __repr__(self):
     return '< UnknownHardwareEvent(%d): %d (at %s) >' % \
            (self.Type, self.State, getTimeString(self.DateTime))
@@ -554,30 +575,6 @@ class Session(DataNode):
 
 
 # TODO
-class oldHardwareEvent(DataNode, SideAware):
-  _baseAttrs = ['DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State']
-  __typeMapping = {0: 'Air',
-                   1: 'Door',
-                   2: 'LED',
-                   }
-
-  def __init__(self, DateTime, Type=None, Cage=None, Corner=None, Side=None, State=None,
-               **kwargs):
-    DataNode.__init__(self, **kwargs)
-    self.DateTime = toDt(DateTime)
-    self.Type = self.__typeMapping[int(Type)] if Type is not None else None
-    self.Cage = int(Cage) if Cage is not None else None
-    self.Corner = int(Corner) if Corner is not None else None
-    self.Side = int(Side) if Side is not None else None
-    self.State = int(State) if State is not None else None
-
-  def __repr__(self):
-    side = '' if self.Side is None else ', %5s side' % self.Door
-    return '< HardwareEvent %s: %d in cage #%d, corner #%d%s (at %s) >' % \
-           (self.Type, self.State, self.Cage, self.Corner, side,
-            getTimeString(self.DateTime))
-
-
 class Group(DataNode):
   _baseAttrs = ['Name', 'Animals']
   _keys = ['Name']

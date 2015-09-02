@@ -28,9 +28,9 @@ from datetime import datetime, timedelta
 from pytz import utc
 
 from ICNodes import Animal, Visit, Nosepoke, \
-                    LogEntry, EnvironmentalConditions, HardwareEvent, \
+                    LogEntry, EnvironmentalConditions, \
                     AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent, \
-                    UnknownHardwareEvent
+                    UnknownHardwareEvent, NamedInt
 from _TestTools import allInstances, Mock, MockIntDictManager, \
                        MockCageManager, MockStrDictManager, MockCloneable, \
                        BaseTest
@@ -531,27 +531,22 @@ class TestEnvironmentalConditions(ICNodeTest):
                      '< Illumination:   0, Temperature:  1.0 (at 1970-01-01 00:00:00.000) >')
 
 
-class HardwareEventTest(ICNodeTest):
-  cls = HardwareEvent
-  attributes = ('DateTime', 'Type', 'Cage', 'Corner', 'Side', 'State',
-               '_source', '_line')
-  reprs = ['< HardwareEvent 0: 0 (at 1970-01-01 00:00:00.000) >',
-           '< HardwareEvent 1: 1 (at 1970-01-01 00:00:00.000) >',
-           '< HardwareEvent 2: 0 (at 1970-01-01 00:00:00.000) >',
-           '< HardwareEvent 3: 1 (at 1970-01-01 00:00:00.000) >',]
+
+class HardwareEventTest(object):
+  attributes = ('DateTime', 'Cage', 'Corner', 'Side', 'State',
+                '_source', '_line')
 
   def setUp(self):
     self.time = datetime(1970, 1, 1, tzinfo=utc)
-    self.hws = [self.cls(self.time, 0, 2, 1, 1, 0, 'src1', 123),
-                self.cls(self.time, 1, 3, 2, 4, 1, 'src2', 124),
-                self.cls(self.time, 2, 4, 3, None, 0, 'src3', 125),
-                self.cls(self.time, 3, 5, 4, None, 1, 'src4', 126)]
+    self.hws = [self.cls(self.time, 2, 1, 1, 0, 'src1', 123),
+                self.cls(self.time, 3, 2, 4, 1, 'src2', 124),
+                self.cls(self.time, 4, 3, None, 0, 'src3', 125),
+                self.cls(self.time, 5, 4, None, 1, 'src4', 126)]
 
   def testCreate(self):
     n = len(self.hws)
     ns = range(1, n + 1)
     for name, tests in [('DateTime', [self.time] * n),
-                        # ('Type', range(n)),
                         ('Cage', [1 + i for i in ns]),
                         ('Corner', ns),
                         ('Side', [1, 4, None, None]),
@@ -561,9 +556,6 @@ class HardwareEventTest(ICNodeTest):
       self.checkAttributeSeq(self.hws, name, tests)
 
     self._checkTypeAttr()
-
-  def _checkTypeAttr(self):
-    self.checkAttributeSeq(self.hws, 'Type', range(len(self.hws)))
 
   def testSlots(self):
     for hw in self.hws:
@@ -595,53 +587,75 @@ class HardwareEventTest(ICNodeTest):
     for hw, hwRepr in zip(self.hws, self.reprs):
       self.assertEqual(repr(hw), hwRepr)
 
-  # TODO: move to FromRow
-  # def testType(self):
-  #   types = [h.Type for h in self.hws]
-  #   self.assertEqual(map(str, types), ['Air', 'Door', 'Led', '_Unknown'])
-  #   self.assertEqual(map(unicode, types), ['Air', 'Door', 'Led', '_Unknown'])
-  #   self.assertEqual(map(repr, types), ['< HEType(0): Air >',
-  #                                       '< HEType(1): Door >',
-  #                                       '< HEType(2): Led >',
-  #                                       '< HEType(3): _Unknown >'])
-
-
-class HardwareEventSuccessorTest(object):
   def _checkTypeAttr(self):
     Type = self.hws[0].Type
     for hw in self.hws:
       self.assertIs(hw.Type, Type)
 
+    self.assertEqual(self.typeStr, str(Type))
 
-class AirEventTest(HardwareEventSuccessorTest, HardwareEventTest):
+
+class AirEventTest(HardwareEventTest, ICNodeTest):
   cls = AirHardwareEvent
+  typeStr = 'Air'
   reprs = ['< AirEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< AirEvent: 1 (at 1970-01-01 00:00:00.000) >',
            '< AirEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< AirEvent: 1 (at 1970-01-01 00:00:00.000) >',]
 
 
-class DoorEventTest(HardwareEventSuccessorTest, HardwareEventTest):
+class DoorEventTest(HardwareEventTest, ICNodeTest):
   cls = DoorHardwareEvent
+  typeStr = 'Door'
   reprs = ['< DoorEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< DoorEvent: 1 (at 1970-01-01 00:00:00.000) >',
            '< DoorEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< DoorEvent: 1 (at 1970-01-01 00:00:00.000) >',]
 
 
-class LedEventTest(HardwareEventSuccessorTest, HardwareEventTest):
+class LedEventTest(HardwareEventTest, ICNodeTest):
   cls = LedHardwareEvent
+  typeStr = 'LED'
   reprs = ['< LedEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< LedEvent: 1 (at 1970-01-01 00:00:00.000) >',
            '< LedEvent: 0 (at 1970-01-01 00:00:00.000) >',
            '< LedEvent: 1 (at 1970-01-01 00:00:00.000) >',]
 
-class LedEventTest(HardwareEventTest):
+
+class UnknownEventTest(HardwareEventTest, ICNodeTest):
+  attributes = HardwareEventTest.attributes + ('Type',)
+  def setUp(self):
+    self.time = datetime(1970, 1, 1, tzinfo=utc)
+    self.hws = [self.cls(self.time, 0, 2, 1, 1, 0, 'src1', 123),
+                self.cls(self.time, 1, 3, 2, 4, 1, 'src2', 124),
+                self.cls(self.time, 2, 4, 3, None, 0, 'src3', 125),
+                self.cls(self.time, 3, 5, 4, None, 1, 'src4', 126)]
+
   cls = UnknownHardwareEvent
   reprs = ['< UnknownHardwareEvent(0): 0 (at 1970-01-01 00:00:00.000) >',
            '< UnknownHardwareEvent(1): 1 (at 1970-01-01 00:00:00.000) >',
            '< UnknownHardwareEvent(2): 0 (at 1970-01-01 00:00:00.000) >',
            '< UnknownHardwareEvent(3): 1 (at 1970-01-01 00:00:00.000) >',]
+
+  def _checkTypeAttr(self):
+    self.checkAttributeSeq(self.hws, 'Type', range(len(self.hws)))
+
+
+class NamedIntTest(unittest.TestCase):
+  def testNamedInt(self):
+    for i, name in enumerate(['', 'a', 'b', 'class']):
+      self.checkNamedInt(i, name)
+
+  def checkNamedInt(self, n, name):
+    namedInt = NamedInt(n, name)
+    self.assertEqual(n, namedInt)
+    self.assertEqual(name, str(namedInt))
+    self.assertEqual(name, unicode(namedInt))
+    namedInt2 = eval(repr(namedInt))
+    self.assertEqual(namedInt, namedInt2)
+    self.assertEqual(str(namedInt), str(namedInt2))
+
+
 
 if __name__ == '__main__':
   unittest.main()
