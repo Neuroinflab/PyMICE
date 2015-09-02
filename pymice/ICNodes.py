@@ -421,10 +421,15 @@ class KnownHardwareEvent(HardwareEvent):
     self.___line = _line
 
   def clone(self, sourceManager, cageManager):
+    corner, side = self.__Corner, self.__Side
+    cage = cageManager.get(self.__Cage)
+    if corner is not None:
+      corner = cage.get(corner)
+      if side is not None:
+        side = corner.get(side)
+
     return self.__class__(self.__DateTime,
-                          cageManager.get(self.__Cage),
-                          self.__Corner,
-                          self.__Side,
+                          cage, corner, side,
                           self.__State,
                           sourceManager.get(self.___source),
                           self.___line)
@@ -473,11 +478,16 @@ class UnknownHardwareEvent(HardwareEvent):
     self.___line = _line
 
   def clone(self, sourceManager, cageManager):
+    corner, side = self.__Corner, self.__Side
+    cage = cageManager.get(self.__Cage)
+    if corner is not None:
+      corner = cage.get(corner)
+      if side is not None:
+        side = corner.get(side)
+
     return UnknownHardwareEvent(self.__DateTime,
                                 self.__Type,
-                                cageManager.get(self.__Cage),
-                                self.__Corner,
-                                self.__Side,
+                                cage, corner, side,
                                 self.__State,
                                 sourceManager.get(self.___source),
                                 self.___line)
@@ -486,8 +496,8 @@ class UnknownHardwareEvent(HardwareEvent):
     return '< UnknownHardwareEvent(%d): %d (at %s) >' % \
            (self.Type, self.State, getTimeString(self.DateTime))
 
-# TODO
 
+# TODO
 class DataNode(object):
   _baseAttrs = []
   _keys = []
@@ -499,12 +509,6 @@ class DataNode(object):
   def fromDict(cls, d):
     return cls(**d)
 
-  # @classmethod #XXX
-  # def fromKwargs(cls, _mapping={}, **kwargs):
-  #   updates = [(k, f(kwargs[k])) for k, f in _mapping.items() if k in kwargs]
-  #   kwargs.update(updates)
-  #   return cls(**kwargs)
-  #
   def merge(self, **kwargs):
     updated = {}
     for k in self._keys:

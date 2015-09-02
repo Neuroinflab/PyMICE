@@ -580,8 +580,15 @@ class HardwareEventTest(object):
       self.checkObjectsEquals(hw, clone)
       self.assertIs(hw.__class__, clone.__class__)
 
-      self.assertIs(clone.Cage, cageManager.items[hw.Cage])
       self.assertIsInstance(clone._source, sourceManager.Cls)
+      if hw.Cage is not None:
+        self.assertIs(clone.Cage, cageManager.items[hw.Cage])
+
+        if hw.Corner is not None:
+          self.assertIs(clone.Corner, clone.Cage.items[hw.Corner])
+
+          if hw.Side is not None:
+            self.assertIs(clone.Side, clone.Corner.items[hw.Side])
 
   def testRepr(self):
     for hw, hwRepr in zip(self.hws, self.reprs):
