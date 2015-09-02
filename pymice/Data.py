@@ -42,8 +42,8 @@ import matplotlib.ticker
 import numpy as np
 from xml.dom import minidom
 
-from operator import itemgetter, methodcaller, attrgetter
-from itertools import izip, repeat, islice, imap
+from operator import methodcaller, attrgetter
+from itertools import izip, repeat
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
                     LogEntry, EnvironmentalConditions, \
@@ -124,7 +124,6 @@ class Data(object):
     self.__animal2cage = {}
 
   def _buildCache(self):
-    # build cache
     self.__cages = {}
     self.__animal2cage = {}
     currentCage = None
@@ -202,8 +201,6 @@ class Data(object):
       return frozenset(self.__cages)
 
     return self.__cages[int(cage)] # is a frozenset already
-
-#  def getFirstLick(self, corners = (), mice=()):
 
   def getStart(self):
     """
@@ -286,7 +283,7 @@ class Data(object):
   def _insertNewHw(self, hNodes):
     self.__hardware.put(hNodes)
 
-  def _insertVisits(self, visits):
+  def insertVisits(self, visits):
     newVisits = map(methodcaller('clone', IdentityManager(),
                                  IntCageManager(),
                                  self.__animalsByName),
@@ -1696,7 +1693,7 @@ class Merger(Data):
         if minStart < self.__topTime:
           print "Possible temporal overlap of visits"
 
-      self._insertVisits(visits)
+      self.insertVisits(visits)
 
     if self._getHw:
       hardware = dataSource.getHardwareEvents()
@@ -1906,16 +1903,20 @@ class ZipLoader(object):
                }
 
   def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
+    corner, side = Corner, Side
+    cage = self.__cageManager.get(Cage)
+    if corner is not None:
+      corner = cage.get(corner)
+      if side is not None:
+        side = corner.get(Side)
+
     try:
-      return self.__hwClass[Type](DateTime, int(Cage), int(Corner),
-                                  int(Side) if Side is not None else None,
+      return self.__hwClass[Type](DateTime, cage, corner, side,
                                   int(State), self.__source, _line)
 
     except KeyError:
-      return UnknownHardwareEvent(DateTime, int(Type), int(Cage), int(Corner),
-                                  int(Side) if Side is not None else None,
+      return UnknownHardwareEvent(DateTime, int(Type), cage, corner, side,
                                   int(State), self.__source, _line)
-
 
   def loadHw(self, columns):
     colValues = self._getColumnValues(['DateTime',

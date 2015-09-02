@@ -497,6 +497,14 @@ class TestZipLoader(BaseTest):
     for hw, hwType in zip(hws, hwTypes):
       self.assertIsInstance(hw, hwType)
 
+    for hw in hws:
+      if hw.Cage is not None:
+        self.assertIs(hw.Cage, self.cageManager.items[hw.Cage])
+        if hw.Corner is not None:
+          self.assertIs(hw.Corner, hw.Cage.items[hw.Corner])
+          if hw.Side is not None:
+            self.assertIs(hw.Side, hw.Corner.items[hw.Side])
+
 
 class MergerTest(unittest.TestCase):
   def setUp(self):
