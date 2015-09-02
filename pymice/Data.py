@@ -30,7 +30,6 @@ import os
 import zipfile
 import csv
 import cStringIO
-import copy
 
 import dateutil.parser
 import pytz
@@ -251,10 +250,6 @@ class Data(object):
 #  def removeVisits(self, condition="False"):
 
 # data management
-
-  @staticmethod
-  def _newNodes(nodes, cls=None):
-    return map(cls.fromDict, nodes)
 
   def insertLog(self, log):
     newLog = map(methodcaller('clone', IdentityManager(),
@@ -1083,7 +1078,7 @@ class Loader(Data):
     self._logAnalysis(logAnalyzers)
 
 
-  def _loadZip(self, zf, getHw=False, source=None):
+  def _loadZip(self, zf, source=None):
     tagToAnimal = AnimalManager(self._loadAnimals(zf))
 
     try:
@@ -1093,10 +1088,10 @@ class Loader(Data):
       ss = aos.getElementsByTagName('Session')
       sessions = []
       for session in ss:
-        offset = session.getElementsByTagName('TimeZoneOffset')[0]
-        offset = offset.childNodes[0]
-        assert offset.nodeType == offset.TEXT_NODE
-        offset = offset.nodeValue
+        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
+        # offset = offset.childNodes[0]
+        # assert offset.nodeType == offset.TEXT_NODE
+        # offset = offset.nodeValue
 
         interval = session.getElementsByTagName('Interval')[0]
         start = interval.getElementsByTagName('Start')[0]
@@ -1193,8 +1188,6 @@ class Loader(Data):
         if vid not in vid2tag:
           warn.warn('Unmatched nosepokes: %s' % vid)
 
-    result = {}
-
     if self._getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       if sessions is not None:
@@ -1224,13 +1217,6 @@ class Loader(Data):
 
         else: #XXX
           timeToFix.extend(hardware['DateTime'])
-
-        #hardware = self._makeDicts(hardware)
-
-      #else:
-      #  hardware = []
-
-      #result['hardware'] = hardware
 
     #XXX important only when timezone changes!
     if sessions is not None:
@@ -1263,8 +1249,6 @@ class Loader(Data):
       hardware['DateTime'] = [datetime(*x) for x in hardware['DateTime']]
       hNodes = visitLoader.loadHw(hardware)
       self._insertNewHw(hNodes)
-
-    return result
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     try:
@@ -1322,7 +1306,6 @@ class Loader(Data):
 
     return data
 
-
   def __repr__ (self):
     """
     Nice string representation for prtinting this class.
@@ -1376,7 +1359,6 @@ class Loader(Data):
     """
     fname = fname.encode('utf-8')
     print 'loading data from %s' % fname
-    #sid = self._registerSource(fname.decode('utf-8'))
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isinstance(fname, basestring) and os.path.isdir(fname):
@@ -1385,12 +1367,7 @@ class Loader(Data):
       else:
         zf = zipfile.ZipFile(fname)
 
-      data = self._loadZip(zf,
-                           getHw=self._getHw,
-                           source=fname.decode('utf-8'))
-
-      if self._getHw:
-        self._insertHardware(data['hardware'])
+      self._loadZip(zf, source=fname.decode('utf-8'))
 
     self._buildCache()
 
@@ -1730,10 +1707,6 @@ class Merger(Data):
       self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
 
     self._buildCache()
-
-  @staticmethod
-  def _newNodes(nodes, cls=None):
-    return map(copy.copy, nodes)
 
 
 class IntCageManager(int):
