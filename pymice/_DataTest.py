@@ -621,6 +621,51 @@ class ICCageManagerTest(unittest.TestCase):
     self.assertRaises(AttributeError, lambda: setattr(self.cageManager, 'Nonexistingattr', None))
 
 
+class DataTest(unittest.TestCase):
+  def testDel(self):
+    ICCage = Data.ICCage
+
+    def getMockCage(n):
+      cage = minimock.Mock('ICCage')
+      cage._del_ = lambda: cagesDeleted.add(n)
+      return cage
+
+    Data.ICCage = minimock.Mock('ICCage',
+                                returns_func=getMockCage)
+
+    deleted = set()
+    cagesDeleted = set()
+    toDelete = []
+    cagesToDelete = []
+    data = Data.Data()
+
+    def makeCloneInjector(cage, label):
+      toDelete.append(label)
+      cagesToDelete.append(cage)
+      cloneInjector = minimock.Mock('CloneInjector')
+      def cloneReporter(sourceManager, cageManager, *args):
+        cageManager[cage]
+        clone = minimock.Mock(label)
+        clone._del_.mock_returns_func = lambda: deleted.add(label)
+        return clone
+
+      cloneInjector.clone.mock_returns_func = cloneReporter
+      return cloneInjector
+
+    data.insertVisits([makeCloneInjector(1, 'Visit')])
+    data.insertLog([makeCloneInjector(2, 'Log')])
+    data.insertEnv([makeCloneInjector(3, 'Env')])
+    data.insertHw([makeCloneInjector(4, 'Hw')])
+    data.__del__()
+
+    for label in toDelete:
+      self.assertIn(label, deleted)
+
+    for cage in cagesToDelete:
+      self.assertIn(cage, cagesDeleted)
+
+    Data.ICCage = ICCage
+
 class MergerTest(unittest.TestCase):
   def setUp(self):
     self.d1 = Data.Data()

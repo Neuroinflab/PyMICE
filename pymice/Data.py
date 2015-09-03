@@ -112,9 +112,16 @@ class Data(object):
     return self._getLog
 
   def __del__(self):
-    for vNode in self.__visits.get():
-      if vNode:
-        vNode._del_()
+    for cache in [self.__visits,
+                  self.__log,
+                  self.__environment,
+                  self.__hardware]:
+      for node in cache.get():
+        if node:
+          node._del_()
+
+    self._cageManager._del_()
+
 
 # caching data
   def _initCache(self):
@@ -1081,7 +1088,7 @@ class Loader(Data):
 
 
   def _loadZip(self, zf, source=None):
-    tagToAnimal = AnimalManager(self._loadAnimals(zf))
+    tagToAnimal = dict(self._loadAnimals(zf))
 
     try:
       fh = zf.open('Sessions.xml')
@@ -1818,11 +1825,6 @@ class ICCageManager(object):
 class IdentityManager(object):
   def __getitem__(self, x):
     return x
-
-
-class AnimalManager(dict):
-  def get(self, key):
-    return self[key]
 
 
 class ZipLoader(object):
