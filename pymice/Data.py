@@ -1831,15 +1831,6 @@ class ICCageManager(object):
       cage._del_()
 
 
-# class IntCageManager(int):
-#   def __getitem__(self, val):
-#     return self.__class__(val)
-#
-#   def getCageCorner(self, cage, corner):
-#     cg = self[cage]
-#     return cg, cg[corner]
-
-
 class IdentityManager(object):
   def __getitem__(self, x):
     return x
