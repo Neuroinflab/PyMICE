@@ -26,13 +26,14 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc
 
-from Data import ZipLoader, Data, Merger, LogEntry, EnvironmentalConditions, \
+from Data import ZipLoader, Merger, LogEntry, EnvironmentalConditions, \
                  AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent, \
-                 UnknownHardwareEvent
+                 UnknownHardwareEvent, \
+                 ICCage, ICCageManager
+import Data
+import minimock
 
-
-from _TestTools import Mock, MockCageManager, \
-                       MockStrDictManager, BaseTest
+from _TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
 
 
 def toStrings(seq):
@@ -52,7 +53,7 @@ def floatToTimedelta(seq):
 
 class TestZipLoader(BaseTest):
   def setUp(self):
-    self.cageManager = MockCageManager()
+    self.cageManager = MockIntDictManager()
     self.animalManager = MockStrDictManager()
     self.source = Mock()
     self.loader = ZipLoader(self.source,
@@ -119,9 +120,9 @@ class TestZipLoader(BaseTest):
                         ]:
       self.checkAttributeSeq(visits, name, tests)
 
-    self.assertEqual(self.animalManager.sequence, [('get', '10')])
-    self.assertTrue(('get', '1') in self.cageManager.sequence)
-    self.assertTrue(('get', '2') in self.cageManager.items[1].sequence)
+    self.assertEqual(self.animalManager.sequence, [('__getitem__', '10')])
+    self.assertTrue(('__getitem__', '1') in self.cageManager.sequence)
+    self.assertTrue(('__getitem__', '2') in self.cageManager.items[1].sequence)
 
   #@unittest.skip('botak')
   def testLoadManyVisitsWithMissingValues(self):
@@ -269,7 +270,7 @@ class TestZipLoader(BaseTest):
                           ('LED3State', 0, int),
                           ('_source', self.source),
                           ('_line', 1)])
-    self.assertEqual(self.cageManager.items[4].items[2].sequence, [('get', '4')])
+    self.assertEqual(self.cageManager.items[4].items[2].sequence, [('__getitem__', '4')])
 
   def testManyVisitsManyNosepokes(self):
     nVisits = 4
@@ -506,10 +507,137 @@ class TestZipLoader(BaseTest):
             self.assertIs(hw.Side, hw.Corner.items[hw.Side])
 
 
+class ICCageTest(unittest.TestCase):
+  def setUp(self):
+    self.cage = ICCage(42)
+
+  def testFromStr(self):
+    self.assertEqual(11, ICCage('11'))
+
+  def testInt(self):
+    self.assertEqual(42, self.cage)
+
+  def testCorners(self):
+    self.assertRaises(ICCage.NoCornerError, lambda: self.cage[0])
+    self.assertRaises(ICCage.NoCornerError, lambda: self.cage[5])
+
+    for i in range(1, 5):
+      corner = self.cage[i]
+      self.assertEqual(i, corner)
+      self.assertIs(corner, self.cage[str(i)])
+
+      self._checkCorner(corner)
+
+      self.assertIs(corner.Cage, self.cage)
+
+  def _checkCorner(self, corner):
+    self.assertRaises(corner.NoSideError, lambda: corner[corner * 2 - 2])
+    self.assertRaises(corner.NoSideError, lambda: corner[corner * 2 + 1])
+    for j, s in enumerate(['left', 'right'], corner * 2 - 1):
+      side = corner[j]
+      self.assertEqual(s, str(side))
+
+      self.assertTrue(j == side)
+      self.assertFalse(j != side)
+      self.assertTrue(j + 1 != side)
+      self.assertFalse(j + 1 == side)
+
+      sameSide = (corner % 4 + 1) * 2 - (s == 'left')
+      self.assertTrue(sameSide == side)
+      self.assertFalse(sameSide != side)
+
+      otherSideStr = 'left' if s == 'right' else 'right'
+      self.assertTrue(s == side)
+      self.assertFalse(s != side)
+      self.assertTrue(otherSideStr != side)
+      self.assertFalse(otherSideStr == side)
+
+      self.assertTrue(s.upper() == side)
+      self.assertFalse(s.upper() != side)
+
+      self.assertIs(side, corner[s])
+      self.assertIs(side, corner[str(j)])
+
+      self.assertIs(side.Corner, corner)
+
+  def testDel(self):
+    corners = [self.cage[i] for i in range(1, 5)]
+    sides = [corner[s] for corner in corners for s in ['left', 'right']]
+    self.cage._del_()
+    for corner in corners:
+      self.assertRaises(AttributeError, lambda: corner.Cage)
+
+    for side in sides:
+      self.assertRaises(AttributeError, lambda: side.Corner)
+
+  def testReadOnly(self):
+    self.assertRaises(AttributeError, lambda: setattr(self.cage, 'Nonexistingattr', None))
+
+    corner = self.cage[1]
+    self.assertRaises(AttributeError, lambda: setattr(corner, 'Cage', None))
+    self.assertRaises(AttributeError, lambda: setattr(corner, 'Nonexistingattr', None))
+
+    side = corner['left']
+    self.assertRaises(AttributeError, lambda: setattr(side, 'Corner', None))
+    self.assertRaises(AttributeError, lambda: setattr(side, 'Nonexistingattr', None))
+
+
+class ICCageManagerTest(unittest.TestCase):
+  def setUp(self):
+    self.cageManager = ICCageManager()
+    self.ICCage = Data.ICCage
+
+  def tearDown(self):
+    Data.ICCage = self.ICCage
+
+  def testGet(self):
+    cages = set()
+    def newCage(cage):
+      cages.add(cage)
+      return minimock.Mock('ICCage(%s)' % cage,
+                           returns=cage)
+    Data.ICCage = minimock.Mock('Data.ICCage',
+                                returns_func=newCage)
+
+    cageNumber = 1
+    cage = self.cageManager[cageNumber]
+    self.assertIs(cage(), cageNumber)
+    self.assertTrue(cageNumber in cages)
+    self.assertIs(cage, self.cageManager[cageNumber])
+    self.assertIs(cage, self.cageManager[str(cageNumber)])
+
+  def testDel(self):
+    cages = {}
+    delCalled = set()
+    def newCage(cage):
+      try:
+        return cages[cage]
+
+      except KeyError:
+        item = minimock.Mock('ICCage(%s)' % cage)
+        item._del_.mock_returns_func = lambda: delCalled.add(cage)
+        cages[cage] = item
+        return item
+
+    Data.ICCage = minimock.Mock('Data.ICCage')
+    Data.ICCage.mock_returns_func = newCage
+
+    for i in range(1, 10):
+      for j in range(1, i + 1):
+        self.cageManager[j]
+
+    self.cageManager._del_()
+    for cage in cages:
+      self.assertTrue(cage in delCalled)
+
+  def testReadOnly(self):
+    self.assertRaises(AttributeError, lambda: setattr(self.cageManager, 'Nonexistingattr', None))
+
+
 class MergerTest(unittest.TestCase):
   def setUp(self):
-    self.d1 = Data()
-    self.d2 = Data()
+    self.d1 = Data.Data()
+    self.d2 = Data.Data()
     self.time1 = datetime(1970, 1, 1, tzinfo=utc)
     self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
 
@@ -543,6 +671,7 @@ class MergerTest(unittest.TestCase):
     mm = Merger(self.d1, self.d2, getHw=True)
     self.assertEqual([u'D2', u'D1'],
                      [h._source for h in mm.getHardwareEvents(order='DateTime')])
+
 
 if __name__ == '__main__':
   unittest.main()

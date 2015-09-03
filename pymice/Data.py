@@ -22,9 +22,9 @@
 #                                                                             #
 ###############################################################################
 
-# original: 60.8%; 1:30 
-# refactored ICN: 17.4%; 1:14  
-# refactored ICN+Nodes: 17.3%; 1:12 
+# original: 60.8%; 1:30
+# refactored ICN: 17.4%; 1:14
+# refactored ICN+Nodes: 17.3%; 1:12
 
 import os
 import zipfile
@@ -907,7 +907,6 @@ class Data(object):
     fh.close()
 
 
-
 try:
   from pymice._C import emptyStringToNone
 
@@ -1709,19 +1708,135 @@ class Merger(Data):
     self._buildCache()
 
 
+class ICSide(int):
+  __slots__ = ('__Corner',)
+
+  def __new__(cls, value, corner):
+    obj = int.__new__(cls, value)
+    obj.__Corner = corner
+    return obj
+
+  def __str__(self):
+    return 'left' if self % 2 else 'right'
+
+  def __eq__(self, other):
+    if isinstance(other, basestring):
+      return str(self) == other.lower()
+
+    return self % 2 == other % 2
+
+  def __ne__(self, other):
+    if isinstance(other, basestring):
+      return str(self) != other.lower()
+
+    return self % 2 != other % 2
+
+  def _del_(self):
+    del self.__Corner
+
+  @property
+  def Corner(self):
+    return self.__Corner
+
+
+class ICCorner(int):
+  class NoSideError(KeyError):
+    pass
+
+  __slots__ = ('__Cage', '__sides', '__sideMapping')
+
+  def __new__(cls, value, cage):
+    obj = int.__new__(cls, value)
+    obj.__Cage = cage
+
+    obj.__sides = [ICSide(i, obj) for i in range(obj * 2 - 1, obj * 2 + 1)]
+    obj.__sideMapping = {}
+
+    for side in obj.__sides:
+      i = int(side)
+      obj.__sideMapping[i] = side
+      obj.__sideMapping[str(i)] = side
+      obj.__sideMapping[str(side)] = side
+
+    return obj
+
+  def __getitem__(self, side):
+    try:
+      return self.__sideMapping[side]
+
+    except KeyError:
+      raise self.NoSideError(side)
+
+  def _del_(self):
+    for side in self.__sides:
+      side._del_()
+
+    del self.__Cage
+
+  @property
+  def Cage(self):
+    return self.__Cage
+
+
+class ICCage(int):
+  class NoCornerError(KeyError):
+    pass
+
+  __slots__ = ('__corners', '__cornerMapping')
+
+  def __init__(self, _):
+    self.__corners = [ICCorner(i, self) for i in range(1, 5)]
+    self.__cornerMapping = {}
+    for corner in self.__corners:
+      self.__cornerMapping[corner] = corner
+      self.__cornerMapping[str(corner)] = corner
+
+  def __getitem__(self, corner):
+    try:
+      return self.__cornerMapping[corner]
+
+    except KeyError:
+      raise self.NoCornerError(corner)
+
+  def _del_(self):
+    for corner in self.__corners:
+      corner._del_()
+
+
+class ICCageManager(object):
+  __slots__ = ('__cageMapping', '__cages')
+
+  def __init__(self):
+    self.__cageMapping = {}
+    self.__cages = []
+
+  def __getitem__(self, cage):
+    try:
+      return self.__cageMapping[cage]
+
+    except KeyError:
+      item = ICCage(cage)
+      self.__cages.append(item)
+      self.__cageMapping[int(cage)] = item
+      self.__cageMapping[str(cage)] = item
+      return item
+
+  def _del_(self):
+    for cage in self.__cages:
+      cage._del_()
+
+
 class IntCageManager(int):
-  @classmethod
-  def get(cls, val):
-    return cls(val)
+  def __getitem__(self, val):
+    return self.__class__(val)
 
   def getCageCorner(self, cage, corner):
-    cg = self.get(cage)
-    return cg, cg.get(corner)
+    cg = self[cage]
+    return cg, cg[corner]
 
 
 class IdentityManager(object):
-  @staticmethod
-  def get(x):
+  def __getitem__(self, x):
     return x
 
 
@@ -1740,8 +1855,9 @@ class ZipLoader(object):
                 CornerCondition, PlaceError,
                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
                 VisitSolution, _line, nosepokeRows):
-    animal = self.__animalManager.get(AnimalTag)
-    cage, corner = self.__cageManager.getCageCorner(Cage, Corner)
+    animal = self.__animalManager[AnimalTag]
+    cage = self.__cageManager[Cage]
+    corner = cage[Corner]
 
     Nosepokes = None
     if nosepokeRows is not None:
@@ -1768,7 +1884,7 @@ class ZipLoader(object):
                      _line)):
 
     return Nosepoke(Start, End,
-                    sideManager.get(Side) if Side is not None else None,
+                    sideManager[Side] if Side is not None else None,
                     int(LickNumber) if LickNumber is not None else None,
                     timedelta(seconds=float(LickContactTime)) if LickContactTime is not None else None,
                     timedelta(seconds=float(LickDuration)) if LickDuration is not None else None,
@@ -1833,11 +1949,11 @@ class ZipLoader(object):
                 Cage, Corner, Side, Notes, _line):
     cage, corner, side = None, None, None
     if Cage is not None:
-      cage = self.__cageManager.get(Cage)
+      cage = self.__cageManager[Cage]
       if Corner is not None:
-        corner = cage.get(Corner)
+        corner = cage[Corner]
         if Side is not None:
-          side = corner.get(Side)
+          side = corner[Side]
 
     return LogEntry(DateTime, unicode(Category), unicode(Type),
                     cage, corner, side,
@@ -1860,7 +1976,7 @@ class ZipLoader(object):
     return EnvironmentalConditions(DateTime,
                                    float(Temperature),
                                    int(Illumination),
-                                   self.__cageManager.get(Cage),
+                                   self.__cageManager[Cage],
                                    self.__source, _line)
 
   def loadEnv(self, columns):
@@ -1877,11 +1993,11 @@ class ZipLoader(object):
 
   def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
     corner, side = Corner, Side
-    cage = self.__cageManager.get(Cage)
+    cage = self.__cageManager[Cage]
     if corner is not None:
-      corner = cage.get(corner)
+      corner = cage[corner]
       if side is not None:
-        side = corner.get(Side)
+        side = corner[Side]
 
     try:
       return self.__hwClass[Type](DateTime, cage, corner, side,

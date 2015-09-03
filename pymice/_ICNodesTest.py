@@ -32,7 +32,7 @@ from ICNodes import Animal, Visit, Nosepoke, \
                     AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent, \
                     UnknownHardwareEvent, NamedInt
 from _TestTools import allInstances, Mock, MockIntDictManager, \
-                       MockCageManager, MockStrDictManager, MockCloneable, \
+                       MockStrDictManager, MockCloneable, \
                        BaseTest
 
 
@@ -255,7 +255,7 @@ class TestVisit(ICNodeTest):
                                       ])
 
   def testClone(self):
-    cageManager = MockCageManager()
+    cageManager = MockIntDictManager()
     sourceManager = MockStrDictManager()
     animalManager = MockStrDictManager()
     visit = self.visit.clone(sourceManager, cageManager, animalManager)
@@ -267,15 +267,15 @@ class TestVisit(ICNodeTest):
       self.assertEqual(nosepoke.sequence[-1], ('clone', sourceManager, cageManager.items[4].items[2]))
       self.assertIs(clonedNosepoke._cloneOf, nosepoke)
 
-    self.assertTrue(('get', 4) in cageManager.sequence)
-    self.assertTrue(('get', 2) in cageManager.items[4].sequence)
+    self.assertTrue(('__getitem__', 4) in cageManager.sequence)
+    self.assertTrue(('__getitem__', 2) in cageManager.items[4].sequence)
     self.assertIs(visit.Cage, cageManager.items[4])
     self.assertIs(visit.Corner, cageManager.items[4].items[2])
 
-    self.assertEqual(animalManager.sequence, [('get', 'animal')])
+    self.assertEqual(animalManager.sequence, [('__getitem__', 'animal')])
     self.assertIsInstance(visit.Animal, animalManager.Cls)
 
-    self.assertEqual(sourceManager.sequence, [('get', 'source')])
+    self.assertEqual(sourceManager.sequence, [('__getitem__', 'source')])
     self.assertIsInstance(visit._source, sourceManager.Cls)
 
   def testReadOnly(self):
@@ -372,10 +372,10 @@ class TestNosepoke(ICNodeTest):
     self.checkObjectsEquals(nosepoke, self.nosepoke,
                             skip=['Visit'])
 
-    self.assertEqual(sideManager.sequence, [('get', 2)])
+    self.assertEqual(sideManager.sequence, [('__getitem__', 2)])
     self.assertIsInstance(nosepoke.Side, sideManager.Cls)
 
-    self.assertEqual(sourceManager.sequence, [('get', 'src')])
+    self.assertEqual(sourceManager.sequence, [('__getitem__', 'src')])
     self.assertIsInstance(nosepoke._source, sourceManager.Cls)
 
     sideManager = MockIntDictManager()
@@ -392,7 +392,7 @@ class TestNosepoke(ICNodeTest):
                                     'Door'
                                     ])
     self.assertEqual(sideManager.sequence, [])
-    self.assertEqual(sourceManager.sequence, [('get', 'src')])
+    self.assertEqual(sourceManager.sequence, [('__getitem__', 'src')])
 
   def testReadOnly(self):
     self.checkReadOnly(self.nosepoke)
@@ -451,24 +451,24 @@ class TestLogEntry(ICNodeTest):
 
   def testClone(self):
     for log in self.logs:
-      cageManager = MockCageManager()
+      cageManager = MockIntDictManager()
       sourceManager = MockStrDictManager()
       clone = log.clone(sourceManager, cageManager)
       self.checkObjectsEquals(log, clone)
 
-      self.assertEqual(sourceManager.sequence, [('get', log._source)])
+      self.assertEqual(sourceManager.sequence, [('__getitem__', log._source)])
       self.assertIsInstance(clone._source, sourceManager.Cls)
 
       if log.Cage is not None:
-        self.assertTrue(('get', log.Cage) in cageManager.sequence)
+        self.assertTrue(('__getitem__', log.Cage) in cageManager.sequence)
         self.assertIs(clone.Cage, cageManager.items[log.Cage])
 
         if log.Corner is not None:
-          self.assertTrue(('get', log.Corner) in clone.Cage.sequence)
+          self.assertTrue(('__getitem__', log.Corner) in clone.Cage.sequence)
           self.assertIs(clone.Corner, clone.Cage.items[log.Corner])
 
           if log.Side is not None:
-            self.assertTrue(('get', log.Side) in clone.Corner.sequence)
+            self.assertTrue(('__getitem__', log.Side) in clone.Corner.sequence)
             self.assertIs(clone.Side, clone.Corner.items[log.Side])
 
   def testReadOnly(self):
@@ -508,7 +508,7 @@ class TestEnvironmentalConditions(ICNodeTest):
                                     ('_line', 1),])
 
   def testClone(self):
-    cageManager = MockCageManager()
+    cageManager = MockIntDictManager()
     sourceManager = MockStrDictManager()
     clone = self.env.clone(sourceManager, cageManager)
     self.checkObjectsEquals(self.env, clone)
@@ -574,7 +574,7 @@ class HardwareEventTest(object):
 
   def testClone(self):
     for hw in self.hws:
-      cageManager = MockCageManager()
+      cageManager = MockIntDictManager()
       sourceManager = MockStrDictManager()
       clone = hw.clone(sourceManager, cageManager)
       self.checkObjectsEquals(hw, clone)

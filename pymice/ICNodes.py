@@ -234,9 +234,10 @@ class Visit(BaseNode, DurationAware):
         nosepoke._bindToVisit(self)
 
   def clone(self, sourceManager, cageManager, animalManager):
-    source = sourceManager.get(self.___source)
-    animal = animalManager.get(self.__Animal)
-    cage, corner = cageManager.getCageCorner(self.__Cage, self.__Corner)
+    source = sourceManager[self.___source]
+    animal = animalManager[self.__Animal]
+    cage = cageManager[self.__Cage]
+    corner = cage[self.__Corner]
     nosepokes = tuple(n.clone(sourceManager, corner) for n in self.__Nosepokes)
     return self.__class__(self.__Start, corner, animal,
                           self.__End, self.__Module, cage,
@@ -301,8 +302,8 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
     self.___line = _line
 
   def clone(self, sourceManager, sideManager):
-    side = sideManager.get(self.__Side) if self.__Side is not None else None
-    source = sourceManager.get(self.___source)
+    side = sideManager[self.__Side] if self.__Side is not None else None
+    source = sourceManager[self.___source]
     return self.__class__(self.__Start, self.__End, side,
                           self.__LickNumber, self.__LickContactTime, self.__LickDuration,
                           self.__SideCondition, self.__SideError, self.__TimeError, self.__ConditionError,
@@ -337,13 +338,13 @@ class LogEntry(BaseNode, SideAware):
   def clone(self, sourceManager, cageManager):
     cage, corner, side = None, None, None
     if self.__Cage is not None:
-      cage = cageManager.get(self.__Cage)
+      cage = cageManager[self.__Cage]
 
       if self.__Corner is not None:
-        corner = cage.get(self.__Corner)
+        corner = cage[self.__Corner]
 
         if self.__Side is not None:
-          side = corner.get(self.__Side)
+          side = corner[self.__Side]
 
     return LogEntry(self.__DateTime,
                     self.__Category,
@@ -352,7 +353,7 @@ class LogEntry(BaseNode, SideAware):
                     corner,
                     side,
                     self.__Notes,
-                    sourceManager.get(self.___source),
+                    sourceManager[self.___source],
                     self.___line)
 
   def __repr__(self):
@@ -378,8 +379,8 @@ class EnvironmentalConditions(BaseNode):
     return self.__class__(self.__DateTime,
                           self.__Temperature,
                           self.__Illumination,
-                          cageManager.get(self.__Cage),
-                          sourceManager.get(self.___source),
+                          cageManager[self.__Cage],
+                          sourceManager[self.___source],
                           self.___line)
 
   def __repr__(self):
@@ -422,16 +423,16 @@ class KnownHardwareEvent(HardwareEvent):
 
   def clone(self, sourceManager, cageManager):
     corner, side = self.__Corner, self.__Side
-    cage = cageManager.get(self.__Cage)
+    cage = cageManager[self.__Cage]
     if corner is not None:
-      corner = cage.get(corner)
+      corner = cage[corner]
       if side is not None:
-        side = corner.get(side)
+        side = corner[side]
 
     return self.__class__(self.__DateTime,
                           cage, corner, side,
                           self.__State,
-                          sourceManager.get(self.___source),
+                          sourceManager[self.___source],
                           self.___line)
 
 
@@ -479,17 +480,17 @@ class UnknownHardwareEvent(HardwareEvent):
 
   def clone(self, sourceManager, cageManager):
     corner, side = self.__Corner, self.__Side
-    cage = cageManager.get(self.__Cage)
+    cage = cageManager[self.__Cage]
     if corner is not None:
-      corner = cage.get(corner)
+      corner = cage[corner]
       if side is not None:
-        side = corner.get(side)
+        side = corner[side]
 
     return UnknownHardwareEvent(self.__DateTime,
                                 self.__Type,
                                 cage, corner, side,
                                 self.__State,
-                                sourceManager.get(self.___source),
+                                sourceManager[self.___source],
                                 self.___line)
 
   def __repr__(self):
@@ -612,98 +613,3 @@ class Group(DataNode):
     updated = DataNode.merge(self, **kwargs)
     for animal in Animals:
       self.addMember(animal)
-
-
-# OMG!!!
-class ICCageManager(object):
-  def __init__(self):
-    self.__cages = {}
-
-  #def add(cage):
-  #  if int(cage) not in self.__cages:
-  #    self.__cages[cage] = ICCage(cage)
-
-  #  return self.get(cage)
-
-  def get(cage, corner=None, side=None):
-    try:
-      cage = self.__cages[int(cage)]
-
-    except KeyError:
-      cage = ICCage(cage)
-      self.__cages[int(cage)] = cage
-
-    if corner is not None:
-      corner = int(corner)
-      if side is not None:
-        return cage.corners[corner].sides[str(side)]
-
-      return cage.corners[corner]
-
-    if side is not None:
-      return cage.sides[int(side)]
-
-    return cage
-
-  def __del__(self):
-    for cage in self.__cages.values():
-      cage._del_()
-
-    del self.__cages
-
-
-class ICCage(int):
-  def __init__(self, cage):
-    int.__init__(self, cage)
-    self.corners = dict((i, ICCornerInt(self, i)) for i in xrange(1,5))
-    self.sides = dict((int(side), side) for corner in self.corners.values()\
-                                        for side in self.side.values())
-
-  def _del_(self):
-    for corner in self.corners.values():
-      corner._del_()
-
-    del self.corners
-    del self.sides
-
-  def __repr__(self):
-    return "Cage #%d" % self
-
-
-class ICCorner(int):
-  def __init__(self, cage, corner):
-    int.__init__(self, corner)
-    self.cage = cage
-
-    self.sides = dict((side, ICSide(self * 2 - 1 + i, self)) \
-                      for (i, side) in enumerate(['left', 'right']))
-
-  def _del_(self):
-    for side in self.sides.values():
-      side._del_()
-
-    del self.sides
-    del self.cage
-
-  def __repr__(self):
-    return "Corner #%d of cage #%d" % (self, self.cage)
-
-
-class ICSide(int):
-  def __init__(self, side, corner):
-    int.__init__(self, side)
-    self.corner = corner
-
-  def _del_(self):
-    del self.corner
-
-  def __str__(self):
-    return 'left' if self % 2 == 1 else 'right'
-
-  def __unicode__(self):
-    return u'left' if self % 2 == 1 else u'right'
-
-  def __repr__(self):
-    return "%s side of corner #%d" % (str(self), (self + 1) / 2) 
-
-

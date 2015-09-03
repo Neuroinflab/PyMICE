@@ -56,8 +56,8 @@ class MockDictManager(Mock):
   def getManager(self, item):
     self._registerCall(('getManager', item))
 
-  def get(self, item):
-    self._registerCall(('get', item))
+  def __getitem__(self, item):
+    self._registerCall(('__getitem__', item))
     return self.Cls(item)
 
 
@@ -72,8 +72,8 @@ class MockIntDictManager(int, MockDictManager):
 
     self.Cls = Cls
 
-  def get(self, item):
-    self._registerCall(('get', item))
+  def __getitem__(self, item):
+    self._registerCall(('__getitem__', item))
     try:
       return self.items[int(item)]
 
@@ -81,12 +81,6 @@ class MockIntDictManager(int, MockDictManager):
       output = self.Cls(item)
       self.items[output] = output
       return output
-
-
-class MockCageManager(MockIntDictManager):
-  def getCageCorner(self, cage, corner):
-    cg = self.get(cage)
-    return (cg, cg.get(corner))
 
 
 class MockStrDictManager(MockDictManager):
@@ -97,12 +91,6 @@ class MockStrDictManager(MockDictManager):
       pass
 
     self.Cls = Cls
-
-
-# class MockAnimalManager(MockStrDictManager):
-#   def getByTag(self, tag):
-#     self._registerCall(('getByTag', tag))
-#     return self.Cls(tag)
 
 
 class MockCloneable(Mock):
