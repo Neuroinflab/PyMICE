@@ -1719,21 +1719,6 @@ class ICSide(int):
     obj.__Corner = corner
     return obj
 
-  def __str__(self):
-    return 'left' if self % 2 else 'right'
-
-  def __eq__(self, other):
-    if isinstance(other, basestring):
-      return str(self) == other.lower()
-
-    return self % 2 == other % 2
-
-  def __ne__(self, other):
-    if isinstance(other, basestring):
-      return str(self) != other.lower()
-
-    return self % 2 != other % 2
-
   def _del_(self):
     del self.__Corner
 
@@ -1752,14 +1737,15 @@ class ICCorner(int):
     obj = int.__new__(cls, value)
     obj.__Cage = cage
 
-    obj.__sides = [ICSide(i, obj) for i in range(obj * 2 - 1, obj * 2 + 1)]
+    obj.__sides = []
     obj.__sideMapping = {}
 
-    for side in obj.__sides:
-      i = int(side)
+    for i, s in enumerate(['left', 'right'], obj * 2 - 1):
+      side = ICSide(i, obj)
+      obj.__sides.append(side)
       obj.__sideMapping[i] = side
       obj.__sideMapping[str(i)] = side
-      obj.__sideMapping[str(side)] = side
+      obj.__sideMapping[s] = side
 
     return obj
 
@@ -1768,8 +1754,6 @@ class ICCorner(int):
       return self.__sideMapping[side]
 
     except KeyError:
-      print self
-      print self.__sideMapping
       raise self.NoSideError(side)
 
   def _del_(self):
