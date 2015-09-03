@@ -34,7 +34,7 @@ from ._Metadata import Phase, ExperimentConfigFile, ExperimentTimeline
 from ._Results import ResultsCSV
 from .LogAnalyser import LickometerLogAnalyzer, PresenceLogAnalyzer, TestMiceData
 __NeuroLexID__ = 'nlx_158570'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __ID__ = __NeuroLexID__ + ' ' + __version__
 __all__ = []
 
