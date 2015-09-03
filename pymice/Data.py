@@ -93,6 +93,9 @@ class Data(object):
     self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
     self._initCache()
 
+    self._cageManager = ICCageManager()
+    self._sourceManager = IdentityManager()
+
   @property
   def _get_npokes(self):
     warn.deprecated("Obsolete attribute _get_npokes accessed.")
@@ -252,8 +255,8 @@ class Data(object):
 # data management
 
   def insertLog(self, log):
-    newLog = map(methodcaller('clone', IdentityManager(),
-                              IntCageManager()),
+    newLog = map(methodcaller('clone', self._sourceManager,
+                              self._cageManager),
                  log)
     self._insertNewLog(newLog)
 
@@ -261,8 +264,8 @@ class Data(object):
     self.__log.put(lNodes)
 
   def insertEnv(self, env):
-    newEnv = map(methodcaller('clone', IdentityManager(),
-                              IntCageManager()),
+    newEnv = map(methodcaller('clone', self._sourceManager,
+                              self._cageManager),
                  env)
     self._insertNewEnv(newEnv)
 
@@ -270,8 +273,8 @@ class Data(object):
     self.__environment.put(eNodes)
 
   def insertHw(self, hardwareEvents):
-    newHw = map(methodcaller('clone', IdentityManager(),
-                              IntCageManager()),
+    newHw = map(methodcaller('clone', self._sourceManager,
+                             self._cageManager),
                 hardwareEvents)
     self._insertNewHw(newHw)
 
@@ -279,8 +282,8 @@ class Data(object):
     self.__hardware.put(hNodes)
 
   def insertVisits(self, visits):
-    newVisits = map(methodcaller('clone', IdentityManager(),
-                                 IntCageManager(),
+    newVisits = map(methodcaller('clone', self._sourceManager,
+                                 self._cageManager,
                                  self.__animalsByName),
                     visits)
     self._insertNewVisits(newVisits)
@@ -1230,7 +1233,7 @@ class Loader(Data):
       nosepokes['Start'] = [datetime(*t) for t in nosepokes['Start']]
       nosepokes['End'] = [datetime(*t) for t in  nosepokes['End']]
 
-    visitLoader = ZipLoader(source, IntCageManager(), tagToAnimal)
+    visitLoader = ZipLoader(source, self._cageManager, tagToAnimal)
     vNodes = visitLoader.loadVisits(visits, nosepokes)
     self._insertNewVisits(vNodes)
 
@@ -1765,6 +1768,8 @@ class ICCorner(int):
       return self.__sideMapping[side]
 
     except KeyError:
+      print self
+      print self.__sideMapping
       raise self.NoSideError(side)
 
   def _del_(self):
@@ -1826,13 +1831,13 @@ class ICCageManager(object):
       cage._del_()
 
 
-class IntCageManager(int):
-  def __getitem__(self, val):
-    return self.__class__(val)
-
-  def getCageCorner(self, cage, corner):
-    cg = self[cage]
-    return cg, cg[corner]
+# class IntCageManager(int):
+#   def __getitem__(self, val):
+#     return self.__class__(val)
+#
+#   def getCageCorner(self, cage, corner):
+#     cg = self[cage]
+#     return cg, cg[corner]
 
 
 class IdentityManager(object):
