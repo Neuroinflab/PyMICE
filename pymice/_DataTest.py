@@ -535,25 +535,12 @@ class ICCageTest(unittest.TestCase):
     self.assertRaises(corner.NoSideError, lambda: corner[corner * 2 + 1])
     for j, s in enumerate(['left', 'right'], corner * 2 - 1):
       side = corner[j]
-      self.assertEqual(s, str(side))
+      self.assertEqual(str(j), str(side))
 
       self.assertTrue(j == side)
       self.assertFalse(j != side)
       self.assertTrue(j + 1 != side)
       self.assertFalse(j + 1 == side)
-
-      sameSide = (corner % 4 + 1) * 2 - (s == 'left')
-      self.assertTrue(sameSide == side)
-      self.assertFalse(sameSide != side)
-
-      otherSideStr = 'left' if s == 'right' else 'right'
-      self.assertTrue(s == side)
-      self.assertFalse(s != side)
-      self.assertTrue(otherSideStr != side)
-      self.assertFalse(otherSideStr == side)
-
-      self.assertTrue(s.upper() == side)
-      self.assertFalse(s.upper() != side)
 
       self.assertIs(side, corner[s])
       self.assertIs(side, corner[str(j)])
