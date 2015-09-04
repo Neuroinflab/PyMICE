@@ -38,11 +38,11 @@ __version__ = '0.1.5'
 __ID__ = __NeuroLexID__ + ' ' + __version__
 __all__ = []
 
-
-print """PyMICE library v. %s
+__welcomeMessage = """PyMICE library v. %s
 (NeuroLex.org ID: %s)
 
 This is a bleeding edge version of the library. It might meet your expectations,
 however it might also go to your fridge, drink all the beer it can find there
 and then eat your cat. Be warned.
 """ % (__version__, __NeuroLexID__)
+print(__welcomeMessage)

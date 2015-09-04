@@ -28,7 +28,11 @@
 import os
 import zipfile
 import csv
-import cStringIO
+try:
+  import cStringIO
+
+except ImportError:
+  pass #TODO: Python3 support
 
 import dateutil.parser
 import pytz
@@ -41,7 +45,12 @@ import numpy as np
 from xml.dom import minidom
 
 from operator import methodcaller, attrgetter, itemgetter
-from itertools import izip, repeat
+try:
+  from itertools import izip, repeat
+
+except ImportError:
+  pass #TODO: Python3 support
+
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
                     LogEntry, EnvironmentalConditions, \
@@ -355,7 +364,7 @@ class Data(object):
   def newGroup(self, group, mice=set()):
     stop
     if group in self.getGroup():
-      print "WARNING: Overwriting group %s." % group
+      print("WARNING: Overwriting group %s." % group)
       self._unregisterGroup(group)
 
     self._registerGroup(group)
@@ -920,7 +929,7 @@ try:
   from pymice._C import emptyStringToNone
 
 except Exception as e:
-  print type(e), e
+  print('%s\t%s' % (type(e), e))
 
   def emptyStringToNone(l):
     for i, x in enumerate(l):
@@ -1081,7 +1090,7 @@ class Loader(Data):
         self.icSessionEnd = log.DateTime
 
       else:
-        print 'unknown Info/Application message: %s' % msg
+        print('unknown Info/Application message: %s' % msg)
 
     self._logAnalysis(logAnalyzers)
 
@@ -1366,7 +1375,7 @@ class Loader(Data):
     Process one input file and append data to self.data
     """
     fname = fname.encode('utf-8')
-    print 'loading data from %s' % fname
+    print('loading data from %s' % fname)
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isinstance(fname, basestring) and os.path.isdir(fname):
@@ -1522,7 +1531,7 @@ class Merger(Data):
         self.appendDataSource(dataSource)
 
       except:
-        print "ERROR processing %s" % dataSource
+        print("ERROR processing %s" % dataSource)
         raise
 
     self._logAnalysis(logAnalyzers)
@@ -1633,13 +1642,13 @@ class Merger(Data):
       if self.icSessionStart != None and self.icSessionEnd != None:
         if self.icSessionStart < dataSource.icSessionStart\
           and self.icSessionEnd > dataSource.icSessionStart:
-          print 'Overlap of IC sessions detected'
+          print('Overlap of IC sessions detected')
 
     if dataSource.icSessionEnd != None:
       if self.icSessionStart != None and self.icSessionEnd != None:
         if self.icSessionStart < dataSource.icSessionEnd\
           and self.icSessionEnd > dataSource.icSessionEnd:
-          print 'Overlap of IC sessions detected'
+          print('Overlap of IC sessions detected')
 
     # TODO: overlap issue!
     for attr, choice in [('Start', min),
@@ -1676,7 +1685,7 @@ class Merger(Data):
 
       else:
         if minStart < self.__topTime:
-          print "Possible temporal overlap of visits"
+          print("Possible temporal overlap of visits")
 
       self.insertVisits(visits)
 
@@ -1718,7 +1727,13 @@ class Merger(Data):
 
 
 class ICSide(int):
-  __slots__ = ('__Corner',)
+  #__slots__ = ('__Corner',)
+  def __setattr__(self, key, value):
+    if key == '_ICSide__Corner':
+      self.__dict__[key] = value
+
+    else:
+      raise AttributeError(key)
 
   def __new__(cls, value, corner):
     obj = int.__new__(cls, value)
@@ -1737,7 +1752,13 @@ class ICCorner(int):
   class NoSideError(KeyError):
     pass
 
-  __slots__ = ('__Cage', '__sides', '__sideMapping')
+  #__slots__ = ('__Cage', '__sides', '__sideMapping')
+  def __setattr__(self, key, value):
+    if key in ('_ICCorner__Cage', '_ICCorner__sides', '_ICCorner__sideMapping'):
+      self.__dict__[key] = value
+
+    else:
+      raise AttributeError(key)
 
   def __new__(cls, value, cage):
     obj = int.__new__(cls, value)
@@ -1780,7 +1801,13 @@ class ICCage(int):
   class NoCornerError(KeyError):
     pass
 
-  __slots__ = ('__corners', '__cornerMapping')
+  #__slots__ = ('__corners', '__cornerMapping')
+  def __setattr__(self, key, value):
+    if key in ('_ICCage__corners', '_ICCage__cornerMapping'):
+      self.__dict__[key] = value
+
+    else:
+      raise AttributeError(key)
 
   def __init__(self, _):
     self.__corners = [ICCorner(i, self) for i in range(1, 5)]
@@ -1861,12 +1888,12 @@ class ZipLoader(object):
                  self.__source, _line,
                  Nosepokes)
 
-  def __makeNosepoke(self, sideManager, (Start, End, Side,
-                     SideCondition, SideError, TimeError, ConditionError,
-                     LickNumber, LickContactTime, LickDuration,
-                     AirState, DoorState, LED1State, LED2State, LED3State,
-                     _line)):
-
+  def __makeNosepoke(self, sideManager, nosepokeTuple):
+    (Start, End, Side,
+     SideCondition, SideError, TimeError, ConditionError,
+     LickNumber, LickContactTime, LickDuration,
+     AirState, DoorState, LED1State, LED2State, LED3State,
+     _line) = nosepokeTuple
     return Nosepoke(Start, End,
                     sideManager[Side] if Side is not None else None,
                     int(LickNumber) if LickNumber is not None else None,

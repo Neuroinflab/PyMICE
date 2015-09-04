@@ -102,11 +102,11 @@ class LickometerLogAnalyzer(ILogAnalyzer):
             # or np.all(short_hist > self.threshold_short):
             pass
             idcs = mmlab.contiguous_regions(medHist > self.medThreshold)
-            # print idcs
+            # print(idcs)
             for tstartidx, tstopidx in idcs:
               tstart = medBins[tstartidx]
               tstop = medBins[tstopidx]
-              # print tstart, tstop
+              # print('%s\t%s" % (tstart, tstop))
               results.append(ExcludeMiceData(startTime=datetime.fromtimestamp(tstart, UTC),
                       endTime=datetime.fromtimestamp(tstop, UTC), logType='Lickometer',
                       cage=cage, side=side,
@@ -122,15 +122,15 @@ class OldLogAnalyzer(ILogAnalyzer):
     errors = [l for l in log if l.Category  == 'Error' and l.Type not in ('Lickometer', 'Nosepoke')]
 
     if len(errors) > 0:
-      print '%d errors' % len(errors)
+      print('%d errors' % len(errors))
 
     warnings = [l for l in log if l.Notes.startswith('Unregistered tag') or l.Notes.startswith('Presence signal')]
 
     if len(warnings) > 0:
-      print '%d warnings in logs' % len(warnings)
+      print('%d warnings in logs' % len(warnings))
       notes = collections.Counter(l.Notes for l in warnings)
       for note, n in sorted(notes.items()):
-        print "%s: %d time(s)" % (note, n)
+        print("%s: %d time(s)" % (note, n))
 
     return () #dummy return to keep _logAnalysis happy
 
@@ -150,7 +150,7 @@ class PresenceLogAnalyzer(ILogAnalyzer):
         tt = np.array([toTimestampUTC(l.DateTime) for l in log \
                        if l.Cage == cage and l.Corner == corner and l.Notes.startswith('Presence signal')])
         if len(tt) > 0:
-          # print cage, corner, len(events)
+          # print('%s\t%s\t%s' % (cage, corner, len(events)))
           ttOrig = tt.copy()
           tds = np.diff(tt)
 
@@ -190,11 +190,11 @@ class PresenceLogAnalyzer(ILogAnalyzer):
             longBins = np.linspace(ttMin, ttMin + nBins * 24 * 3600.,
                                    int(nBins) + 1)
             hist, _ = np.histogram(tt, bins=longBins)
-            print tt
-            print longBins
-            print hist
+            print(tt)
+            print(longBins)
+            print(hist)
             if (hist > 4).any():
-              # print cage, corner, 'Zostalo ', len(tt)
+              # print('%s\t%s\t%s\t%s' % (cage, corner, 'Zostalo ', len(tt)))
               nBins = ceil(span / self.finBin)
               bins = np.arange(ttMin, ttMin + nBins * self.finBin,
                                int(nBins) + 1)

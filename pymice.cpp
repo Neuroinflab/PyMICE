@@ -19,92 +19,29 @@
 *    along with this software.  If not, see http://www.gnu.org/licenses/.     *
 *                                                                             *
 \*****************************************************************************/
-#include <Python.h>
-
-#include <cstring>
-#include <cstdio>
-#include <ctime>
-#include <cstdlib>
-#include <cmath>
-
-#include <algorithm>
-#include <limits>
-#include <list>
-#include <utility>
-#include <vector>
-
 #include "pymice.h"
-
-//Py_TPFLAGS_BASETYPE -> type can be subclassed :-D
-
-template <class T> void heapify(T * heap, unsigned int size, unsigned int i)
-{
-  unsigned int node = i;
-  unsigned int minimal = i; // already maximal - working at negative values ;)
-  unsigned int left = i << 1;
-  while (left <= size)
-  {
-    // some tolerance for values of same order
-    if (heap[left] > heap[minimal] && std::numeric_limits<T>::radix * heap[left] > heap[minimal]) minimal = left;
-    unsigned int right = left + 1;
-    if (left < size && heap[right] > heap[minimal] && std::numeric_limits<T>::radix * heap[right] > heap[minimal]) minimal = right;
-    if (minimal == node) return;
-    T tmp = heap[node];
-    heap[node] = heap[minimal];
-    heap[minimal] = tmp;
-    node = minimal;
-    left = minimal << 1;
-  }
-}
-
-template <class T> void buildHeap(T * heap, unsigned int size)
-{
-  for (unsigned int i = size / 2; i > 0; i--)
-  {
-    heapify(heap, size, i);
-  }
-}
-
-template <class T> T sumHeap(T * heap, unsigned int size)
-{
-  switch (size)
-  {
-    case 0:
-      return 0;
-
-    case 1:
-      return heap[0];
-
-    case 2:
-      return heap[0] + heap[1];
-
-    default:
-      heap--;
-      buildHeap(heap, size);
-    
-      while (size > 2)
-      {
-        if (heap[2] < heap[3])
-        {
-          heap[2] += heap[1];
-          heapify(heap, size, 2);
-        }
-        else
-        {
-          heap[3] += heap[1];
-          heapify(heap, size, 3);
-        }
-        heap[1] = heap[size--];
-        heapify(heap, size, 1);
-      }
-      return heap[1] + heap[2];
-  }
-}
 
 static PyMethodDef pymice_module_methods[] = {
   {"emptyStringToNone", (PyCFunction) pymice_emptyStringToNone, METH_O, "Replace (in place) empty strings in a list with None."},
-  {NULL}  /* Sentinel */  
+  {NULL, NULL, 0, NULL}  // Sentinel
 };
+
+const char * pymice_module_name = "_C";
+const char * pymice_module_doc = "Experimental module for pymice module speedup.";
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef pymice_module_def = {
+  PyModuleDef_HEAD_INIT,
+  pymice_module_name,
+  pymice_module_doc,
+  -1, // m_size
+  pymice_module_methods,
+  NULL, // m_reload
+  NULL, // m_traverse
+  NULL, // m_clear
+  NULL, // m_free
+};
+#endif
 
 void emptyStringToNone(PyObject * list)
 {
@@ -112,10 +49,13 @@ void emptyStringToNone(PyObject * list)
   for (Py_ssize_t i = 0; i < n; i++)
   {
     PyObject * item = PyList_GET_ITEM(list, i);
-    if (item != NULL)
-    {
-      if (PyString_CheckExact(item) && PyString_GET_SIZE(item) == 0 ||
-          PyUnicode_CheckExact(item) && PyUnicode_GET_SIZE(item) == 0)
+//    if (item != NULL)
+//    {
+      if (
+#if PY_MAJOR_VERSION < 3
+          (PyString_CheckExact(item) && PyString_GET_SIZE(item) == 0) ||
+#endif
+          (PyUnicode_CheckExact(item) && PyUnicode_GET_SIZE(item) == 0))
       {
         Py_DECREF(item);
         Py_INCREF(Py_None);
@@ -125,42 +65,39 @@ void emptyStringToNone(PyObject * list)
       {
         emptyStringToNone(item);
       }
-    }
+//    }
   }
 }
 
 static PyObject * pymice_emptyStringToNone(PyObject * self, PyObject * list)
 {
-  if (list != NULL)
-  {
+//  if (list != NULL)
+//  {
     if (PyList_CheckExact(list))
     {
       emptyStringToNone(list);
       Py_INCREF(list);
       return list;
     }
-    else
-    {
-      PyErr_SetString(PyExc_TypeError,
-                      "ERROR @pymice_emptyStringToNone: List must be a list instance (not a subtype).");
-    }
-  }
+
+    PyErr_SetString(PyExc_TypeError,
+                    "ERROR @pymice_emptyStringToNone: List must be a list instance (not a subtype).");
+//  }
   return NULL;
 }
 
 
-#ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-PyMODINIT_FUNC
-init_C(void) 
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit__C(void)
 {
-  srand(time(NULL));
-  PyObject * m;
-  
-  //penna_PennaType.tp_new = PyType_GenericNew;
-  m = Py_InitModule3("_C", pymice_module_methods,
-                     "Experimental module for pymice module speedup.");
-
+  PyObject * m = PyModule_Create(&pymice_module_def);
+  return m;
 }
+#else
+PyMODINIT_FUNC init_C(void)
+{
+  Py_InitModule3(pymice_module_name, pymice_module_methods,
+                 pymice_module_doc);
+}
+#endif
 

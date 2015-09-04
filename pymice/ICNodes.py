@@ -23,7 +23,12 @@
 ###############################################################################
 
 from operator import attrgetter
-from itertools import imap
+try:
+  from itertools import imap
+
+except ImportError:
+  pass #TODO: Python3 support
+
 from datetime import timedelta
 from _Tools import toDt
 
@@ -393,7 +398,7 @@ class HardwareEvent(BaseNode, SideAware):
 
 
 class NamedInt(int):
-  __slots__ = ('__text',)
+  #__slots__ = ('__text',)
 
   def __new__(cls, value, text='_Unknown'):
     obj = int.__new__(cls, value)
@@ -405,6 +410,13 @@ class NamedInt(int):
 
   def __repr__(self):
     return '%s(%d, %s)' % (self.__class__.__name__, self, repr(self.__text))
+
+  def __setattr__(self, key, value):
+    if key == '_NamedInt__text':
+      self.__dict__[key] = value
+
+    else:
+      raise AttributeError(key)
 
 
 class KnownHardwareEvent(HardwareEvent):

@@ -28,7 +28,12 @@ import csv
 import re
 import collections
 
-from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
+try:
+  from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
+
+except ImportError:
+  from configparser import RawConfigParser, NoSectionError, NoOptionError
+
 import pytz 
 import numpy as np                                           
 import matplotlib.ticker
@@ -506,7 +511,7 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
       try:
         tzinfo = pytz.timezone(self.get(sec, 'tzinfo'))
 
-      except NoOptionError, pytz.UnknownTimeZoneError:
+      except (NoOptionError, pytz.UnknownTimeZoneError):
         tzinfo = self.tzinfo
 
       times = []

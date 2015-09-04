@@ -216,7 +216,7 @@ def getTutorialData(path=None):
   def reporthook(blockcount, blocksize, totalsize):
     downloaded = blockcount * blocksize * 100 / totalsize
     if downloaded > fraction[0]:
-      print "%3d%% downloaded." % downloaded
+      print("%3d%% downloaded." % downloaded)
       fraction[0] += 25
 
 
@@ -243,46 +243,46 @@ def getTutorialData(path=None):
     if all(os.path.isfile(os.path.join(path, fn)) and \
            os.path.getsize(os.path.join(path, fn)) == fs \
            for (fn, fs) in files.items()):
-      print "%s data already downloaded." % url
+      print("%s data already downloaded." % url)
       continue
 
     toDownload[url] = sorted(files.items())
 
   if not toDownload:
-    print "All data already downloaded."
-    print
+    print("All data already downloaded.")
+    print("")
     return
 
-  print "In case the automatic download fails fetch the data manually."
+  print("In case the automatic download fails fetch the data manually.")
   for url, files in toDownload.items():
 
-    print "Download archive from: %s" % url
-    print "then extract the following files:"
+    print("Download archive from: %s" % url)
+    print("then extract the following files:")
     for filename, _ in files:
-      print "- %s" % filename
+      print("- %s" % filename)
   
-    print
+    print("")
   
-  print
+  print("")
 
   import tempfile
   import zipfile
   import urllib
 
   for url, files in toDownload.items():
-    print "downloading data from %s" % url
+    print("downloading data from %s" % url)
     fh, fn = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
     os.close(fh)
     try:
       fraction = [0]
       urllib.urlretrieve(url, fn, reporthook)
-      print 'data downloaded'
+      print('data downloaded')
       zf = zipfile.ZipFile(fn)
       for filename, filesize in files:
-        print "extracting file %s" % filename
+        print("extracting file %s" % filename)
         zf.extract(filename, path)
         if os.path.getsize(os.path.join(path, filename)) != filesize:
-          print 'Warning: size of extracted file differs'
+          print('Warning: size of extracted file differs')
 
       zf.close()
 

@@ -29,9 +29,9 @@ try:
 
 except ImportError:
   from distutils.core import setup, Extension
-  print "The setuptools module is not found - 'Unable to find vcvarsall.bat' error"
-  print "(and many others) might occur."
-  print
+  print("The setuptools module is not found - 'Unable to find vcvarsall.bat' error")
+  print("(and many others) might occur.")
+  print("")
   setuptoolsPresent = False
 
 else:

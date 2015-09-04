@@ -23,7 +23,11 @@
 ###############################################################################
 
 from datetime import datetime, timedelta
-from itertools import izip, islice
+try:
+  from itertools import izip, islice
+
+except ImportError:
+  pass #TODO: Python3 support
 
 import numpy as np
 import heapq
