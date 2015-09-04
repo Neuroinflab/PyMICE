@@ -43,7 +43,7 @@ class ICNodeTest(BaseTest):
         self.assertRaises(AttributeError, lambda: setattr(obj, attr, attr))
 
       except AssertionError:
-        print attr
+        print(attr)
         raise
 
   def checkDel(self, obj, skip=()):
@@ -58,7 +58,7 @@ class ICNodeTest(BaseTest):
         getattr(obj, attr)
 
       except AttributeError:
-        print attr
+        print(attr)
         raise
 
     obj._del_()
@@ -68,7 +68,7 @@ class ICNodeTest(BaseTest):
         self.assertRaises(AttributeError,
                           lambda: getattr(obj, attr))
       except AssertionError:
-        print attr
+        print(attr)
         raise
 
   def checkSlots(self, obj):
