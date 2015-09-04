@@ -544,6 +544,7 @@ class ICCageTest(unittest.TestCase):
 
       self.assertIs(side, corner[s])
       self.assertIs(side, corner[str(j)])
+      self.assertIs(side, getattr(corner, s.capitalize()))
 
       self.assertIs(side.Corner, corner)
 

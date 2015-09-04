@@ -41,7 +41,7 @@ import matplotlib.ticker
 import numpy as np
 from xml.dom import minidom
 
-from operator import methodcaller, attrgetter
+from operator import methodcaller, attrgetter, itemgetter
 from itertools import izip, repeat
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
@@ -1772,6 +1772,9 @@ class ICCorner(int):
   @property
   def Cage(self):
     return self.__Cage
+
+  Left = property(itemgetter('left'))
+  Right = property(itemgetter('right'))
 
 
 class ICCage(int):
