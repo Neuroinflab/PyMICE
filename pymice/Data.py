@@ -22,9 +22,8 @@
 #                                                                             #
 ###############################################################################
 
-# original: 60.8%; 1:30
-# refactored ICN: 17.4%; 1:14
-# refactored ICN+Nodes: 17.3%; 1:12
+# original: 2.7% (1.8 GB max); 73s
+# rewritten: 0.6% (412 MB max); 73s
 
 import os
 import zipfile
