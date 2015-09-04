@@ -58,7 +58,7 @@ class MockDictManager(Mock):
 
   def __getitem__(self, item):
     self._registerCall(('__getitem__', item))
-    return self.Cls(item)
+    return self.Cls(item) if item is not None else None
 
 
 class MockIntDictManager(int, MockDictManager):

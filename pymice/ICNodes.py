@@ -206,13 +206,12 @@ class Visit(BaseNode, DurationAware):
 
       return property(propertyGetter)
 
-  def __init__(self, Start, Corner, Animal, End=None, Module=None, Cage=None,
-               CornerCondition=None, PlaceError=None,
-               AntennaNumber=None, AntennaDuration=None,
-               PresenceNumber=None, PresenceDuration=None,
-               VisitSolution=None,
-               _source=None, _line=None,
-               Nosepokes=None):
+  def __init__(self, Start, Corner, Animal, End, Module, Cage,
+               CornerCondition, PlaceError,
+               AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
+               VisitSolution,
+               _source, _line,
+               Nosepokes):
     self.__Start = Start
     self.__Corner = Corner
     self.__Animal = Animal
@@ -238,7 +237,7 @@ class Visit(BaseNode, DurationAware):
     animal = animalManager[self.__Animal]
     cage = cageManager[self.__Cage]
     corner = cage[self.__Corner]
-    nosepokes = tuple(n.clone(sourceManager, corner) for n in self.__Nosepokes)
+    nosepokes = tuple(n.clone(sourceManager, corner) for n in self.__Nosepokes) if self.__Nosepokes is not None else None
     return self.__class__(self.__Start, corner, animal,
                           self.__End, self.__Module, cage,
                           self.__CornerCondition, self.__PlaceError,

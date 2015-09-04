@@ -214,20 +214,24 @@ class TestVisit(ICNodeTest):
                            for i in xrange(1, 5))
     self.visit = Visit(self.start, 2, 'animal', self.end, 'mod', 4,
                        1, 0,
-                       2, timedelta(seconds=12.125),
-                       7, timedelta(seconds=8.5),
+                       2, timedelta(seconds=12.125), 7, timedelta(seconds=8.5),
                        0,
                        'source', 1,
                        self.nosepokes,
                        )
-    self.minimalVisit = Visit(self.start, 2, 'animal')
+    self.minimalVisit = Visit(self.start, 2, 'animal', None, None, -1,
+                              None, None,
+                              None, None, None, None,
+                              None,
+                              None, None,
+                              None)
 
   def testCreate(self):
-    #_vid
     self.checkAttributes(self.minimalVisit, [('Start', self.start),
                                              ('Corner', 2),
                                              ('Animal', 'animal'),
-                                             'End', 'Module', 'Cage',
+                                             ('Cage', -1),
+                                             'End', 'Module',
                                              'CornerCondition', 'PlaceError',
                                              'AntennaNumber', 'AntennaDuration',
                                              'PresenceNumber', 'PresenceDuration',
@@ -277,6 +281,14 @@ class TestVisit(ICNodeTest):
 
     self.assertEqual(sourceManager.sequence, [('__getitem__', 'source')])
     self.assertIsInstance(visit._source, sourceManager.Cls)
+
+  def testCloneNoNosepokes(self):
+    cageManager = MockIntDictManager()
+    sourceManager = MockStrDictManager()
+    animalManager = MockStrDictManager()
+
+    clone = self.minimalVisit.clone(sourceManager, cageManager, animalManager)
+    self.checkObjectsEquals(self.minimalVisit, clone)
 
   def testReadOnly(self):
     self.checkReadOnly(self.visit)
