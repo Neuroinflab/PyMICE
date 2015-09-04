@@ -22,25 +22,11 @@
 #                                                                             #
 ###############################################################################
 
-from _Tools import BaseNodeMetaclass
+from _Tools import BaseNodeMetaclass, BaseNode_del_
 
 
 class BaseNode(object):
   __slots__ = ()
   __metaclass__ = BaseNodeMetaclass
-
-
-  def _del_(self):
-    for cls in self.__class__.__mro__:
-      if not hasattr(cls, '__slots__'):
-        continue
-
-      #privatePrefix = '_' + cls.__name__
-      privatePrefix = ''
-
-      for attr in cls.__slots__:
-        try:
-          delattr(self, privatePrefix + attr if attr.startswith('__') else attr)
-
-        except AttributeError:
-          pass
+  _del_ = BaseNode_del_
+  
