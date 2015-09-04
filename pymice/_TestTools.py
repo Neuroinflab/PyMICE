@@ -43,7 +43,7 @@ class Mock(object):
           return self.__callers[item][args]
 
         except TypeError:
-          print item, args
+          print('%s\t%s' % (item, args))
           raise
 
     return method
@@ -63,7 +63,6 @@ class MockDictManager(Mock):
 
 class MockIntDictManager(int, MockDictManager):
   def __init__(self, val=0, *args, **kwargs):
-    int.__init__(self, val)
     MockDictManager.__init__(self, *args, **kwargs)
     self.items = {}
 
@@ -100,20 +99,24 @@ class MockCloneable(Mock):
 
 
 class BaseTest(TestCase):
+  longMessage = True
   def checkAttribute(self, obj, name, value=None, cls=None):
-    try:
+    # try:
       attr = getattr(obj, name)
       if value is None:
-        self.assertIs(attr, None,)
+        self.assertIs(attr, None,
+                      'Attribute: %s' % name)
 
       else:
-        self.assertEqual(attr, value)
+        self.assertEqual(attr, value,
+                         'Attribute: %s' % name)
         if cls is not None:
-          self.assertIsInstance(attr, cls)
+          self.assertIsInstance(attr, cls,
+                                'Attribute: %s' % name)
 
-    except AssertionError:
-      print name
-      raise
+    # except AssertionError:
+    #   print(name)
+    #   raise
 
   def checkAttributes(self, obj, testList):
     for test in testList:
@@ -139,9 +142,10 @@ class BaseTest(TestCase):
       if attr in skip:
         continue
 
-      try:
-        self.assertEqual(getattr(a, attr), getattr(b, attr))
+      # try:
+      self.assertEqual(getattr(a, attr), getattr(b, attr),
+                       'Attribute: %s' % attr)
 
-      except AssertionError:
-        print attr
-        raise
+      # except AssertionError:
+      #   print(attr)
+      #   raise

@@ -31,43 +31,11 @@ except ImportError:
 
 from datetime import timedelta
 from _Tools import toDt
+from _BaseNode2 import BaseNode
 
 def getTimeString(time):
   return time.strftime('%Y-%m-%d %H:%M:%S') + \
          ('%.3f' % (time.microsecond / 1000000.))[1:5]
-
-
-def makePrivateSlots(attributes):
-  return tuple('__' + s for s in attributes)
-
-
-class BaseNode(object):
-  __slots__ = ()
-
-  class __metaclass__(type):
-    def __new__(mcl, name, bases, attrs):
-
-      attributes = attrs['__slots__']
-      slots = makePrivateSlots(attributes)
-      attrs['__slots__'] = slots
-      attrs.update(zip(attributes,
-                      (property(attrgetter('_' + name + s)) for s in slots)))
-
-      return type.__new__(mcl, name, bases, attrs)
-
-  def _del_(self):
-    for cls in self.__class__.__mro__:
-      if not hasattr(cls, '__slots__'):
-        continue
-
-      privatePrefix = '_' + cls.__name__
-
-      for attr in cls.__slots__:
-        try:
-          delattr(self, privatePrefix + attr if attr.startswith('__') else attr)
-
-        except AttributeError:
-          pass
 
 
 class DurationAware(object):

@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# encoding: utf-8
+###############################################################################
+#                                                                             #
+#    PyMICE library                                                           #
+#                                                                             #
+#    Copyright (C) 2012-2015 Jakub M. Kowalski, S. Łęski (Laboratory of       #
+#    Neuroinformatics; Nencki Institute of Experimental Biology)              #
+#                                                                             #
+#    This software is free software: you can redistribute it and/or modify    #
+#    it under the terms of the GNU General Public License as published by     #
+#    the Free Software Foundation, either version 3 of the License, or        #
+#    (at your option) any later version.                                      #
+#                                                                             #
+#    This software is distributed in the hope that it will be useful,         #
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of           #
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            #
+#    GNU General Public License for more details.                             #
+#                                                                             #
+#    You should have received a copy of the GNU General Public License        #
+#    along with this software.  If not, see http://www.gnu.org/licenses/.     #
+#                                                                             #
+###############################################################################
+
+from _Tools import BaseNodeMetaclass
+
+
+class BaseNode(object):
+  __slots__ = ()
+  __metaclass__ = BaseNodeMetaclass
+
+
+  def _del_(self):
+    for cls in self.__class__.__mro__:
+      if not hasattr(cls, '__slots__'):
+        continue
+
+      #privatePrefix = '_' + cls.__name__
+      privatePrefix = ''
+
+      for attr in cls.__slots__:
+        try:
+          delattr(self, privatePrefix + attr if attr.startswith('__') else attr)
+
+        except AttributeError:
+          pass

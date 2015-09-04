@@ -368,6 +368,23 @@ def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
   result.append((lastStart, lastEnd, lastValue))
   return result
 
+
+def makePrivateSlots(attributes, name):
+  prefix = '_%s__' % name
+  return tuple(prefix + s for s in attributes)
+
+
+class BaseNodeMetaclass(type):
+  def __new__(mcl, name, bases, attrs):
+    attributes = attrs['__slots__']
+    slots = makePrivateSlots(attributes, name)
+    attrs['__slots__'] = slots
+    attrs.update(zip(attributes,
+                     (property(attrgetter(s)) for s in slots)))
+
+    return type.__new__(mcl, name, bases, attrs)
+
+
 if __name__ == '__main__':
   import doctest
   import collections

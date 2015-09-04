@@ -211,7 +211,7 @@ class TestVisit(ICNodeTest):
                                          LickNumber = i - 1,
                                          LickDuration = timedelta(seconds=0.25 * i),
                                          LickContactTime= timedelta(seconds=0.125 * i))\
-                           for i in xrange(1, 5))
+                           for i in range(1, 5))
     self.visit = Visit(self.start, 2, 'animal', self.end, 'mod', 4,
                        1, 0,
                        2, timedelta(seconds=12.125), 7, timedelta(seconds=8.5),
