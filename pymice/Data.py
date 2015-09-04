@@ -1240,7 +1240,8 @@ class Loader(Data):
       fixSessions(timeOrderer.pullOrdered(), sessions)
 
     else:
-      map(methodcaller('append', pytz.utc), timeToFix) # UTC assumed
+      for t in timeToFix:
+        t.append(pytz.utc) # UTC assumed
 
     visits['Start'] = [datetime(*t) for t in visits['Start']]
     visits['End'] = [datetime(*t) for t in visits['End']]
