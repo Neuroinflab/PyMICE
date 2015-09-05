@@ -22,13 +22,20 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import time
 import warnings
 from math import modf
 from operator import attrgetter
+
+try:
+  from itertools import imap
+
+except ImportError:
+  imap = map
 
 from numbers import Number
 import numpy as np
@@ -37,6 +44,8 @@ if not issubclass(np.floating, Number):
 
 from _FixTimezones import LatticeOrderer
 
+if sys.version_info >= (3, 0):
+  basestring = str
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
@@ -385,8 +394,71 @@ class BaseNodeMetaclass(type):
     return type.__new__(mcl, name, bases, attrs)
 
 
+def BaseNode_del_(self):
+  for cls in self.__class__.__mro__:
+    if not hasattr(cls, '__slots__'):
+      continue
+
+    for attr in cls.__slots__:
+      try:
+        delattr(self, attr)
+
+      except AttributeError:
+        pass
+
+class VisitMetaclass(BaseNodeMetaclass):
+  __npSummaryProperties = [(('NosepokeDuration', 'Duration'), timedelta(0)),
+                           ('LickNumber', 0),
+                           ('LickDuration', timedelta(0)),
+                           ('LickContactTime', timedelta(0)),
+                           ]
+  def __new__(cls, name, bases, attrs):
+    cls.__addNosepokeSummaryPropertiesToDict(attrs)
+    return BaseNodeMetaclass.__new__(cls, name, bases, attrs)
+
+  @classmethod
+  def __addNosepokeSummaryPropertiesToDict(cls, dict):
+    dict.update(cls.__makeNosepokeSummaryPropertyPair(*propertyAttr) \
+                for propertyAttr in cls.__npSummaryProperties)
+
+  @classmethod
+  def __makeNosepokeSummaryPropertyPair(cls, arg, start):
+    propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
+    return propName, cls.__makeNosepokeAggregativeProperty(attrName, start)
+
+  @staticmethod
+  def __makeNosepokeAggregativeProperty(attr, start):
+    npAttrGetter = attrgetter(attr)
+    def propertyGetter(self):
+      nosepokes = self._Visit__Nosepokes
+      if nosepokes is not None:
+        return sum(imap(npAttrGetter, nosepokes), start)
+
+    return property(propertyGetter)
+
+
+class DurationAware(object):
+  class DurationCannotBeCalculatedError(AttributeError):
+    pass
+
+  __slots__ = ()
+  @property
+  def Duration(self):
+    try:
+      return self.End - self.Start
+
+    except TypeError:
+      raise self.DurationCannotBeCalculatedError
+
+
+def getTimeString(time):
+  return time.strftime('%Y-%m-%d %H:%M:%S') + \
+         ('%.3f' % (time.microsecond / 1000000.))[1:5]
+
+
 if __name__ == '__main__':
   import doctest
   import collections
   doctest.testmod(extraglobs={
     'Pair': collections.namedtuple('Pair', ['a', 'b'])})
+

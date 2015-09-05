@@ -25,13 +25,11 @@
 from _Tools import (BaseNodeMetaclass, BaseNode_del_,
                     VisitMetaclass, DurationAware, getTimeString)
 
-
-class BaseNode(object):
+class BaseNode(object, metaclass=BaseNodeMetaclass):
   __slots__ = ()
-  __metaclass__ = BaseNodeMetaclass
   _del_ = BaseNode_del_
 
-class Visit(BaseNode, DurationAware):
+class Visit(BaseNode, DurationAware, metaclass=VisitMetaclass):
   __slots__ = ('Start', 'Corner', 'Animal', 'End', 'Module', 'Cage',
                'CornerCondition', 'PlaceError',
                'AntennaNumber', 'AntennaDuration',
@@ -40,7 +38,6 @@ class Visit(BaseNode, DurationAware):
                '_source', '_line',
                'Nosepokes')
 
-  __metaclass__ = VisitMetaclass
 
   def __init__(self, Start, Corner, Animal, End, Module, Cage,
                CornerCondition, PlaceError,

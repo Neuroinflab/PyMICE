@@ -22,34 +22,17 @@
 #                                                                             #
 ###############################################################################
 
-from operator import attrgetter
-try:
-  from itertools import imap
+import sys
 
-except ImportError:
-  pass #TODO: Python3 support
+from _Tools import toDt, getTimeString, DurationAware
 
-from datetime import timedelta
-from _Tools import toDt
-from _BaseNode2 import BaseNode
+if sys.version_info >= (3, 0):
+  from _BaseNode3 import BaseNode, Visit
+  unicode = str
+  basestring = str
 
-def getTimeString(time):
-  return time.strftime('%Y-%m-%d %H:%M:%S') + \
-         ('%.3f' % (time.microsecond / 1000000.))[1:5]
-
-
-class DurationAware(object):
-  class DurationCannotBeCalculatedError(AttributeError):
-    pass
-
-  __slots__ = ()
-  @property
-  def Duration(self):
-    try:
-      return self.End - self.Start
-
-    except TypeError:
-      raise self.DurationCannotBeCalculatedError
+else:
+  from _BaseNode2 import BaseNode, Visit
 
 
 class SideAware(object):
@@ -114,11 +97,17 @@ class Animal(BaseNode):
   def __hash__(self):
     return self.__Name.__hash__()
 
-  def __str__(self):
-    return self.__Name.encode('utf-8')
 
-  def __unicode__(self):
-    return self.__Name
+  if sys.version_info >= (3, 0):
+    def __str__(self):
+      return self.__Name
+
+  else:
+    def __str__(self):
+      return self.__Name.encode('utf-8')
+
+    def __unicode__(self):
+      return self.__Name
 
   def __repr__(self):
     result = '< Animal %s (' % self.Name
@@ -126,7 +115,7 @@ class Animal(BaseNode):
       result += '%s; ' % self.Sex
 
     result += 'Tag: ' if len(self.__Tag) == 1 else 'Tags: '
-    result += ', '.join(str(t) for t in self.__Tag)
+    result += ', '.join(str(t) for t in sorted(self.__Tag))
     return result + ') >'
 
   def merge(self, other):
@@ -140,105 +129,7 @@ class Animal(BaseNode):
     self.__Tag = self.__Tag | other.__Tag
 
 
-class Visit(BaseNode, DurationAware):
-  __slots__ = ('Start', 'Corner', 'Animal', 'End', 'Module', 'Cage',
-                'CornerCondition', 'PlaceError',
-                'AntennaNumber', 'AntennaDuration',
-                'PresenceNumber', 'PresenceDuration',
-                'VisitSolution',
-                '_source', '_line',
-                'Nosepokes')
 
-  class __metaclass__(BaseNode.__metaclass__):
-    __npSummaryProperties = [(('NosepokeDuration', 'Duration'), timedelta(0)),
-                             ('LickNumber', 0),
-                             ('LickDuration', timedelta(0)),
-                             ('LickContactTime', timedelta(0)),
-                             ]
-    def __new__(cls, name, bases, attrs):
-      cls.__addNosepokeSummaryPropertiesToDict(attrs)
-      return BaseNode.__metaclass__.__new__(cls, name, bases, attrs)
-
-    @classmethod
-    def __addNosepokeSummaryPropertiesToDict(cls, dict):
-      dict.update(cls.__makeNosepokeSummaryPropertyPair(*propertyAttr)\
-                  for propertyAttr in cls.__npSummaryProperties)
-
-    @classmethod
-    def __makeNosepokeSummaryPropertyPair(cls, arg, start):
-      propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
-      return propName, cls.__makeNosepokeAggregativeProperty(attrName, start)
-
-    @staticmethod
-    def __makeNosepokeAggregativeProperty(attr, start):
-      npAttrGetter = attrgetter(attr)
-      def propertyGetter(self):
-        nosepokes = self._Visit__Nosepokes
-        if nosepokes is not None:
-          return sum(imap(npAttrGetter, nosepokes), start)
-
-      return property(propertyGetter)
-
-  def __init__(self, Start, Corner, Animal, End, Module, Cage,
-               CornerCondition, PlaceError,
-               AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-               VisitSolution,
-               _source, _line,
-               Nosepokes):
-    self.__Start = Start
-    self.__Corner = Corner
-    self.__Animal = Animal
-    self.__End = End
-    self.__Module = Module
-    self.__Cage = Cage
-    self.__CornerCondition = CornerCondition
-    self.__PlaceError = PlaceError
-    self.__AntennaNumber = AntennaNumber
-    self.__AntennaDuration = AntennaDuration
-    self.__PresenceNumber = PresenceNumber
-    self.__PresenceDuration = PresenceDuration
-    self.__VisitSolution = VisitSolution
-    self.___source = _source
-    self.___line = _line
-    self.__Nosepokes = Nosepokes
-    if Nosepokes is not None:
-      for nosepoke in Nosepokes:
-        nosepoke._bindToVisit(self)
-
-  def clone(self, sourceManager, cageManager, animalManager):
-    source = sourceManager[self.___source]
-    animal = animalManager[self.__Animal]
-    cage = cageManager[self.__Cage]
-    corner = cage[self.__Corner]
-    nosepokes = tuple(n.clone(sourceManager, corner) for n in self.__Nosepokes) if self.__Nosepokes is not None else None
-    return self.__class__(self.__Start, corner, animal,
-                          self.__End, self.__Module, cage,
-                          self.__CornerCondition, self.__PlaceError,
-                          self.__AntennaNumber, self.__AntennaDuration,
-                          self.__PresenceNumber, self.__PresenceDuration,
-                          self.__VisitSolution, source,
-                          self.___line, nosepokes)
-
-  def _del_(self):
-    if self.__Nosepokes:
-      for nosepoke in self.__Nosepokes:
-        nosepoke._del_()
-
-    super(Visit, self)._del_()
-
-  # derivatives
-  @property
-  def NosepokeNumber(self):
-    if self.__Nosepokes is not None:
-      return len(self.__Nosepokes)
-
-
-
-
-  def __repr__(self):
-    return '< Visit of "%s" to corner #%d of cage #%d (at %s) >' % \
-           (self.__Animal, self.__Corner, self.__Cage,
-            getTimeString(self.__Start))
 
 
 class Nosepoke(BaseNode, SideAware, DurationAware):
@@ -377,7 +268,7 @@ class NamedInt(int):
     return self.__text
 
   def __repr__(self):
-    return '%s(%d, %s)' % (self.__class__.__name__, self, repr(self.__text))
+    return '%s(%d, %s)' % (self.__class__.__name__, int(self), repr(self.__text))
 
   def __setattr__(self, key, value):
     if key == '_NamedInt__text':

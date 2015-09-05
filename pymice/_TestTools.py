@@ -21,8 +21,13 @@
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
 ###############################################################################
+
+import sys
 from unittest import TestCase
 
+if sys.version_info >= (3, 0):
+#  unicode = str
+   basestring = str
 
 def allInstances(instances, cls):
   return all(isinstance(x, cls) for x in instances)

@@ -22,6 +22,7 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 import unittest
 
 from datetime import datetime, timedelta
@@ -34,6 +35,11 @@ from ICNodes import Animal, Visit, Nosepoke, \
 from _TestTools import allInstances, Mock, MockIntDictManager, \
                        MockStrDictManager, MockCloneable, \
                        BaseTest
+
+
+if sys.version_info >= (3, 0):
+  unicode = str
+#   basestring = str
 
 
 class ICNodeTest(BaseTest):
@@ -124,7 +130,9 @@ class TestAnimal(ICNodeTest):
     self.assertFalse(self.mickey == Animal.fromRow('Mickey', '2', Sex='female'))
 
     animal = Animal.fromRow(u'b\xf3br', '1')
-    self.assertTrue(animal == 'b\xc3\xb3br')
+    if sys.version_info < (3, 0):
+      self.assertTrue(animal == 'b\xc3\xb3br')
+
     self.assertFalse(animal == 'bobr')
 
     self.assertTrue(animal == u'b\xf3br')
@@ -136,7 +144,8 @@ class TestAnimal(ICNodeTest):
     self.assertFalse(self.mickey != Animal.fromRow('Mickey', '2'))
 
     animal = Animal(u'b\xf3br', '1')
-    self.assertFalse(animal != 'b\xc3\xb3br')
+    if sys.version_info < (3, 0):
+      self.assertFalse(animal != 'b\xc3\xb3br')
     self.assertTrue(animal != 'bobr')
     self.assertFalse(animal != u'b\xf3br')
     self.assertTrue(animal != u'b\xc3\xb3br')
@@ -144,6 +153,8 @@ class TestAnimal(ICNodeTest):
   def testHash(self):
     self.assertEqual(hash(self.mickey), hash('Mickey'))
 
+  @unittest.skipIf(sys.version_info >= (3, 0),
+                   'Python3: tested by .testUnicode()')
   def testStr(self):
     animal = Animal.fromRow(u'b\xf3br', '1')
     self.assertEqual(str(animal), 'b\xc3\xb3br')
@@ -499,7 +510,7 @@ class TestLogEntry(ICNodeTest):
     self.checkAttributeSeq(self.logs, 'Door', ['left', 'right', None, None, None])
 
   def testRepr(self):
-    self.assertEqual(map(repr, self.logs),
+    self.assertEqual(list(map(repr, self.logs)),
                      ['< Log cat%d, tpe%d (at 1970-01-01 00:00:00.000) >' % (i, i)\
                       for i in range(1, len(self.logs) + 1)])
 
