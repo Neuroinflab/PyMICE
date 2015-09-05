@@ -39,7 +39,6 @@ from _TestTools import allInstances, Mock, MockIntDictManager, \
 
 if sys.version_info >= (3, 0):
   unicode = str
-#   basestring = str
 
 
 class ICNodeTest(BaseTest):
