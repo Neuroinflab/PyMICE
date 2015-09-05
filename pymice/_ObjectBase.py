@@ -181,7 +181,8 @@ class ObjectBase(object):
       if not acceptedValues:
         return np.zeros_like(self.__values, dtype=bool)
 
-      return self.__sumMasks(map(self.__getMasksMatchingValue, acceptedValues))
+      # XXX: Python3 fix
+      return self.__sumMasks(list(map(self.__getMasksMatchingValue, acceptedValues)))
 
     def __sumMasks(self, masks):
       if len(masks) == 1:
@@ -247,7 +248,8 @@ class ObjectBase(object):
   def __getConvertedAttributeValues(self, attributeName):
     attributeValues = self.getAttributes(attributeName)
     if attributeName in self.__converters:
-      return map(self.__converters[attributeName], attributeValues)
+      # XXX: Python3 fix - makes NumPy array working
+      return list(map(self.__converters[attributeName], attributeValues))
 
     return attributeValues
 
@@ -277,12 +279,12 @@ class ObjectBase(object):
     >>> ob.getAttributes('a')
     [ClassB(c=1, d=2)]
     """
-    return map(attrgetter(*attributeNames), self.__objects)
+    # XXX: Python3 fix
+    return list(map(attrgetter(*attributeNames), self.__objects))
 
 
 if __name__ == '__main__':
   import doctest
-  import collections
   class ClassA(object):
     def __init__(self, a, b):
       self.a = a
