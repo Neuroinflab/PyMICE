@@ -25,6 +25,11 @@
 # original: 2.7% (1.8 GB max); 73s
 # rewritten: 0.6% (412 MB max); 73s
 
+import sys
+if sys.version_info >= (3, 0):
+  basestring = str
+  unicode = str
+
 import os
 import zipfile
 import csv
@@ -46,10 +51,12 @@ from xml.dom import minidom
 
 from operator import methodcaller, attrgetter, itemgetter
 try:
-  from itertools import izip, repeat
+  from itertools import izip, imap, repeat, count
 
 except ImportError:
-  pass #TODO: Python3 support
+  from itertools import repeat, count
+  izip = zip
+  imap = map
 
 from datetime import datetime, timedelta, MINYEAR 
 from ICNodes import Animal, Group, Visit, Nosepoke, \
@@ -194,7 +201,7 @@ class Data(object):
 
     if len(cages) != 1:
       warn.warn("Mouse %s found in multiple cages: %s."\
-                    % (mouse, ', '.join(map(str,cages))), stacklevel=2)
+                    % (mouse, ', '.join(map(str, cages))), stacklevel=2)
       return tuple(cages)
 
     return cages[0]
@@ -270,27 +277,26 @@ class Data(object):
 # data management
 
   def insertLog(self, log):
-    newLog = map(methodcaller('clone', self._sourceManager,
-                              self._cageManager),
-                 log)
+    newLog = self.__cloneObjectsWithSourceCageManagers(log)
     self._insertNewLog(newLog)
+
+  def __cloneObjectsWithSourceCageManagers(self, objects):
+    return map(methodcaller('clone', self._sourceManager,
+                            self._cageManager),
+               objects)
 
   def _insertNewLog(self, lNodes):
     self.__log.put(lNodes)
 
   def insertEnv(self, env):
-    newEnv = map(methodcaller('clone', self._sourceManager,
-                              self._cageManager),
-                 env)
+    newEnv = self.__cloneObjectsWithSourceCageManagers(env)
     self._insertNewEnv(newEnv)
 
   def _insertNewEnv(self, eNodes):
     self.__environment.put(eNodes)
 
   def insertHw(self, hardwareEvents):
-    newHw = map(methodcaller('clone', self._sourceManager,
-                             self._cageManager),
-                hardwareEvents)
+    newHw = self.__cloneObjectsWithSourceCageManagers(hardwareEvents)
     self._insertNewHw(newHw)
 
   def _insertNewHw(self, hNodes):
@@ -1912,27 +1918,24 @@ class ZipLoader(object):
                     self.__source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
-    cages = visitsCollumns['Cage']
-    corners = visitsCollumns['Corner']
-
     if nosepokesCollumns is not None:
-      vIDs = visitsCollumns['VisitID']
-      vNosepokes = self.__assignNosepokesToVisits(nosepokesCollumns, vIDs)
+      vNosepokes = self.__assignNosepokesToVisits(nosepokesCollumns,
+                                                  visitsCollumns['VisitID'])
 
     else:
-      vNosepokes = ()
+      vNosepokes = repeat(None)
 
-    vColValues = [cages, corners] + [visitsCollumns.get(x, ()) \
-                  for x in ['AnimalTag', 'Start', 'End', 'ModuleName',
+    vColValues = [visitsCollumns.get(x, repeat(None)) \
+                  for x in ['Cage', 'Corner',
+                            'AnimalTag', 'Start', 'End', 'ModuleName',
                             'CornerCondition', 'PlaceError',
                             'AntennaNumber', 'AntennaDuration',
                             'PresenceNumber', 'PresenceDuration',
                             'VisitSolution',]]
-    vRows = max(map(len, vColValues))
-    vLines = range(1, 1 + vRows)
+    vLines = count(1)
     vColValues.append(vLines)
     vColValues.append(vNosepokes)
-    return map(self.__makeVisit, *vColValues)
+    return list(imap(self.__makeVisit, *vColValues))
 
   def __assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
@@ -1974,14 +1977,15 @@ class ZipLoader(object):
                     _line)
 
   def loadLog(self, columns):
-    colValues = self._getColumnValues(['DateTime',
-                                       'LogCategory',
-                                       'LogType',
-                                       'Cage',
-                                       'Corner',
-                                       'Side',
-                                       'LogNotes'], columns)
-    return map(self.__makeLog, *colValues)
+    return self.__columnsToObjects(columns,
+                                   ['DateTime',
+                                    'LogCategory',
+                                    'LogType',
+                                    'Cage',
+                                    'Corner',
+                                    'Side',
+                                    'LogNotes'],
+                                   self.__makeLog)
 
   def __makeEnv(self, DateTime, Temperature, Illumination, Cage,
                 _line):
@@ -1992,11 +1996,14 @@ class ZipLoader(object):
                                    self.__source, _line)
 
   def loadEnv(self, columns):
-    colValues = self._getColumnValues(['DateTime',
-                                       'Temperature',
-                                       'Illumination',
-                                       'Cage'], columns)
-    return map(self.__makeEnv, *colValues)
+    return self.__columnsToObjects(columns,
+                                   ['DateTime', 'Temperature',
+                                    'Illumination', 'Cage'],
+                                   self.__makeEnv)
+
+  def __columnsToObjects(self, columns, columnNames, objectFactory):
+    colValues = self._getColumnValues(columnNames, columns)
+    return list(imap(objectFactory, *colValues))
 
   __hwClass = {'0': AirHardwareEvent,
                '1': DoorHardwareEvent,
@@ -2020,20 +2027,17 @@ class ZipLoader(object):
                                   int(State), self.__source, _line)
 
   def loadHw(self, columns):
-    colValues = self._getColumnValues(['DateTime',
-                                       'Type',
-                                       'Cage',
-                                       'Corner',
-                                       'Side',
-                                       'State'], columns)
-    return map(self.__makeHw, *colValues)
+    return self.__columnsToObjects(columns,
+                                   ['DateTime',
+                                    'Type',
+                                    'Cage',
+                                    'Corner',
+                                    'Side',
+                                    'State'],
+                                   self.__makeHw)
 
   def _getColumnValues(self, columnNames, columns):
-    colValues = map(columns.get,
-                    columnNames)
-    n = max(map(len, colValues))
-    colValues.append(range(1, n + 1))
-    return colValues
+    return [columns.get(c) for c in columnNames] + [count(1)]
 
 
 if __name__ == '__main__':

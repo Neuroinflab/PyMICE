@@ -24,6 +24,7 @@
 
 import numpy as np
 from operator import attrgetter
+from collections import Sequence
 
 class ObjectBase(object):
   """
@@ -131,6 +132,11 @@ class ObjectBase(object):
   >>> ob = ObjectBase({'a': lambda x: x.d - x.c})
   >>> ob.get()
   []
+
+  >>> ob = ObjectBase()
+  >>> ob.put((x * x for x in range(4)))
+  >>> ob.get()
+  [0, 1, 4, 9]
   """
   class MaskManager(object):
     def __init__(self, values):
@@ -214,7 +220,8 @@ class ObjectBase(object):
     return len(self.__objects)
 
   def put(self, objects):
-    self.__objects = np.append(self.__objects, objects)
+    self.__objects = np.append(self.__objects,
+                               objects if isinstance(objects, Sequence) else list(objects))
     self.__cachedMaskManagers.clear()
 
   def get(self, filters=None):

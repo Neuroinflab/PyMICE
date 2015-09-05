@@ -22,6 +22,7 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 import unittest
 from datetime import datetime, timedelta
 from pytz import utc
@@ -34,6 +35,10 @@ import Data
 import minimock
 
 from _TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
+
+if sys.version_info >= (3, 0):
+  unicode = str
+  basestring = str
 
 
 def toStrings(seq):
@@ -134,9 +139,9 @@ class TestZipLoader(BaseTest):
     ends = [None if i == 1 else start + timedelta(seconds=15 + 10 * i) for i in vNumbers]
     modules = [None if i == 2 else str(i) for i in vNumbers]
     cages = [1 + (i % 2) * 4 for i in vNumbers]
-    corners = [1 + (i / 2) % 4 for i in vNumbers]
+    corners = [1 + (i // 2) % 4 for i in vNumbers]
     conditions = [None if i == 3 else 1 - i % 3 for i in vNumbers]
-    errors = [None if i == 4 else int(c < 0) for i, c in zip(vNumbers, conditions)]
+    errors = [None if i == 4 else 1 if c is None else int(c < 0) for i, c in zip(vNumbers, conditions)]
     aNumbers = [None if i == 5 else i % 3 for i in vNumbers]
     aDurations = [None if i == 6 else i % 3 * 0.125 for i in vNumbers]
     pNumbers = [None if i == 7 else i % 4 for i in vNumbers]
@@ -278,7 +283,7 @@ class TestZipLoader(BaseTest):
     start = datetime(1970, 1, 1, tzinfo=utc)
     end = start + timedelta(seconds=12)
     corners = [1 + (i - 1) % 2 for i in vIds]
-    cages = [1 + 3 * ((i - 1) / 2) for i in vIds]
+    cages = [1 + 3 * ((i - 1) // 2) for i in vIds]
     inputVColumns = {'VisitID': toStrings(vIds),
                      'AnimalTag': toStrings(vIds),
                      'Start': [start] * nVisits,
@@ -301,9 +306,9 @@ class TestZipLoader(BaseTest):
     lickDurations = [3. * i for i in lickContactTimes]
     airState = [i % 2 for i in _lines]
     doorState = [1 - i % 2 for i in _lines]
-    led1state = [i / 2 % 2 for i in _lines]
-    led2state = [1 - i / 2 % 2 for i in _lines]
-    led3state = [i / 3 % 2 for i in _lines]
+    led1state = [i // 2 % 2 for i in _lines]
+    led2state = [1 - i // 2 % 2 for i in _lines]
+    led3state = [i // 3 % 2 for i in _lines]
     inputNColumns = {'VisitID': toStrings(nIds),
                      'Start': nStarts,
                      'End': nEnds,
@@ -443,7 +448,7 @@ class TestZipLoader(BaseTest):
                                 'Temperature': floatToStrings(temperature, '%.1f'),
                                 'Illumination': toStrings(illumination),
                                 'Cage': toStrings(cages)})
-    self.assertEquals(len(envs), 2)
+    self.assertEqual(len(envs), 2)
     for name, tests in [('DateTime', times),
                         ('Temperature', temperature),
                         ('Illumination', illumination),
@@ -484,7 +489,7 @@ class TestZipLoader(BaseTest):
                               'Side': toStrings(sides),
                               'State': toStrings(states),
                               })
-    self.assertEquals(len(hws), n)
+    self.assertEqual(len(hws), n)
     for name, tests in [('DateTime', times),
                         ('Type', types),
                         ('Cage', cages),
