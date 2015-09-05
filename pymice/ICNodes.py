@@ -27,12 +27,12 @@ import sys
 from _Tools import toDt, getTimeString, DurationAware
 
 if sys.version_info >= (3, 0):
-  from _BaseNode3 import BaseNode, Visit
+  from _ICNodes3 import BaseNode, Visit
   unicode = str
   basestring = str
 
 else:
-  from _BaseNode2 import BaseNode, Visit
+  from _ICNodes2 import BaseNode, Visit
 
 
 class SideAware(object):
