@@ -204,22 +204,22 @@ class TestLatticeOrderer(unittest.TestCase):
     self.compareOrderTo([[0]])
 
   def testAddLatticeSequence(self):
-    self.orderer.addOrderedSequence(self.generateSequence(xrange(10, 0, -1)))
+    self.orderer.addOrderedSequence(self.generateSequence(range(10, 0, -1)))
 
-    self.compareOrderTo([[i] for i in xrange(10, 0, -1)])
+    self.compareOrderTo([[i] for i in range(10, 0, -1)])
 
 
   def testMakeTupleSequence(self):
-    firstElements = self.generateSequence(xrange(2, 9, 3))
-    secondElements = self.generateSequence(xrange(1, 9, 3))
-    thirdElements = self.generateSequence(xrange(0, 9, 3))
+    firstElements = self.generateSequence(range(2, 9, 3))
+    secondElements = self.generateSequence(range(1, 9, 3))
+    thirdElements = self.generateSequence(range(0, 9, 3))
     self.orderer.coupleTuples(firstElements, secondElements, thirdElements)
     self.orderer.addNodes(*firstElements)
 
     self.compareOrderTo([[2], [1], [0], [5], [4], [3], [8], [7], [6]])
 
   def testMakeOrderedSequence(self):
-    sequence = self.generateSequence(xrange(5, 0, -1))
+    sequence = self.generateSequence(range(5, 0, -1))
     self.orderer.makeOrderedSequence(sequence)
     a = LatticeOrderer.Node([10])
     a.markLessThan(sequence[0])

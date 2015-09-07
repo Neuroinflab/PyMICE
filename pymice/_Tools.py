@@ -307,7 +307,7 @@ def groupBy(objects, getKey):
   >>> output = groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
   ...                  getKey=operator.itemgetter(1))
   >>> for k in sorted(output):
-  ...   print k, output[k]
+  ...   print("%s %s" % (k, output[k]))
   1 [(1, 1), (2, 1, 8)]
   2 [(1, 2), (3, 2)]
   4 [(3, 4)]
@@ -315,7 +315,7 @@ def groupBy(objects, getKey):
   >>> output = groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
   ...                  getKey=lambda x: x[0] + x[1])
   >>> for k in sorted(output):
-  ...   print k, output[k]
+  ...   print("%s %s" % (k, output[k]))
   2 [(0, 2), (1, 1), (1, 1)]
   3 [(1, 2), (2, 1), (3, 0)]
 
@@ -324,13 +324,13 @@ def groupBy(objects, getKey):
 
   >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], 'a')
   >>> for k in sorted(output):
-  ...   print k, output[k]
+  ...   print("%s %s" % (k, output[k]))
   1 [Pair(a=1, b=2), Pair(a=1, b=1)]
   2 [Pair(a=2, b=1)]
 
   >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b'))
   >>> for k in sorted(output):
-  ...   print k, output[k]
+  ...   print("%s %s" % (k, output[k]))
   (1, 1) [Pair(a=1, b=1)]
   (1, 2) [Pair(a=1, b=2)]
   (2, 1) [Pair(a=2, b=1)]

@@ -22,12 +22,14 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 from datetime import datetime, timedelta
 try:
   from itertools import izip, islice
 
 except ImportError:
-  pass #TODO: Python3 support
+  from itertools import islice
+  izip = zip
 
 import numpy as np
 import heapq
@@ -167,6 +169,10 @@ class LatticeOrderer(object):
         self.addNodes(e)
 
       return leastElement
+
+  if sys.version_info >= (3, 0):
+    __next__ = next
+    del next
 
   def addNodes(self, *nodes):
     for node in nodes:

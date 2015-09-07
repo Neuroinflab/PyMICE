@@ -34,10 +34,10 @@ import os
 import zipfile
 import csv
 try:
-  import cStringIO
+  import cStringIO as io
 
 except ImportError:
-  pass #TODO: Python3 support
+  import io
 
 import dateutil.parser
 import pytz
@@ -552,13 +552,13 @@ class Data(object):
 
 
     >>> for v in ml_icp3.getVisits(order='Start'):
-    ...   print v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z")
+    ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
     2012-12-18 12:13:14.139000 +0100
     2012-12-18 12:18:55.421000 +0100
     2012-12-18 12:19:55.421000 +0100
 
     >>> for v in ml_l1.getVisits(mice='Minnie'):
-    ...   print v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z")
+    ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
     2012-12-18 12:30:02.360000 +0000
 
     @param mice: mouse (or mice) which visits are requested
@@ -615,7 +615,7 @@ class Data(object):
     """
     >>> log = ml_icp3.getLog(order='DateTime')
     >>> for entry in log:
-    ...   print entry.Notes
+    ...   print(entry.Notes)
     Session is started
     Session is stopped
 
@@ -656,7 +656,7 @@ class Data(object):
   def getEnvironment(self, start=None, end=None, order=None, startTime=None, endTime=None):
     """
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
-    ...   print "%.1f" %env.Temperature
+    ...   print("%.1f" % env.Temperature)
     22.0
     23.6
     22.0
@@ -1167,7 +1167,7 @@ class Loader(Data):
 
       timeOrderer.coupleTuples(vStarts, vEnds)
       timeOrderer.makeOrderedSequence(vEnds)
-      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(map(int, vids))])
+      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(list(imap(int, vids)))])
 
     else: #XXX
       timeToFix = visits['End'] + visits['Start'] 
@@ -1195,8 +1195,9 @@ class Loader(Data):
         timeOrderer.makeOrderedSequence(npEnds)
 
         npStarts = np.array(npStarts + [None], dtype=object)
-        npTags = np.array(map(vid2tag.__getitem__, npVids))
-        npSides = np.array(map(int, nosepokes['Side'])) % 2 # no bilocation assumed
+
+        npTags = np.array(list(imap(vid2tag.__getitem__, npVids)))
+        npSides = np.array(list(imap(int, nosepokes['Side']))) % 2 # no bilocation assumed
         # XXX                   ^ - ugly... possibly duplicated
 
         for tag in tagToAnimal:
@@ -1277,6 +1278,16 @@ class Loader(Data):
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     try:
       fh = zf.open(path + '.txt')
+      if sys.version_info >= (3, 0):
+        # if sys.version_info < (3, 2):
+        #   # XXX: Python3 monkey-path
+        #   fh.readable = lambda: True
+        #   fh.writable = lambda: False
+        #   fh.seekable = lambda: False
+        #   fh.read1 = items_file.read
+        #   #io.BytesIO(fh.read())
+
+        fh = io.TextIOWrapper(fh)
 
     except KeyError:
       return
@@ -1326,7 +1337,7 @@ class Loader(Data):
     if convert is not None:
       for label, f in convert.items():
         if label in data:
-          data[label] = map(f, data[label])
+          data[label] = list(imap(f, data[label]))
 
     return data
 
@@ -1343,13 +1354,12 @@ class Loader(Data):
     animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
 
     animalGroup = animals.pop('Group')
-    #animals = self._makeDicts(animals )
     tags = animals['Tag']
-    animals = map(Animal.fromRow,
-                  animals['Name'],
-                  tags,
-                  animals.get('Sex', ()),
-                  animals.get('Notes', ()))
+    animals = list(imap(Animal.fromRow,
+                        animals['Name'],
+                        tags,
+                        animals.get('Sex', repeat(None)),
+                        animals.get('Notes', repeat(None))))
 
     animalNames = set()
     groups = {}
@@ -1381,8 +1391,11 @@ class Loader(Data):
     """
     Process one input file and append data to self.data
     """
-    fname = fname.encode('utf-8')
-    print('loading data from %s' % fname)
+    if isinstance(fname, str): #XXX: Python3
+      print('loading data from %s' % fname)
+
+    else:
+      print('loading data from %s' % fname.encode('utf-8'))
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isinstance(fname, basestring) and os.path.isdir(fname):
@@ -1391,7 +1404,7 @@ class Loader(Data):
       else:
         zf = zipfile.ZipFile(fname)
 
-      self._loadZip(zf, source=fname.decode('utf-8'))
+      self._loadZip(zf, source=fname)
 
     self._buildCache()
 
@@ -1437,7 +1450,7 @@ class Merger(Data):
   """
   >>> mm = Merger(ml_icp3, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
-  ...   print '%s %d %s' % (str(v.Animal), len(v.Nosepokes), list(v.Animal.Tag)[0])
+  ...   print('%s %d %s' % (str(v.Animal), len(v.Nosepokes), list(v.Animal.Tag)[0]))
   Minnie 0 1337
   Mickey 1 42
   Jerry 2 69
@@ -1447,15 +1460,15 @@ class Merger(Data):
 
   >>> mm = Merger(ml_empty, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
-  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
+  ...   print('%s %d' % (str(v.Animal), len(v.Nosepokes)))
   Minnie 1
   Mickey 1
   Jerry 2
 
   >>> mm = Merger(ml_retagged, ml_l1)
   >>> for v in mm.getVisits(order='Start'):
-  ...   print '%s %d' % (str(v.Animal), len(v.Nosepokes))
-  ...   print "  %s" % (', '.join(sorted(v.Animal.Tag)))
+  ...   print('%s %d' % (str(v.Animal), len(v.Nosepokes)))
+  ...   print("  %s" % (', '.join(sorted(v.Animal.Tag))))
   Mickey 0
     1337, 42
   Minnie 1
@@ -1554,18 +1567,18 @@ class Merger(Data):
     >>> dtA = datetime(2012, 2, 1)
     >>> dtB = datetime(2012, 2, 2)
 
-    >>> map(methodcaller('getStart'),
-    ...     Merger._sortDataSources([FakeData(), FakeData(dtA),
-    ...                              FakeData(dtB), FakeData(dtA)])) == [dtA, dtA, dtB, None]
+    >>> list(map(methodcaller('getStart'),
+    ...          Merger._sortDataSources([FakeData(), FakeData(dtA),
+    ...                                   FakeData(dtB), FakeData(dtA)]))) == [dtA, dtA, dtB, None]
     True
 
-    >>> map(methodcaller('getStart'),
-    ...     Merger._sortDataSources([FakeData(dtA),
-    ...                              FakeData(dtB), FakeData(dtA)])) == [dtA, dtA, dtB]
+    >>> list(map(methodcaller('getStart'),
+    ...          Merger._sortDataSources([FakeData(dtA),
+    ...                                   FakeData(dtB), FakeData(dtA)]))) == [dtA, dtA, dtB]
     True
 
-    >>> map(methodcaller('getStart'),
-    ...     Merger._sortDataSources([FakeData(), FakeData(), FakeData()])) == [None, None, None]
+    >>> list(map(methodcaller('getStart'),
+    ...          Merger._sortDataSources([FakeData(), FakeData(), FakeData()]))) == [None, None, None]
     True
     """
     sourcesByStartPresence = groupBy(dataSources, getKey=lambda x: x.getStart() is not None)
