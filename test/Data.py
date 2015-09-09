@@ -23,18 +23,20 @@
 ###############################################################################
 
 import sys
+import os
 import unittest
+import doctest
+
 from datetime import datetime, timedelta
 from pytz import utc
 
-from Data import ZipLoader, Merger, LogEntry, EnvironmentalConditions, \
-                 AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent, \
-                 UnknownHardwareEvent, \
-                 ICCage, ICCageManager
-import Data
+import pymice as pm
+from pymice.Data import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
+                         AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
+                         UnknownHardwareEvent, ICCage, ICCageManager)
 import minimock
 
-from _TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
+from TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
 
 if sys.version_info >= (3, 0):
   unicode = str
@@ -578,10 +580,10 @@ class ICCageTest(unittest.TestCase):
 class ICCageManagerTest(unittest.TestCase):
   def setUp(self):
     self.cageManager = ICCageManager()
-    self.ICCage = Data.ICCage
+    self.ICCage = pm.Data.ICCage
 
   def tearDown(self):
-    Data.ICCage = self.ICCage
+    pm.Data.ICCage = self.ICCage
 
   def testGet(self):
     cages = set()
@@ -589,8 +591,8 @@ class ICCageManagerTest(unittest.TestCase):
       cages.add(cage)
       return minimock.Mock('ICCage(%s)' % cage,
                            returns=cage)
-    Data.ICCage = minimock.Mock('Data.ICCage',
-                                returns_func=newCage)
+    pm.Data.ICCage = minimock.Mock('Data.ICCage',
+                                   returns_func=newCage)
 
     cageNumber = 1
     cage = self.cageManager[cageNumber]
@@ -612,8 +614,8 @@ class ICCageManagerTest(unittest.TestCase):
         cages[cage] = item
         return item
 
-    Data.ICCage = minimock.Mock('Data.ICCage')
-    Data.ICCage.mock_returns_func = newCage
+    pm.Data.ICCage = minimock.Mock('Data.ICCage')
+    pm.Data.ICCage.mock_returns_func = newCage
 
     for i in range(1, 10):
       for j in range(1, i + 1):
@@ -629,21 +631,21 @@ class ICCageManagerTest(unittest.TestCase):
 
 class DataTest(unittest.TestCase):
   def testDel(self):
-    ICCage = Data.ICCage
+    ICCage = pm.Data.ICCage
 
     def getMockCage(n):
       cage = minimock.Mock('ICCage')
       cage._del_ = lambda: cagesDeleted.add(n)
       return cage
 
-    Data.ICCage = minimock.Mock('ICCage',
-                                returns_func=getMockCage)
+    pm.Data.ICCage = minimock.Mock('ICCage',
+                                    returns_func=getMockCage)
 
     deleted = set()
     cagesDeleted = set()
     toDelete = []
     cagesToDelete = []
-    data = Data.Data()
+    data = pm.Data.Data()
 
     def makeCloneInjector(cage, label):
       toDelete.append(label)
@@ -670,12 +672,12 @@ class DataTest(unittest.TestCase):
     for cage in cagesToDelete:
       self.assertIn(cage, cagesDeleted)
 
-    Data.ICCage = ICCage
+    pm.Data.ICCage = ICCage
 
 class MergerTest(unittest.TestCase):
   def setUp(self):
-    self.d1 = Data.Data()
-    self.d2 = Data.Data()
+    self.d1 = pm.Data.Data()
+    self.d2 = pm.Data.Data()
     self.time1 = datetime(1970, 1, 1, tzinfo=utc)
     self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
 
@@ -712,4 +714,17 @@ class MergerTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+  testDir = os.path.abspath(os.path.dirname(__file__))
+  TEST_GLOBALS = {
+    #XXX: ml_l1 - not sure if data format is valid
+    'ml_l1': pm.Loader(os.path.join(testDir, 'legacy_data.zip')),
+    #'ml_a1': pm.Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
+    'ml_icp3': pm.Loader(os.path.join(testDir, 'icp3_data.zip'),
+                      getLog=True, getEnv=True),
+    'ml_empty': pm.Loader(os.path.join(testDir, 'empty_data.zip')),
+    'ml_retagged': pm.Loader(os.path.join(testDir, 'retagged_data.zip')),
+  }
+
+  doctest.testmod(pm.Data, extraglobs=TEST_GLOBALS)
+
   unittest.main()

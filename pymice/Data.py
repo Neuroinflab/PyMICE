@@ -58,18 +58,18 @@ except ImportError:
   izip = zip
   imap = map
 
-from datetime import datetime, timedelta, MINYEAR 
-from ICNodes import Animal, Group, Visit, Nosepoke, \
-                    LogEntry, EnvironmentalConditions, \
-                    AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,\
-                    UnknownHardwareEvent, Session
+from datetime import datetime, timedelta, MINYEAR
 
-from _Tools import timeString, ensureFloat, ensureInt, \
-                   convertTime, timeToList, \
-                   PathZipFile, toTimestampUTC, warn, groupBy
-from _FixTimezones import inferTimezones, LatticeOrderer
+from .ICNodes import (Animal, Group, Visit, Nosepoke, LogEntry,
+                      EnvironmentalConditions, AirHardwareEvent,
+                      DoorHardwareEvent, LedHardwareEvent,
+                      UnknownHardwareEvent, Session)
 
-from _ObjectBase import ObjectBase
+from ._Tools import (timeString, timeToList,
+                     PathZipFile, toTimestampUTC, warn, groupBy)
+from ._FixTimezones import inferTimezones, LatticeOrderer
+
+from ._ObjectBase import ObjectBase
 
 callCopy = methodcaller('copy')
 
@@ -2051,19 +2051,3 @@ class ZipLoader(object):
 
   def _getColumnValues(self, columnNames, columns):
     return [columns.get(c) for c in columnNames] + [count(1)]
-
-
-if __name__ == '__main__':
-  import doctest
-  testDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../test'))
-  TEST_GLOBALS = {
-    #XXX: ml_l1 - not sure if data format is valid
-    'ml_l1': Loader(os.path.join(testDir, 'legacy_data.zip')),
-    #'ml_a1': Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
-    'ml_icp3': Loader(os.path.join(testDir, 'icp3_data.zip'),
-                      getLog=True, getEnv=True),
-    'ml_empty': Loader(os.path.join(testDir, 'empty_data.zip')),
-    'ml_retagged': Loader(os.path.join(testDir, 'retagged_data.zip')),
-    }
-
-  doctest.testmod(extraglobs=TEST_GLOBALS)

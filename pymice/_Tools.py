@@ -44,7 +44,7 @@ import numpy as np
 if not issubclass(np.floating, Number):
   Number.register(np.floating)
 
-from _FixTimezones import LatticeOrderer
+from ._FixTimezones import LatticeOrderer
 
 if sys.version_info >= (3, 0):
   basestring = str
@@ -96,34 +96,34 @@ class PmWarnings(object):
 
 warn = PmWarnings()
 
-def ensureFloat(x):
-  """
-  Convert x to float if possible.
-
-  Accept ',' used as a decimal mark.
-
-  Convert '' to None.
-  """
-  if isinstance(x, basestring):
-    if x == '':
-      return None
-
-    return float(x.replace(',', '.'))
-
-  if x is not None:
-    return float(x)
-
-
-def ensureInt(x):
-  """
-  Convert x to int if possible.
-
-  Convert '' to None.
-  """
-  if x == '' or x is None:
-    return None
-
-  return int(x)
+# def ensureFloat(x):
+#   """
+#   Convert x to float if possible.
+#
+#   Accept ',' used as a decimal mark.
+#
+#   Convert '' to None.
+#   """
+#   if isinstance(x, basestring):
+#     if x == '':
+#       return None
+#
+#     return float(x.replace(',', '.'))
+#
+#   if x is not None:
+#     return float(x)
+#
+#
+# def ensureInt(x):
+#   """
+#   Convert x to int if possible.
+#
+#   Convert '' to None.
+#   """
+#   if x == '' or x is None:
+#     return None
+#
+#   return int(x)
 
 
 def hTime(t):
@@ -378,11 +378,3 @@ def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
 
   result.append((lastStart, lastEnd, lastValue))
   return result
-
-
-if __name__ == '__main__':
-  import doctest
-  import collections
-  doctest.testmod(extraglobs={
-    'Pair': collections.namedtuple('Pair', ['a', 'b'])})
-

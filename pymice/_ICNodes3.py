@@ -22,8 +22,8 @@
 #                                                                             #
 ###############################################################################
 
-from _ICNodesBase import (BaseNodeMetaclass, BaseNode_del_, \
-                          VisitMetaclass, DurationAware, getTimeString)
+from ._ICNodesBase import (BaseNodeMetaclass, BaseNode_del_, \
+                           VisitMetaclass, DurationAware, getTimeString)
 
 class BaseNode(object, metaclass=BaseNodeMetaclass):
   __slots__ = ()
