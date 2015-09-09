@@ -22,11 +22,11 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 import os 
 from datetime import datetime
 import csv
 import re
-import collections
 
 try:
   from ConfigParser import RawConfigParser, NoSectionError, NoOptionError
@@ -42,6 +42,8 @@ import matplotlib.pyplot as plt
 
 from ._Tools import convertTime, warn
 
+if sys.version_info >= (3, 0):
+  basestring = str
 
 
 class MetadataNode(object):

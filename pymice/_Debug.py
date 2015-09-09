@@ -310,7 +310,7 @@ def checkData(mds):
   """Check for recording gaps"""
   limits = sorted([(md.getStart(), md.getEnd()) for md in mds])
   for ((_, a), (b, _)) in zip(limits[:-1], limits[1:]):
-    print 1, '             ', b - a
+    print('%s               %s' % (1, b - a))
 
 def plotCumulativeVisits(md, tzone=None, **kwargs):
   fig = plt.figure()

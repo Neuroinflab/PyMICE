@@ -36,8 +36,7 @@ try:
   from itertools import imap
 
 except ImportError:
-  #imap = map
-  pass
+  imap = map
 
 from numbers import Number
 import numpy as np
@@ -164,11 +163,14 @@ def toDt(tmp):
 def convertTime(tStr, tzinfo=None):
   """
   Converts time to timestamp - no timezones assumed.
+
+  >>> convertTime('1970-01-01 12:34:56.7')
+  datetime.datetime(1970, 1, 1, 12, 34, 56, 700000)
   """
   tSplit = tStr.replace('-', ' ').replace(':', ' ').split()
-  args = map(int, tSplit[:5])
+  args = list(imap(int, tSplit[:5]))
   secs = int(float(tSplit[5]) * 1000000) if len(tSplit) == 6 else 0
-  args.extend((secs / 1000000, secs % 1000000, tzinfo))
+  args.extend((secs // 1000000, secs % 1000000, tzinfo))
   return datetime(*args)
 
 def timeToList(tStr):
@@ -225,7 +227,7 @@ def getTutorialData(path=None):
 
   #fraction = [0]
   def reporthook(blockcount, blocksize, totalsize):
-    downloaded = blockcount * blocksize * 100 / totalsize
+    downloaded = blockcount * blocksize * 100 // totalsize
     if downloaded > fraction[0]:
       print("%3d%% downloaded." % downloaded)
       fraction[0] += 25
@@ -278,7 +280,11 @@ def getTutorialData(path=None):
 
   import tempfile
   import zipfile
-  import urllib
+  try:
+   from urllib import urlretrieve
+
+  except ImportError:
+    from urllib.request import urlretrieve
 
   for url, files in toDownload.items():
     print("downloading data from %s" % url)
@@ -286,7 +292,7 @@ def getTutorialData(path=None):
     os.close(fh)
     try:
       fraction = [0]
-      urllib.urlretrieve(url, fn, reporthook)
+      urlretrieve(url, fn, reporthook)
       print('data downloaded')
       zf = zipfile.ZipFile(fn)
       for filename, filesize in files:
