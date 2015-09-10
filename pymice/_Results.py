@@ -22,6 +22,7 @@
 #                                                                             #
 ###############################################################################
 
+import sys
 import os 
 import csv
 
@@ -38,7 +39,11 @@ class ResultsCSV(object):
     if os.path.exists(filename) and not force:
       raise ValueError("File %s already exists." % filename)
 
-    self.__fh = open(filename, 'wb')
+    if sys.version_info < (3, 0):
+      self.__fh = open(filename, 'wb')
+
+    else:
+      self.__fh = open(filename, 'w', newline='')
 
   def __enter__(self):
     return self
@@ -56,9 +61,19 @@ class ResultsCSV(object):
     fields = self.__fieldsOrder if inOrder else sorted(self.__fields)
     writer = csv.writer(self.__fh)
 
-    writer.writerow([f.encode('utf-8') for f in fields])
+    if sys.version_info < (3, 0):
+      writer.writerow([f.encode('utf-8') for f in fields])
+
+    else:
+      writer.writerow(fields)
+
     for row in [self.__rows[id] for id in self.__rowOrder]:
-      line = [unicode(row.get(f, '')).encode('utf-8') for f in fields]
+      if sys.version_info < (3, 0):
+        line = [unicode(row.get(f, '')).encode('utf-8') for f in fields]
+
+      else:
+        line = [str(row.get(f, '')) for f in fields]
+
       writer.writerow(line)
 
     self.__fh.close()
