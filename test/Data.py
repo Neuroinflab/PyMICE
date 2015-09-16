@@ -31,9 +31,9 @@ from datetime import datetime, timedelta
 from pytz import utc
 
 import pymice as pm
-from pymice.Data import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
-                         AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
-                         UnknownHardwareEvent, ICCage, ICCageManager)
+from pymice._ICData import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
+                            AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
+                            UnknownHardwareEvent, ICCage, ICCageManager)
 import minimock
 
 from TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
@@ -580,10 +580,10 @@ class ICCageTest(unittest.TestCase):
 class ICCageManagerTest(unittest.TestCase):
   def setUp(self):
     self.cageManager = ICCageManager()
-    self.ICCage = pm.Data.ICCage
+    self.ICCage = pm._ICData.ICCage
 
   def tearDown(self):
-    pm.Data.ICCage = self.ICCage
+    pm._ICData.ICCage = self.ICCage
 
   def testGet(self):
     cages = set()
@@ -591,7 +591,7 @@ class ICCageManagerTest(unittest.TestCase):
       cages.add(cage)
       return minimock.Mock('ICCage(%s)' % cage,
                            returns=cage)
-    pm.Data.ICCage = minimock.Mock('Data.ICCage',
+    pm._ICData.ICCage = minimock.Mock('Data.ICCage',
                                    returns_func=newCage)
 
     cageNumber = 1
@@ -614,8 +614,8 @@ class ICCageManagerTest(unittest.TestCase):
         cages[cage] = item
         return item
 
-    pm.Data.ICCage = minimock.Mock('Data.ICCage')
-    pm.Data.ICCage.mock_returns_func = newCage
+    pm._ICData.ICCage = minimock.Mock('Data.ICCage')
+    pm._ICData.ICCage.mock_returns_func = newCage
 
     for i in range(1, 10):
       for j in range(1, i + 1):
@@ -631,21 +631,21 @@ class ICCageManagerTest(unittest.TestCase):
 
 class DataTest(unittest.TestCase):
   def testDel(self):
-    ICCage = pm.Data.ICCage
+    ICCage = pm._ICData.ICCage
 
     def getMockCage(n):
       cage = minimock.Mock('ICCage')
       cage._del_ = lambda: cagesDeleted.add(n)
       return cage
 
-    pm.Data.ICCage = minimock.Mock('ICCage',
-                                    returns_func=getMockCage)
+    pm._ICData.ICCage = minimock.Mock('ICCage',
+                                      returns_func=getMockCage)
 
     deleted = set()
     cagesDeleted = set()
     toDelete = []
     cagesToDelete = []
-    data = pm.Data.Data()
+    data = pm.Data.Data(CageManager=pm._ICData.ICCageManager) # XXX: ugly test -> split testing of ICCageManager and Data.__del__
 
     def makeCloneInjector(cage, label):
       toDelete.append(label)
@@ -672,7 +672,8 @@ class DataTest(unittest.TestCase):
     for cage in cagesToDelete:
       self.assertIn(cage, cagesDeleted)
 
-    pm.Data.ICCage = ICCage
+    pm._ICData.ICCage = ICCage
+
 
 class MergerTest(unittest.TestCase):
   def setUp(self):

@@ -28,7 +28,7 @@ pymice package
 A collection of tools to access IntelliCage data.
 """
 
-from .Data import Loader, Merger
+from ._ICData import Loader, Merger
 from ._Tools import hTime, convertTime, getTutorialData, warn
 from ._Metadata import Phase, ExperimentConfigFile, ExperimentTimeline
 from ._Results import ResultsCSV
