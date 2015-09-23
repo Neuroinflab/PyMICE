@@ -45,7 +45,7 @@ from collections import Container
 
 from .ICNodes import Group # XXX: unnecessary dependency
 
-from ._Tools import timeString, toTimestampUTC
+from ._Tools import timeString, toTimestampUTC, warn
 from ._ObjectBase import ObjectBase
 
 class IdentityManager(object):
