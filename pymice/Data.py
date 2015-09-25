@@ -262,21 +262,6 @@ class Data(object):
       return None
 
 
-# log analysis
-  def _logAnalysis(self, loganalyzers):
-    self.excluded = []
-    self.loganalyzers = loganalyzers
-    for loganalyzer in loganalyzers:
-      self.excluded.extend(loganalyzer(self))
-
-  def getExcludedData(self):
-    warn.deprecated("Deprecated method getExcludedData() called; use getExcluded() instead.")
-    return self.getExcluded()
-
-  def getExcluded(self):
-    return list(self.excluded)
-
-
 #  def removeVisits(self, condition="False"):
 
 # data management

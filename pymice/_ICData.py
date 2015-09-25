@@ -172,7 +172,7 @@ class Loader(Data):
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
-               logAnalyzers=(), tzinfo=pytz.UTC, **kwargs):
+               tzinfo=pytz.UTC, **kwargs):
     """
     @param fname: a path to the data file.
     @type fname: basestring
@@ -188,8 +188,6 @@ class Loader(Data):
 
     @param getHw: whether to load hardware data.
     @type getHw: bool
-
-    @param logAnalyzers: a collection of log analysers (to be implemented)
     """
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
@@ -208,14 +206,14 @@ class Loader(Data):
         warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
         getHw = value
 
-      elif key == 'loganalyzers':
-        logAnalyzers = value
+      elif key in ('loganalyzers', 'logAnalyzers'):
+        warn.deprecated("Obsolete argument {} given for Loader constructor. ".format(key) +\
+                        "Set the getLog argument to True and use the DataValidator " +\
+                        "class for log analysis.")
+        getLog = True
 
       else:
         warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
-
-    if len(logAnalyzers) > 0:
-      getLog = True
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
                   CageManager=ICCageManager)
@@ -236,8 +234,6 @@ class Loader(Data):
 
       else:
         print('unknown Info/Application message: %s' % msg)
-
-    self._logAnalysis(logAnalyzers)
 
 
   def _loadZip(self, zf, source=None):
@@ -648,7 +644,7 @@ class Merger(Data):
     getLog = kwargs.pop('getLog', False)
     getEnv = kwargs.pop('getEnv', False)
     getHw = kwargs.pop('getHw', False)
-    logAnalyzers = kwargs.pop('logAnalyzers', [])
+    #logAnalyzers = kwargs.pop('logAnalyzers', [])
 
     self._ignoreMiceDifferences = kwargs.pop('ignoreMiceDifferences', False)
 
@@ -669,15 +665,14 @@ class Merger(Data):
         warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
         getHw = value
 
-      elif key == 'loganalyzers':
-        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
-        logAnalyzers = value
+      elif key in ('loganalyzers', 'logAnalyzers'):
+        warn.deprecated("Obsolete argument {} given for Merger constructor. ".format(key) +\
+                        "Set the getLog argument to True and use the DataValidator " +\
+                        "class for log analysis.")
+        getLog = True
 
       else:
         warn.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
-
-    if len(logAnalyzers) > 0:
-      getLog = True
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
                   CageManager=ICCageManager)
@@ -694,7 +689,6 @@ class Merger(Data):
         print("ERROR processing %s" % dataSource)
         raise
 
-    self._logAnalysis(logAnalyzers)
 
   @staticmethod
   def _sortDataSources(dataSources):
