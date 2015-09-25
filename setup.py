@@ -37,6 +37,8 @@ except ImportError:
 else:
   setuptoolsPresent = True
 
+
+
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 #install_requires = ['numpy']?
 setup(name = 'PyMICE',
@@ -57,7 +59,10 @@ The library provides user with an object oriented application programming interf
                      'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                      'Natural Language :: English',
                      'Operating System :: OS Independent',
+                     'Programming Language :: Python :: 2',
                      'Programming Language :: Python :: 2.7',
+                     'Programming Language :: Python :: 3',
+                     'Programming Language :: Python :: 3.3',
                      'Programming Language :: C',
                      'Topic :: Scientific/Engineering',
                      'Topic :: Scientific/Engineering :: Bio-Informatics',
