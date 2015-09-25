@@ -33,21 +33,17 @@ import matplotlib.mlab as mmlab
 
 from ._Tools import toTimestampUTC
 
-class ExcludedList(list):
-  def getExcluded(self):
-    return list(self)
-
 
 class DataValidator(object):
   def __init__(self, *analyzers):
     self.__analyzers = tuple(analyzers)
 
   def __call__(self, md):
-    excluded = ExcludedList()
+    excluded = []
     for analyzer in self.__analyzers:
       excluded.extend(analyzer(md))
 
-    return excluded
+    return tuple(excluded)
 
 
 class ExcludeMiceData(object):
@@ -131,7 +127,7 @@ class LickometerLogAnalyzer(object):
                       notes=str(sum(medHist[tstartidx:tstopidx]))
                       + ' cases. ' + self.notes))
 
-    return results
+    return tuple(results)
 
 
 class OldLogAnalyzer(object):
@@ -229,7 +225,7 @@ class PresenceLogAnalyzer(object):
                         notes=str(sum(hist[tstartidx:tstopidx]))
                         + ' cases. ' + self.notes))
 
-    return results
+    return tuple(results)
 
 
 def overlap(exc, interval):
@@ -257,8 +253,8 @@ class TestMiceData(object):
     if logType is not None:
       self._logType = logType
 
-  def __call__(self, md, interval, **kwargs):
-    for exc in md.getExcluded():
+  def __call__(self, excluded, interval, **kwargs):
+    for exc in excluded:
       if not self._single_test(exc, interval, **kwargs):
         return False
 
