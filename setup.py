@@ -59,6 +59,7 @@ The library provides user with an object oriented application programming interf
                      'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                      'Natural Language :: English',
                      'Operating System :: OS Independent',
+                     'Programming Language :: Python',
                      'Programming Language :: Python :: 2',
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3',
