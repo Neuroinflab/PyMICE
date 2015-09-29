@@ -22,16 +22,31 @@
 #include <Python.h>
 
 #ifndef PYMICE_H
-#define PYMICE_H
+  #ifdef __cplusplus
+    extern "C" {
+  #endif
 
-static PyObject * pymice_emptyStringToNone(PyObject *, PyObject *);
+  #define PYMICE_H
+
+  static PyObject * pymice_emptyStringToNone(PyObject *, PyObject *);
+
+  #if PY_MAJOR_VERSION >= 3
+    PyMODINIT_FUNC PyInit__C(void);
+
+  #else
+    PyMODINIT_FUNC init_C(void);
+
+  #endif
+
+  #ifdef __cplusplus
+    }
+  #endif
 
 #endif
 
 
 #ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
-
-#define PyMODINIT_FUNC void
+  #define PyMODINIT_FUNC void
 
 #endif
 
