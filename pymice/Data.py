@@ -535,7 +535,7 @@ class Data(object):
     >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'], order='Start')]
     [1, 3]
 
-    >>> mice = map(ml_l1.getAnimal, ['Mickey', 'Minnie'])
+    >>> mice = [ml_l1.getAnimal(m) for m in ['Mickey', 'Minnie']]
     >>> [v.Corner for v in ml_l1.getVisits(mice=mice, order='Start')]
     [4, 1]
 
