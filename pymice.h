@@ -22,21 +22,22 @@
 #include <Python.h>
 
 #ifndef PYMICE_H
-  #ifdef __cplusplus
-    extern "C" {
-  #endif
-
   #define PYMICE_H
+
+  #ifdef __cplusplus
+    extern "C"
+    {
+  #endif
 
   static PyObject * pymice_emptyStringToNone(PyObject *, PyObject *);
 
-  #if PY_MAJOR_VERSION >= 3
-    PyMODINIT_FUNC PyInit__C(void);
+    #if PY_MAJOR_VERSION >= 3
+      PyMODINIT_FUNC PyInit__C(void);
 
-  #else
-    PyMODINIT_FUNC init_C(void);
+    #else
+      PyMODINIT_FUNC init_C(void);
 
-  #endif
+    #endif
 
   #ifdef __cplusplus
     }
