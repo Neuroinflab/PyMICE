@@ -42,7 +42,7 @@ else:
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 #install_requires = ['numpy']?
 setup(name = 'PyMICE',
-      version = '0.2.0',
+      version = '0.2.1',
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
       description = 'PyMICE - a Python™ library for mice behavioural data analysis',
       long_description="""PyMICE is a Python™ library for mice behavioural data analysis.
