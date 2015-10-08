@@ -95,11 +95,11 @@ DT4L7Vi4l+wex6u695AC7tFSLk+9ag9m5yA0gZLV2BolCzU8DFHt5aS86Rp1cYA=
 -----END PGP PUBLIC KEY BLOCK-----
 """
 
-__welcomeMessage = """PyMICE library v. %s
-(NeuroLex.org ID: %s)
+__welcomeMessage = """PyMICE library v. {version}
+(NeuroLex.org ID: {neurolex})
 
-This is a bleeding edge version of the library. It might meet your expectations,
-however it might also go to your fridge, drink all the beer it can find there
-and then eat your cat. Be warned.
-""" % (__version__, __NeuroLexID__)
+This is a bleeding edge version of the library. It might meet your
+expectations, however it might also go to your fridge, drink all the
+beer it can find there and then eat your cat. Be warned.
+""".format(version=__version__, neurolex=__NeuroLexID__)
 print(__welcomeMessage)
