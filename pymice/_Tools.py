@@ -130,7 +130,7 @@ def hTime(t):
   Convert timestamp t to a human-readible UTC string.
   """
   dec, integer = modf(t)
-  return time.strftime("%Y-%m-%d %H:%M:%S" + ('%01.3f' % dec)[1:],
+  return time.strftime("%Y-%m-%d %H:%M:%S" + ('{:01.3f}'.format(dec))[1:],
                        time.gmtime(integer))
 
 EPOCH = datetime(1970,1,1)
@@ -216,7 +216,7 @@ class PathZipFile(object):
     return open(fn, mode)
 
 
-def getTutorialData(path=None):
+def getTutorialData(path=None, quiet=False):
   """
   Download example dataset(s) used in tutorials.
 
@@ -224,12 +224,30 @@ def getTutorialData(path=None):
                (defaults to working directory)
   @type path: basestring
   """
+  def report(msg):
+    if not quiet:
+      print(msg)
+
+  def printManualDownloadInstruction():
+    print("In case the automatic download fails fetch the data manually.")
+
+    for url, files in toDownload.items():
+      print("Download archive from: {}".format(url))
+      print("then extract the following files:")
+      for filename, _ in files:
+        print("- {}".format(filename))
+    
+      print("")
+    
+    print("")
+    
+
 
   #fraction = [0]
   def reporthook(blockcount, blocksize, totalsize):
     downloaded = blockcount * blocksize * 100 // totalsize
     if downloaded > fraction[0]:
-      print("%3d%% downloaded." % downloaded)
+      print("{:3d}% downloaded.".format(downloaded))
       fraction[0] += 25
 
 
@@ -240,7 +258,7 @@ def getTutorialData(path=None):
     os.makedirs(path)
 
   elif not os.path.isdir(path):
-    raise OSError("Not a directory: '%s'" % path)
+    raise OSError("Not a directory: '{}'".format(path))
 
   DATA = {'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1':
            {'C57_AB/2012-08-28 13.44.51.zip': 86480,
@@ -256,27 +274,17 @@ def getTutorialData(path=None):
     if all(os.path.isfile(os.path.join(path, fn)) and \
            os.path.getsize(os.path.join(path, fn)) == fs \
            for (fn, fs) in files.items()):
-      print("%s data already downloaded." % url)
+      report("{} data already downloaded.".format(url))
       continue
 
     toDownload[url] = sorted(files.items())
 
   if not toDownload:
-    print("All data already downloaded.")
-    print("")
+    report("All data already downloaded.\n")
     return
 
-  print("In case the automatic download fails fetch the data manually.")
-  for url, files in toDownload.items():
-
-    print("Download archive from: %s" % url)
-    print("then extract the following files:")
-    for filename, _ in files:
-      print("- %s" % filename)
-  
-    print("")
-  
-  print("")
+  if not quiet:
+    printManualDownloadInstruction()
 
   import tempfile
   import zipfile
@@ -287,19 +295,19 @@ def getTutorialData(path=None):
     from urllib.request import urlretrieve
 
   for url, files in toDownload.items():
-    print("downloading data from %s" % url)
+    report("downloading data from {}".format(url))
     fh, fn = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
     os.close(fh)
     try:
       fraction = [0]
-      urlretrieve(url, fn, reporthook)
-      print('data downloaded')
+      urlretrieve(url, fn, None if quiet else reporthook)
+      report('data downloaded')
       zf = zipfile.ZipFile(fn)
       for filename, filesize in files:
-        print("extracting file %s" % filename)
+        report("extracting file {}".format(filename))
         zf.extract(filename, path)
         if os.path.getsize(os.path.join(path, filename)) != filesize:
-          print('Warning: size of extracted file differs')
+          report('Warning: size of extracted file differs')
 
       zf.close()
 
@@ -313,7 +321,7 @@ def groupBy(objects, getKey):
   >>> output = groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
   ...                  getKey=operator.itemgetter(1))
   >>> for k in sorted(output):
-  ...   print("%s %s" % (k, output[k]))
+  ...   print("{} {}".format(k, output[k]))
   1 [(1, 1), (2, 1, 8)]
   2 [(1, 2), (3, 2)]
   4 [(3, 4)]
@@ -321,7 +329,7 @@ def groupBy(objects, getKey):
   >>> output = groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
   ...                  getKey=lambda x: x[0] + x[1])
   >>> for k in sorted(output):
-  ...   print("%s %s" % (k, output[k]))
+  ...   print("{} {}".format(k, output[k]))
   2 [(0, 2), (1, 1), (1, 1)]
   3 [(1, 2), (2, 1), (3, 0)]
 
@@ -330,13 +338,13 @@ def groupBy(objects, getKey):
 
   >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], 'a')
   >>> for k in sorted(output):
-  ...   print("%s %s" % (k, output[k]))
+  ...   print("{} {}".format(k, output[k]))
   1 [Pair(a=1, b=2), Pair(a=1, b=1)]
   2 [Pair(a=2, b=1)]
 
   >>> output = groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b'))
   >>> for k in sorted(output):
-  ...   print("%s %s" % (k, output[k]))
+  ...   print("{} {}".format(k, output[k]))
   (1, 1) [Pair(a=1, b=1)]
   (1, 2) [Pair(a=1, b=2)]
   (2, 1) [Pair(a=2, b=1)]
