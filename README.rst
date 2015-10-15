@@ -13,3 +13,9 @@ a tool for workflow configuration.
 
 For more details please see `The project website
 <https://neuroinflab.wordpress.com/research/pymice/>`_.
+
+
+Acknowledgement
+---------------
+
+Project sponsored by Symfonia NCN grant: UMO-2013/08/W/NZ4/00691
