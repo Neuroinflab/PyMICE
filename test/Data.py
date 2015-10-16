@@ -715,15 +715,15 @@ class MergerTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-  testDir = os.path.abspath(os.path.dirname(__file__))
+  dataDir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
   TEST_GLOBALS = {
     #XXX: ml_l1 - not sure if data format is valid
-    'ml_l1': pm.Loader(os.path.join(testDir, 'legacy_data.zip')),
-    #'ml_a1': pm.Loader(os.path.join(testDir, 'analyzer_data.txt'), getNpokes=True),
-    'ml_icp3': pm.Loader(os.path.join(testDir, 'icp3_data.zip'),
+    'ml_l1': pm.Loader(os.path.join(dataDir, 'legacy_data.zip')),
+    #'ml_a1': pm.Loader(os.path.join(dataDir, 'analyzer_data.txt'), getNpokes=True),
+    'ml_icp3': pm.Loader(os.path.join(dataDir, 'icp3_data.zip'),
                       getLog=True, getEnv=True),
-    'ml_empty': pm.Loader(os.path.join(testDir, 'empty_data.zip')),
-    'ml_retagged': pm.Loader(os.path.join(testDir, 'retagged_data.zip')),
+    'ml_empty': pm.Loader(os.path.join(dataDir, 'empty_data.zip')),
+    'ml_retagged': pm.Loader(os.path.join(dataDir, 'retagged_data.zip')),
   }
 
   doctest.testmod(pm.Data, extraglobs=TEST_GLOBALS)

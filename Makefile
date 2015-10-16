@@ -20,7 +20,7 @@
 #                                                                             #
 ###############################################################################
 
-TEST_DIR  = test/
+TEST_DIR  = test/data/
 LDATA_DIR = ${TEST_DIR}legacy_data/
 LDATA_IC_DIR = ${LDATA_DIR}IntelliCage/
 ICP3DATA_DIR = ${TEST_DIR}icp3_data/
