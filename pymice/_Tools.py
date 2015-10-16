@@ -38,12 +38,23 @@ try:
 except ImportError:
   imap = map
 
+
 from numbers import Number
 import numpy as np
 if not issubclass(np.floating, Number):
   Number.register(np.floating)
 
 from ._FixTimezones import LatticeOrderer
+
+
+import tempfile
+import zipfile
+try:
+ from urllib import urlretrieve
+
+except ImportError:
+  from urllib.request import urlretrieve
+
 
 if sys.version_info >= (3, 0):
   basestring = str
@@ -216,103 +227,223 @@ class PathZipFile(object):
     return open(fn, mode)
 
 
-def getTutorialData(path=None, quiet=False):
+class DataDownloader(object):
+  DATA = {'C57_AB': ('https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
+                     {'C57_AB/2012-08-28 13.44.51.zip': 86480,
+                      'C57_AB/2012-08-28 15.33.58.zip': 494921,
+                      'C57_AB/2012-08-31 11.46.31.zip': 29344,
+                      'C57_AB/2012-08-31 11.58.22.zip': 3818445,
+                      'C57_AB/timeline.ini': 2894,
+                     }),
+          'demo': ('https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
+                   {'demo.zip': 106091,
+                   }),
+         }
+
+  class DownloadPercentReporter(object):
+    def __init__(self, checkpoints):
+      self.__checkpoints = iter(checkpoints)
+      self.setNextCheckpoint()
+
+    def isAtCheckpoint(self, downloaded):
+      return downloaded > self.__checkpoint
+
+    def setNextCheckpoint(self):
+      try:
+        self.__checkpoint = next(self.__checkpoints)
+
+      except StopIteration:
+        self.__checkpoint = float('inf')
+
+    def reportCheckpoint(self):
+      print("{:3d}% downloaded".format(self.__checkpoint))
+
+    def reportAtCheckpoint(self, downloaded):
+      if self.isAtCheckpoint(downloaded):
+        self.reportCheckpoint()
+        self.setNextCheckpoint()
+
+    def __call__(self, blockcount, blocksize, totalsize):
+      self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
+
+  class TemporaryFileName(object):
+    def __enter__(self):
+      fh, self.__filename = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
+      os.close(fh)
+      return self.__filename
+
+    def __exit__(self, exc_type, exc_value, traceback):
+      os.remove(self.__filename)
+
+  def __init__(self, path, quiet):
+    self.setPath(path)
+    self.__quiet = quiet
+
+  def setPath(self, path):
+    if path is None:
+      path = os.getcwd()
+
+    self.ensureIsDirectory(path)
+    self.__path = path
+
+  def ensureIsDirectory(self, path):
+    if not os.path.exists(path):
+      os.makedirs(path)
+
+    elif not os.path.isdir(path):
+      raise OSError("Not a directory: '{}'".format(path))
+
+  def report(self, msg):
+    if not self.__quiet:
+      print(msg)
+
+  def printManualDownloadInstruction(self, toDownload):
+    if self.__quiet:
+      return
+
+    print("In case the automatic download fails fetch the data manually.")
+
+    for url, files in toDownload.items():
+      self.printFileDownloadInstruction(url, files)
+    
+    print("\n")
+
+  def printFileDownloadInstruction(self, url, files):
+    print("\nDownload archive from: {}".format(url))
+    print("then extract the following files:")
+    for filename, _ in files:
+      print("- {}".format(filename))
+
+  def necesseryDownloadGenerator(self, fetch):
+    for download in fetch:
+      try:
+        url, files = self.DATA[download]
+
+      except KeyError:
+        self.report('Warning: unknown download requested({})'.format(download))
+        continue
+
+      if all(self.fileSizeMatches(fn, fs) for (fn, fs) in files.items()):
+        self.report("{} data already downloaded".format(url))
+        continue
+
+      yield url, sorted(files.items())
+
+  def fileSizeMatches(self, filename, size):
+    path = os.path.join(self.__path, filename)
+    return os.path.isfile(path) and os.path.getsize(path) == size
+
+  def download(self, fetch):
+    if fetch is None:
+      fetch = sorted(self.DATA.keys())
+
+    elif isinstance(fetch, basestring):
+      fetch = (fetch,)
+
+    toDownload = dict(self.necesseryDownloadGenerator(fetch))
+
+    if not toDownload:
+      self.report("All data already downloaded.")
+      return
+
+    self.printManualDownloadInstruction(toDownload)
+
+    for url, files in toDownload.items():
+      self.retrieveFiles(url, files)
+
+  def retrieveFiles(self, url, files):
+    self.report("downloading data from {}".format(url))
+    with self.TemporaryFileName() as filename:
+      self.downloadArchive(url, filename)
+      self.extractFiles(filename, files)
+
+  def downloadArchive(self, url, filename):
+    urlretrieve(url, filename,
+                None if self.__quiet else self.DownloadPercentReporter([1, 25, 50, 75]))
+    self.report('data downloaded')
+
+  def extractFiles(self, archive, files):
+    with zipfile.ZipFile(archive) as zf:
+      for filename, filesize in files:
+        self.extractFile(zf, filename, filesize)
+
+  def extractFile(self, zipfile, filename, filesize):
+    self.report("extracting file {}".format(filename))
+    zipfile.extract(filename, self.__path)
+    if os.path.getsize(os.path.join(self.__path, filename)) != filesize:
+      self.report('Warning: size of extracted file differs')
+
+
+def getTutorialData(path=None, quiet=False, fetch=None):
   """
   Download example dataset(s) used in tutorials.
 
   @param path: a directory where tutorial data are to be loaded into
                (defaults to working directory)
   @type path: basestring
+
+  @param quiet: a switch disabling stdout output.
+  @type quiet: bool
+
+  @param fetch: the datasets to download
+  @type fetch: collection(basestring, ...)
+
+  >>> getTutorialData(fetch='C57_AB')
+  In case the automatic download fails fetch the data manually.
+  <BLANKLINE>
+  Download archive from: https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1
+  then extract the following files:
+  - C57_AB/2012-08-28 13.44.51.zip
+  - C57_AB/2012-08-28 15.33.58.zip
+  - C57_AB/2012-08-31 11.46.31.zip
+  - C57_AB/2012-08-31 11.58.22.zip
+  - C57_AB/timeline.ini
+  <BLANKLINE>
+  <BLANKLINE>
+  downloading data from https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1
+    1% downloaded
+   25% downloaded
+   50% downloaded
+   75% downloaded
+  data downloaded
+  extracting file C57_AB/2012-08-28 13.44.51.zip
+  extracting file C57_AB/2012-08-28 15.33.58.zip
+  extracting file C57_AB/2012-08-31 11.46.31.zip
+  extracting file C57_AB/2012-08-31 11.58.22.zip
+  extracting file C57_AB/timeline.ini
+  >>> getTutorialData(fetch='C57_AB')
+  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
+  All data already downloaded.
+  >>> getTutorialData(fetch='C57_AB', quiet=True)
+  >>> getTutorialData()
+  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
+  In case the automatic download fails fetch the data manually.
+  <BLANKLINE>
+  Download archive from: https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1
+  then extract the following files:
+  - demo.zip
+  <BLANKLINE>
+  <BLANKLINE>
+  downloading data from https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1
+    1% downloaded
+   25% downloaded
+   50% downloaded
+   75% downloaded
+  data downloaded
+  extracting file demo.zip
+  >>> getTutorialData()
+  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
+  https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1 data already downloaded
+  All data already downloaded.
   """
-  def report(msg):
-    if not quiet:
-      print(msg)
-
-  def printManualDownloadInstruction():
-    print("In case the automatic download fails fetch the data manually.")
-
-    for url, files in toDownload.items():
-      print("Download archive from: {}".format(url))
-      print("then extract the following files:")
-      for filename, _ in files:
-        print("- {}".format(filename))
-    
-      print("")
-    
-    print("")
-    
+  downloader = DataDownloader(path, quiet)
+  downloader.download(fetch)
 
 
-  #fraction = [0]
-  def reporthook(blockcount, blocksize, totalsize):
-    downloaded = blockcount * blocksize * 100 // totalsize
-    if downloaded > fraction[0]:
-      print("{:3d}% downloaded.".format(downloaded))
-      fraction[0] += 25
 
 
-  if path is None:
-    path = os.getcwd()
 
-  if not os.path.exists(path):
-    os.makedirs(path)
 
-  elif not os.path.isdir(path):
-    raise OSError("Not a directory: '{}'".format(path))
-
-  DATA = {'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1':
-           {'C57_AB/2012-08-28 13.44.51.zip': 86480,
-            'C57_AB/2012-08-31 11.58.22.zip': 3818445,
-            'C57_AB/2012-08-28 15.33.58.zip': 494921,
-            'C57_AB/2012-08-31 11.46.31.zip': 29344,
-            'C57_AB/timeline.ini': 2894,
-           },
-         }
-
-  toDownload = {}
-  for url, files in DATA.items():
-    if all(os.path.isfile(os.path.join(path, fn)) and \
-           os.path.getsize(os.path.join(path, fn)) == fs \
-           for (fn, fs) in files.items()):
-      report("{} data already downloaded.".format(url))
-      continue
-
-    toDownload[url] = sorted(files.items())
-
-  if not toDownload:
-    report("All data already downloaded.\n")
-    return
-
-  if not quiet:
-    printManualDownloadInstruction()
-
-  import tempfile
-  import zipfile
-  try:
-   from urllib import urlretrieve
-
-  except ImportError:
-    from urllib.request import urlretrieve
-
-  for url, files in toDownload.items():
-    report("downloading data from {}".format(url))
-    fh, fn = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
-    os.close(fh)
-    try:
-      fraction = [0]
-      urlretrieve(url, fn, None if quiet else reporthook)
-      report('data downloaded')
-      zf = zipfile.ZipFile(fn)
-      for filename, filesize in files:
-        report("extracting file {}".format(filename))
-        zf.extract(filename, path)
-        if os.path.getsize(os.path.join(path, filename)) != filesize:
-          report('Warning: size of extracted file differs')
-
-      zf.close()
-
-    finally:
-      os.remove(fn)
 
 
 def groupBy(objects, getKey):
