@@ -36,7 +36,7 @@ from pymice._ICData import (ZipLoader, Merger, LogEntry, EnvironmentalConditions
                             UnknownHardwareEvent, ICCage, ICCageManager)
 import minimock
 
-from TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
+from ._TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
 
 if sys.version_info >= (3, 0):
   unicode = str
@@ -714,9 +714,9 @@ class MergerTest(unittest.TestCase):
                      [h._source for h in mm.getHardwareEvents(order='DateTime')])
 
 
-if __name__ == '__main__':
+def getGlobals():
   dataDir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-  TEST_GLOBALS = {
+  return {
     #XXX: ml_l1 - not sure if data format is valid
     'ml_l1': pm.Loader(os.path.join(dataDir, 'legacy_data.zip')),
     #'ml_a1': pm.Loader(os.path.join(dataDir, 'analyzer_data.txt'), getNpokes=True),
@@ -726,6 +726,10 @@ if __name__ == '__main__':
     'ml_retagged': pm.Loader(os.path.join(dataDir, 'retagged_data.zip')),
   }
 
-  doctest.testmod(pm.Data, extraglobs=TEST_GLOBALS)
+def load_tests(loader, tests, ignore):
+  tests.addTests(doctest.DocTestSuite(pm.Data, extraglobs=getGlobals()))
+  return tests
 
+if __name__ == '__main__':
+  doctest.testmod(pm.Data, extraglobs=getGlobals())
   unittest.main()

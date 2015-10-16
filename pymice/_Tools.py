@@ -388,6 +388,13 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   @param fetch: the datasets to download
   @type fetch: collection(basestring, ...)
 
+  SetUp
+  >>> import tempfile
+  >>> import os
+  >>> _dirname = tempfile.mkdtemp(prefix='.tmp_ToolsDoctests')
+  >>> _cwd = os.getcwd()
+  >>> os.chdir(_dirname)
+
   >>> getTutorialData(fetch='C57_AB')
   In case the automatic download fails fetch the data manually.
   <BLANKLINE>
@@ -435,6 +442,17 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
   https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1 data already downloaded
   All data already downloaded.
+
+  TearDown
+  >>> os.remove('demo.zip')
+  >>> os.remove('C57_AB/2012-08-28 13.44.51.zip')
+  >>> os.remove('C57_AB/2012-08-28 15.33.58.zip')
+  >>> os.remove('C57_AB/2012-08-31 11.46.31.zip')
+  >>> os.remove('C57_AB/2012-08-31 11.58.22.zip')
+  >>> os.remove('C57_AB/timeline.ini')
+  >>> os.rmdir('C57_AB')
+  >>> os.chdir(_cwd)
+  >>> os.rmdir(_dirname)
   """
   downloader = DataDownloader(path, quiet)
   downloader.download(fetch)

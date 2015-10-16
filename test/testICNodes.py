@@ -33,9 +33,9 @@ from pymice.ICNodes import (Animal, Visit, Nosepoke,
                             AirHardwareEvent, DoorHardwareEvent,
                             LedHardwareEvent, UnknownHardwareEvent,
                             NamedInt)
-from TestTools import (allInstances, Mock, MockIntDictManager,
-                       MockStrDictManager, MockCloneable,
-                       BaseTest)
+from ._TestTools import (allInstances, Mock, MockIntDictManager,
+                         MockStrDictManager, MockCloneable,
+                         BaseTest)
 
 
 if sys.version_info >= (3, 0):

@@ -25,7 +25,13 @@
 import doctest
 import collections
 import pymice as pm
+
+def getGlobs():
+  return {'Pair': collections.namedtuple('Pair', ['a', 'b'])}
+
+def load_tests(loader, tests, ignore):
+  tests.addTests(doctest.DocTestSuite(pm._Tools, extraglobs=getGlobs()))
+  return tests
+
 if __name__ == '__main__':
-  doctest.testmod(pm._Tools,
-                  extraglobs={
-                    'Pair': collections.namedtuple('Pair', ['a', 'b'])})
+  doctest.testmod(pm._Tools, extraglobs=getGlobs())
