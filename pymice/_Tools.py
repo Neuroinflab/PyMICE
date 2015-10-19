@@ -227,19 +227,7 @@ class PathZipFile(object):
     return open(fn, mode)
 
 
-class DataDownloader(object):
-  DATA = {'C57_AB': ('https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
-                     {'C57_AB/2012-08-28 13.44.51.zip': 86480,
-                      'C57_AB/2012-08-28 15.33.58.zip': 494921,
-                      'C57_AB/2012-08-31 11.46.31.zip': 29344,
-                      'C57_AB/2012-08-31 11.58.22.zip': 3818445,
-                      'C57_AB/timeline.ini': 2894,
-                     }),
-          'demo': ('https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
-                   {'demo.zip': 106091,
-                   }),
-         }
-
+class DataDownloadStdoutReporter(object):
   class DownloadPercentReporter(object):
     def __init__(self, checkpoints):
       self.__checkpoints = iter(checkpoints)
@@ -266,6 +254,66 @@ class DataDownloader(object):
     def __call__(self, blockcount, blocksize, totalsize):
       self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
 
+  def warnUnknownDownload(self, download):
+    print('Warning: unknown download requested({})'.format(download))
+
+  def reportUnnecessaryDownload(self, url):
+    print('{} data already downloaded'.format(url))
+
+  def reportNothingToDownload(self):
+    print('All data already downloaded.')
+
+  def printManualDownloadInstruction(self, toDownload):
+    print('In case the automatic download fails fetch the data manually.')
+
+    for url, files in toDownload.items():
+      self.printFileDownloadInstruction(url, files)
+    
+    print("\n")
+
+  def printFileDownloadInstruction(self, url, files):
+    print('\nDownload archive from: {}'.format(url))
+    print('then extract the following files:')
+    for filename, _ in files:
+      print('- {}'.format(filename))
+
+  def reportDownloadStart(self, url):
+    print('downloading data from {}'.format(url))
+
+  def getReportHook(self):
+    return self.DownloadPercentReporter([1, 25, 50, 75])
+
+  def reportDownloadEnd(self):
+    print('data downloaded')
+
+  def reportFileExtraction(self, filename):
+    print('extracting file {}'.format(filename))
+
+  def warnFileSizeMismatch(self, filename, filesize):
+    print('Warning: size of extracted file differs')
+
+
+class DataDownloadDummyReporter(object):
+  def __getattribute__(self, attribute):
+    def dummyFunction(*args, **kwargs):
+      return None
+
+    return dummyFunction
+
+
+class DataDownloader(object):
+  DATA = {'C57_AB': ('https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
+                     {'C57_AB/2012-08-28 13.44.51.zip': 86480,
+                      'C57_AB/2012-08-28 15.33.58.zip': 494921,
+                      'C57_AB/2012-08-31 11.46.31.zip': 29344,
+                      'C57_AB/2012-08-31 11.58.22.zip': 3818445,
+                      'C57_AB/timeline.ini': 2894,
+                     }),
+          'demo': ('https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
+                   {'demo.zip': 106091,
+                   }),
+         }
+
   class TemporaryFileName(object):
     def __enter__(self):
       fh, self.__filename = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
@@ -275,9 +323,9 @@ class DataDownloader(object):
     def __exit__(self, exc_type, exc_value, traceback):
       os.remove(self.__filename)
 
-  def __init__(self, path, quiet):
+  def __init__(self, path, reporter):
     self.setPath(path)
-    self.__quiet = quiet
+    self.__reporter = reporter
 
   def setPath(self, path):
     if path is None:
@@ -293,38 +341,17 @@ class DataDownloader(object):
     elif not os.path.isdir(path):
       raise OSError("Not a directory: '{}'".format(path))
 
-  def report(self, msg):
-    if not self.__quiet:
-      print(msg)
-
-  def printManualDownloadInstruction(self, toDownload):
-    if self.__quiet:
-      return
-
-    print("In case the automatic download fails fetch the data manually.")
-
-    for url, files in toDownload.items():
-      self.printFileDownloadInstruction(url, files)
-    
-    print("\n")
-
-  def printFileDownloadInstruction(self, url, files):
-    print("\nDownload archive from: {}".format(url))
-    print("then extract the following files:")
-    for filename, _ in files:
-      print("- {}".format(filename))
-
   def necesseryDownloadGenerator(self, fetch):
     for download in fetch:
       try:
         url, files = self.DATA[download]
 
       except KeyError:
-        self.report('Warning: unknown download requested({})'.format(download))
+        self.__reporter.warnUnknownDownload(download)
         continue
 
       if all(self.fileSizeMatches(fn, fs) for (fn, fs) in files.items()):
-        self.report("{} data already downloaded".format(url))
+        self.__reporter.reportUnnecessaryDownload(url)
         continue
 
       yield url, sorted(files.items())
@@ -343,24 +370,23 @@ class DataDownloader(object):
     toDownload = dict(self.necesseryDownloadGenerator(fetch))
 
     if not toDownload:
-      self.report("All data already downloaded.")
+      self.__reporter.reportNothingToDownload()
       return
 
-    self.printManualDownloadInstruction(toDownload)
+    self.__reporter.printManualDownloadInstruction(toDownload)
 
     for url, files in toDownload.items():
       self.retrieveFiles(url, files)
 
   def retrieveFiles(self, url, files):
-    self.report("downloading data from {}".format(url))
+    self.__reporter.reportDownloadStart(url)
     with self.TemporaryFileName() as filename:
       self.downloadArchive(url, filename)
       self.extractFiles(filename, files)
 
   def downloadArchive(self, url, filename):
-    urlretrieve(url, filename,
-                None if self.__quiet else self.DownloadPercentReporter([1, 25, 50, 75]))
-    self.report('data downloaded')
+    urlretrieve(url, filename, self.__reporter.getReportHook())
+    self.__reporter.reportDownloadEnd()
 
   def extractFiles(self, archive, files):
     with zipfile.ZipFile(archive) as zf:
@@ -368,10 +394,10 @@ class DataDownloader(object):
         self.extractFile(zf, filename, filesize)
 
   def extractFile(self, zipfile, filename, filesize):
-    self.report("extracting file {}".format(filename))
+    self.__reporter.reportFileExtraction(filename)
     zipfile.extract(filename, self.__path)
     if os.path.getsize(os.path.join(self.__path, filename)) != filesize:
-      self.report('Warning: size of extracted file differs')
+      self.__reporter.warnFileSizeMismatch(filename, filesize)
 
 
 def getTutorialData(path=None, quiet=False, fetch=None):
@@ -454,7 +480,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   >>> os.chdir(_cwd)
   >>> os.rmdir(_dirname)
   """
-  downloader = DataDownloader(path, quiet)
+  downloader = DataDownloader(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
   downloader.download(fetch)
 
 
