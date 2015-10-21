@@ -415,12 +415,13 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   @type fetch: collection(basestring, ...)
 
   SetUp
+
   >>> import tempfile
   >>> import os
   >>> _dirname = tempfile.mkdtemp(prefix='.tmp_ToolsDoctests')
   >>> _cwd = os.getcwd()
   >>> os.chdir(_dirname)
-
+  
   >>> getTutorialData(fetch='C57_AB')
   In case the automatic download fails fetch the data manually.
   <BLANKLINE>
@@ -470,6 +471,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   All data already downloaded.
 
   TearDown
+
   >>> os.remove('demo.zip')
   >>> os.remove('C57_AB/2012-08-28 13.44.51.zip')
   >>> os.remove('C57_AB/2012-08-28 15.33.58.zip')
