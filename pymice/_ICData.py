@@ -172,7 +172,7 @@ class Loader(Data):
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
-               tzinfo=pytz.UTC, **kwargs):
+               tzinfo=pytz.UTC, verbose=False, **kwargs):
     """
     @param fname: a path to the data file.
     @type fname: basestring
@@ -188,6 +188,9 @@ class Loader(Data):
 
     @param getHw: whether to load hardware data.
     @type getHw: bool
+
+    @param verbose: whether to output verbose messages
+    @type verbose: bool
     """
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
@@ -217,6 +220,7 @@ class Loader(Data):
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
                   CageManager=ICCageManager)
+    self.__verbose = verbose
 
     self._fnames = (fname,)
 
@@ -526,11 +530,12 @@ class Loader(Data):
     """
     Process one input file and append data to self.data
     """
-    if isinstance(fname, str): #XXX: Python3
-      print('loading data from %s' % fname)
+    if self.__verbose:
+      if isinstance(fname, str): #XXX: Python3
+        print('loading data from {}'.format(fname))
 
-    else:
-      print('loading data from %s' % fname.encode('utf-8'))
+      else:
+        print('loading data from {}'.format(fname.encode('utf-8')))
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isinstance(fname, basestring) and os.path.isdir(fname):
@@ -686,7 +691,7 @@ class Merger(Data):
         self.appendDataSource(dataSource)
 
       except:
-        print("ERROR processing %s" % dataSource)
+        print("ERROR processing {}".format(dataSource))
         raise
 
 
