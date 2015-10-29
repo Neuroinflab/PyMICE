@@ -4,13 +4,13 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-  - "3.5-dev"
-  - "nightly"
-  - "pypy"
-  - "pypy3"
+#  - "3.5-dev"
+#  - "nightly"
+#  - "pypy"
+#  - "pypy3"
 os:
   - linux
-  - osx
+#  - osx
 
 before_install:
   - pip install --upgrade pip
