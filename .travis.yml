@@ -20,7 +20,8 @@ before_install:
 install:
   - pip install -r requirements.txt
   - pip install minimock
-  - python setup.py install
+  - head setup.py
+  - sudo python setup.py install
 
 script:
   - python -m unittest discover
