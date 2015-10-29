@@ -553,7 +553,7 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
   def __call__(self, x, pos=0):
     x = mpd.num2date(x)
     for sec in self.sections():
-      t1, t2 = self.gettime(sec)
+      t1, t2 = self.getTime(sec)
       if t1 <= x and x < t2:
         return sec
 
