@@ -25,9 +25,44 @@
 import doctest
 import collections
 import pymice as pm
+import unittest
+import operator
+from pymice._Tools import groupBy
+
+Pair = collections.namedtuple('Pair', ['a', 'b'])
+
+class TestGroupBy(unittest.TestCase):
+  def testKeyFunctionItemgetter(self):
+    self.assertEqual({1: [(1, 1), (2, 1, 8)],
+                      2: [(1, 2), (3, 2)],
+                      4: [(3, 4)]},
+                     groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
+                             getKey=operator.itemgetter(1)))
+
+  def testKeyFunctionLambda(self):
+    self.assertEqual({2: [(0, 2), (1, 1), (1, 1)],
+                      3: [(1, 2), (2, 1), (3, 0)]},
+                     groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
+                             getKey=lambda x: x[0] + x[1]))
+
+  def testEmptyKeyFunctionLambda(self):
+    self.assertEqual({},
+                     groupBy([], getKey=lambda x: x[0] + x[1]))
+
+  def testAttibute(self):
+    self.assertEqual({1: [(1, 2), (1, 1)],
+                      2: [(2, 1)]},
+                     groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], 'a'))
+
+  def testAttributeTuple(self):
+    self.assertEqual({(1, 1): [(1, 1)],
+                      (1, 2): [(1, 2)],
+                      (2, 1): [(2, 1)]},
+                     groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b')))
+
 
 def getGlobs():
-  return {'Pair': collections.namedtuple('Pair', ['a', 'b'])}
+  return {'Pair': Pair}
 
 def load_tests(loader, tests, ignore):
   tests.addTests(doctest.DocTestSuite(pm._Tools, extraglobs=getGlobs()))
@@ -35,3 +70,4 @@ def load_tests(loader, tests, ignore):
 
 if __name__ == '__main__':
   doctest.testmod(pm._Tools, extraglobs=getGlobs())
+  unittest.main()
