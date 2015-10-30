@@ -29,12 +29,12 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy pytz dateutil minimock
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy pytz dateutil
   - source activate test-environment
   - python setup.py install
   - make
 #  - pip install -r requirements.txt
-#  - pip install minimock
+  - pip install minimock
 
 script:
 #  - python setup.py install --user
