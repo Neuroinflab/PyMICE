@@ -73,4 +73,5 @@ The library provides user with an object oriented application programming interf
                      'Topic :: Software Development :: Libraries :: Python Modules'],
       keywords ='IntelliCage mice behavioural data loading analysis',
       ext_modules = [cPymice],
-      packages = ['pymice'])
+      packages = ['pymice'],
+      package_dir = {'': 'lib'})

@@ -1,6 +1,6 @@
 include Makefile
 include pymice.h
 recursive-include test *
-prune test/*.zip
+prune test/data/*.zip
 include tutorial/*/timeline.ini
 include tutorial/*/*.ipynb
