@@ -869,7 +869,7 @@ class Merger(Data):
       maxEnd = [self.__topTime]
       maxEnd.extend(v.End for v in visits)
       if self._getNp:
-        maxEnd.extend(np.End for v in visits if v.Nosepokes for np in v.Nosepokes)
+        maxEnd.extend(n.End for v in visits if v.Nosepokes for n in v.Nosepokes)
 
       self.__topTime = max(maxEnd)
 
