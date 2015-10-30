@@ -38,11 +38,10 @@ try:
 except ImportError:
   imap = map
 
-
-from numbers import Number
-import numpy as np
-if not issubclass(np.floating, Number):
-  Number.register(np.floating)
+#from numbers import Number
+#import numpy as np
+#if not issubclass(np.floating, Number):
+#  Number.register(np.floating)
 
 from ._FixTimezones import LatticeOrderer
 
