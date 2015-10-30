@@ -14,7 +14,6 @@ os:
 
 before_install:
 #  - pip install --upgrade pip
-   - apt-get update
 #  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda_linux.sh
 #  - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda_osx.sh
 
