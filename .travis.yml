@@ -23,4 +23,5 @@ install:
 
 script:
   - sudo python setup.py install
+  - make
   - python -m unittest discover
