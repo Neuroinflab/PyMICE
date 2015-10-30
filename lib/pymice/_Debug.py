@@ -27,7 +27,6 @@ import operator
 from datetime import timedelta
 from math import sqrt, ceil
 
-import numpy as np
 import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
@@ -298,8 +297,7 @@ def plotData(mds):
     ax.plot([t1, t2], [idx, idx], 'ko-') 
     ax.plot([t2], [idx], 'bo')
 
-  ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
-                                             tz=self.tzone)) 
+  ax.xaxis.set_major_locator(mpd.HourLocator([00], tz=self.tzone)) 
   ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
   ax.autoscale_view()
   ax.get_figure().autofmt_xdate()
