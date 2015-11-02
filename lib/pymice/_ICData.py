@@ -224,7 +224,7 @@ class Loader(Data):
 
     self._fnames = (fname,)
 
-    self.appendData(fname)
+    self._appendData(fname)
 
     for log in self.getLog():
       if log.Category != 'Info' or log.Type != 'Application':
@@ -526,7 +526,7 @@ class Loader(Data):
 
     return dict((t, self.getAnimal(n)) for t, n in tag2Animal.items())
 
-  def appendData(self, fname):
+  def _appendData(self, fname):
     """
     Process one input file and append data to self.data
     """
@@ -547,43 +547,6 @@ class Loader(Data):
       self._loadZip(zf, source=fname)
 
     self._buildCache()
-
-
-  @staticmethod
-  def fromCSV(fname, lines = False):
-    """
-    Read data from the CSV file into directory of lists.
-
-    @type fname: str or file object
-    """
-    result = None
-
-    if type(fname) is str:
-      fname = open(fname)
-
-    reader = csv.reader(fname, delimiter='\t')
-    try:
-      labels = reader.next()
-      data = [x for x in reader]
-      n = len(data)
-      if n > 0:
-        data = zip(*data)
-
-      else:
-        data = [[] for x in labels]
-
-      result = dict(zip(labels, data))
-      if lines:
-        assert 'line' not in result
-        result['_line'] = range(1, n + 1)
-
-    except StopIteration:
-      pass
-
-    finally:
-      fname.close()
-
-    return result
 
 
 class Merger(Data):
@@ -688,7 +651,7 @@ class Merger(Data):
 
     for dataSource in self._sortDataSources(dataSources):
       try:
-        self.appendDataSource(dataSource)
+        self._appendDataSource(dataSource)
 
       except:
         print("ERROR processing {}".format(dataSource))
@@ -732,7 +695,7 @@ class Merger(Data):
                 str(self._dataSources)
     return mystring
 
-  def plotData(self):
+  def _plotData(self):
     # FIXME: obsoleted
     #fig, ax = plt.subplots()
     ax = plt.gca()
@@ -757,14 +720,14 @@ class Merger(Data):
     plt.xlim(start - 0.1 * span, end + 0.1 * span)
     plt.ylim(0, len(self._dataSources) + 1)
 
-  def plotChannelR(self, top=1., bottom=0.):
+  def _plotChannelR(self, top=1., bottom=0.):
     h = top - bottom
     l = len(self._dataSources)
     h2 = h / l
     starts, ends = [], []
 
     for i, dataSource in enumerate(self._dataSources):
-      start, end = dataSource.plotChannelR(bottom + i * h2, bottom + (i + 1) * h2)
+      start, end = dataSource._plotChannelR(bottom + i * h2, bottom + (i + 1) * h2)
       starts.append(start)
       ends.append(end)
 
@@ -796,7 +759,7 @@ class Merger(Data):
 
     return min(starts), max(ends)
 
-  def appendDataSource(self, dataSource):
+  def _appendDataSource(self, dataSource):
     if dataSource.icSessionStart != None:
       if self.icSessionStart != None and self.icSessionEnd != None:
         if self.icSessionStart < dataSource.icSessionStart\

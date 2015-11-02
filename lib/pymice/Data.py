@@ -107,7 +107,7 @@ class Data(object):
     self.__visits = ObjectBase({
       'Start': toTimestampUTC,
       'End': toTimestampUTC})
-    self.__nosepokes = [] #reserved for future use
+
     self.__log = ObjectBase({'DateTime': toTimestampUTC})
     self.__environment = ObjectBase({'DateTime': toTimestampUTC})
     self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
@@ -262,8 +262,6 @@ class Data(object):
       return None
 
 
-#  def removeVisits(self, condition="False"):
-
 # data management
 
   def insertLog(self, log):
@@ -319,9 +317,6 @@ class Data(object):
     self.__name2group[Name] = group
     return group
 
-  def _unregisterGroup(self, name):
-    del self.__name2group[name]
-
   def _addMember(self, name, animal):
     group = self.__name2group[name]
     animal = self.getAnimal(animal) # XXX sanity
@@ -353,27 +348,7 @@ class Data(object):
 
     return animal
 
-  # TODO or not TODO
-#  def _unregisterAnimal(self, Name = None, aid = None):
-
-  # is anyone using it?
-  def newGroup(self, group, mice=set()):
-    stop
-    if group in self.getGroup():
-      print("WARNING: Overwriting group %s." % group)
-      self._unregisterGroup(group)
-
-    self._registerGroup(group)
-    for mouse in mice:
-      aid = self.getAnimal(mouse)
-      aid = aid._aid
-      self._addMember(group, aid)
-
-  def getTag(self, mouse):
-    tag = self.getAnimal(mouse)
-    return tag.Tag
-
-  def plotMiceCage(self):
+  def _plotMiceCage(self):
     visits = {}
     for v in self.getVisits():
       try:
@@ -411,7 +386,7 @@ class Data(object):
 
     #plt.legend()
 
-  def plotChannel(self, top=1., bottom=0., startM=None, endM=None):
+  def _plotChannel(self, top=1., bottom=0., startM=None, endM=None):
     #TODO!!!!
     h = top - bottom
     data = self.getVisits()
@@ -463,33 +438,9 @@ class Data(object):
     times = [x for x in [startD, endD, startR, endR, startM, endM] if x is not None]
     return min(times), max(times)
 
-  def plotChannelR(self, top=1., bottom=0.):
+  def _plotChannelR(self, top=1., bottom=0.):
     # to be overriden
     return self.plotChannel(top=top, bottom=bottom)
-
-  def __filterUnicode(self, data, field, select=None):
-    if select is None:
-      return data
-
-    key = attrgetter(field)
-    if isinstance(select, basestring):
-      select = unicode(select)
-      return (x for x in data if unicode(key(x)) == select)
-
-    select = frozenset(map(unicode, select))
-    return (x for x in data if unicode(key(x)) in select)
-
-  def __filterInt(self, data, field, select=None):
-    if select is None:
-      return data
-
-    key = attrgetter(field)
-    if not isinstance(select, (tuple, list, set, frozenset)):
-      select = int(select)
-      return (x for x in data if int(key(x)) == select)
-
-    select = frozenset(map(int, select))
-    return (x for x in data if int(key(x)) in select)
 
   @staticmethod
   def __orderBy(data, order):
@@ -734,7 +685,7 @@ class Data(object):
     hw = self.__hardware.get(selectors)
     return self.__orderBy(hw, order)
 
-  def save(self, filename, force=False):
+  def _save(self, filename, force=False):
     """
     An experimental method for saving the data.
 
@@ -802,10 +753,6 @@ class Data(object):
       sources.add(visit._source)
       visits[id(visit)] = str(len(visits)) #vid
 
-    for nosepoke in self.__nosepokes:
-      npKeys.update(nosepoke.keys())
-      sources.add(nosepoke._source)
-
     for log in self.__log.get():
       logKeys.update(log.keys())
       sources.add(log._source)
@@ -862,21 +809,6 @@ class Data(object):
 
       writer = csv.writer(buf, delimiter='\t')
       writer.writerow(['_vid', 'Start', 'End'] + visKeys + ['_sid'])
-      for nosepoke in self.__nosepokes:
-        try:
-          _vid = visits[id(nosepoke.Visit)]
-
-        except:
-          _vid = ''
-
-        Start = timeString(nosepoke.Start)
-        End = timeString(nosepoke.End)
-        _sid = sources[nosepoke._source]
-        row = nosepoke.select(npKeys)
-        row = [_vid, Start, End] +\
-              [str(x) if x is not None else '' for x in row] +\
-              [_sid]
-        writer.writerow(row)
 
       fh.writestr('IntelliCage/Nosepokes.txt', buf.getvalue(), zipfile.ZIP_DEFLATED)
       buf.reset()
