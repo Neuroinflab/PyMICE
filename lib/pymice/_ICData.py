@@ -42,10 +42,6 @@ except ImportError:
 import dateutil.parser
 import pytz
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.path import Path
-import matplotlib.ticker
 import numpy as np
 from xml.dom import minidom
 
@@ -695,70 +691,6 @@ class Merger(Data):
                 str(self._dataSources)
     return mystring
 
-  def _plotData(self):
-    # FIXME: obsoleted
-    #fig, ax = plt.subplots()
-    ax = plt.gca()
-    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, y: hTime(x)))
-    plt.xticks(rotation=10)
-    labels = []
-    yticks = []
-    times = []
-    for i, dataSource in enumerate(self._dataSources):
-      labels.append(str(i))
-      start = dataSource.getStart()
-      end = dataSource.getEnd()
-      #plt.broken_barh([(start, end - start)], [i - 0.4, 0.8])
-      times.extend([start, end])
-      dataSource.plotChannel(i + 0.6, i + 1.4)
-      yticks.append(i)
-
-    plt.yticks(yticks, labels)
-    start = min(times)
-    end = max(times)
-    span = end - start
-    plt.xlim(start - 0.1 * span, end + 0.1 * span)
-    plt.ylim(0, len(self._dataSources) + 1)
-
-  def _plotChannelR(self, top=1., bottom=0.):
-    h = top - bottom
-    l = len(self._dataSources)
-    h2 = h / l
-    starts, ends = [], []
-
-    for i, dataSource in enumerate(self._dataSources):
-      start, end = dataSource._plotChannelR(bottom + i * h2, bottom + (i + 1) * h2)
-      starts.append(start)
-      ends.append(end)
-
-    if self.maskTimeStart is not None and self.maskTimeEnd is not None:
-      left = self.maskTimeStart if self.maskTimeStart is not None else self.getStart()
-      right = self.maskTimeEnd if self.maskTimeEnd is not None else self.getEnd()
-      ax = plt.gca()
-      codes = [Path.MOVETO, Path.LINETO]
-      verts = [(left, top), (right, top)]
-      if self.maskTimeEnd is not None:
-        codes.append(Path.LINETO)
-        ends.append(self.maskTimeEnd)
-
-      else:
-        codes.append(Path.MOVETO)
-
-      verts.append((right, bottom))
-      codes.append(Path.LINETO)
-      verts.append((left, bottom))
-      if self.maskTimeStart is not None:
-        verts.append((left, top))
-        codes.append(Path.CLOSEPOLY)
-        starts.append(self.maskTimeStart)
-
-      path = Path(verts, codes)
-      patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
-      ax.add_patch(patch)
-      
-
-    return min(starts), max(ends)
-
   def _appendDataSource(self, dataSource):
     if dataSource.icSessionStart != None:
       if self.icSessionStart != None and self.icSessionEnd != None:
@@ -846,6 +778,75 @@ class Merger(Data):
       self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
 
     self._buildCache()
+
+# # TO BE MOVED TO DEBUG MODULE
+# import matplotlib.pyplot as plt
+# import matplotlib.patches as patches
+# from matplotlib.path import Path
+# import matplotlib.ticker
+#   def _plotData(self):
+#     # FIXME: obsoleted
+#     #fig, ax = plt.subplots()
+#     ax = plt.gca()
+#     ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, y: hTime(x)))
+#     plt.xticks(rotation=10)
+#     labels = []
+#     yticks = []
+#     times = []
+#     for i, dataSource in enumerate(self._dataSources):
+#       labels.append(str(i))
+#       start = dataSource.getStart()
+#       end = dataSource.getEnd()
+#       #plt.broken_barh([(start, end - start)], [i - 0.4, 0.8])
+#       times.extend([start, end])
+#       dataSource.plotChannel(i + 0.6, i + 1.4)
+#       yticks.append(i)
+#
+#     plt.yticks(yticks, labels)
+#     start = min(times)
+#     end = max(times)
+#     span = end - start
+#     plt.xlim(start - 0.1 * span, end + 0.1 * span)
+#     plt.ylim(0, len(self._dataSources) + 1)
+#
+#   def _plotChannelR(self, top=1., bottom=0.):
+#     h = top - bottom
+#     l = len(self._dataSources)
+#     h2 = h / l
+#     starts, ends = [], []
+#
+#     for i, dataSource in enumerate(self._dataSources):
+#       start, end = dataSource._plotChannelR(bottom + i * h2, bottom + (i + 1) * h2)
+#       starts.append(start)
+#       ends.append(end)
+#
+#     if self.maskTimeStart is not None and self.maskTimeEnd is not None:
+#       left = self.maskTimeStart if self.maskTimeStart is not None else self.getStart()
+#       right = self.maskTimeEnd if self.maskTimeEnd is not None else self.getEnd()
+#       ax = plt.gca()
+#       codes = [Path.MOVETO, Path.LINETO]
+#       verts = [(left, top), (right, top)]
+#       if self.maskTimeEnd is not None:
+#         codes.append(Path.LINETO)
+#         ends.append(self.maskTimeEnd)
+#
+#       else:
+#         codes.append(Path.MOVETO)
+#
+#       verts.append((right, bottom))
+#       codes.append(Path.LINETO)
+#       verts.append((left, bottom))
+#       if self.maskTimeStart is not None:
+#         verts.append((left, top))
+#         codes.append(Path.CLOSEPOLY)
+#         starts.append(self.maskTimeStart)
+#
+#       path = Path(verts, codes)
+#       patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
+#       ax.add_patch(patch)
+#
+#
+#     return min(starts), max(ends)
 
 
 class ICSide(int):
