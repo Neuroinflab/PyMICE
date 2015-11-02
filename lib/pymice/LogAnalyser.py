@@ -22,7 +22,6 @@
 #                                                                             #
 ###############################################################################
 
-import time
 from datetime import datetime
 from pytz import UTC
 from math import ceil
