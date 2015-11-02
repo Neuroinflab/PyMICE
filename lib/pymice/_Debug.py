@@ -27,11 +27,11 @@ import operator
 from datetime import timedelta
 from math import sqrt, ceil
 
-import matplotlib.ticker
+#import matplotlib.ticker
 import matplotlib.dates as mpd
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.path import Path
+#import matplotlib.patches as patches
+#from matplotlib.path import Path
 
 import dateutil.tz
 
