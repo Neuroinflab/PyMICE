@@ -206,19 +206,30 @@ class Loader(Data):
 
     self._appendData(fname)
 
-    for log in self.getLog():
-      if log.Category != 'Info' or log.Type != 'Application':
-        continue
+    self._setIcSessionAttributes()
 
-      if log.Notes == 'Session is started':
-        self.icSessionStart = log.DateTime
 
-      elif log.Notes == 'Session is stopped':
-        self.icSessionEnd = log.DateTime
+  def _appendData(self, fname):
+    """
+    Process one input file and append data to self.data
+    """
+    if self.__verbose:
+      if isinstance(fname, str): #XXX: Python3
+        print('loading data from {}'.format(fname))
 
       else:
-        print('unknown Info/Application message: %s' % msg)
+        print('loading data from {}'.format(fname.encode('utf-8')))
 
+    if fname.endswith('.zip') or os.path.isdir(fname):
+      if isinstance(fname, basestring) and os.path.isdir(fname):
+        zf = PathZipFile(fname)
+
+      else:
+        zf = zipfile.ZipFile(fname)
+
+      self._loadZip(zf, source=fname)
+
+    self._buildCache()
 
   def _loadZip(self, zf, source=None):
     tagToAnimal = dict(self._loadAnimals(zf))
@@ -254,11 +265,11 @@ class Loader(Data):
           if sessionEnd is None:
             continue
 
-          if sessionStart < start < sessionEnd or\
-             end is not None and sessionStart < end < sessionEnd or\
-             (end is not None and start <= sessionStart and sessionEnd <= end) or\
-             (end is not None and sessionStart <= start and end <= sessionEnd):
-              warn.warn(UserWarning('Temporal overlap of sessions!'))
+          if sessionStart < start < sessionEnd or \
+                                  end is not None and sessionStart < end < sessionEnd or \
+                  (end is not None and start <= sessionStart and sessionEnd <= end) or \
+                  (end is not None and sessionStart <= start and end <= sessionEnd):
+            warn.warn(UserWarning('Temporal overlap of sessions!'))
 
         sessions.append(Session(Start=start, End=end))
 
@@ -289,7 +300,7 @@ class Loader(Data):
       timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(list(imap(int, vids)))])
 
     else: #XXX
-      timeToFix = visits['End'] + visits['Start'] 
+      timeToFix = visits['End'] + visits['Start']
 
     nosepokes = None
     if self._getNp:
@@ -460,6 +471,20 @@ class Loader(Data):
 
     return data
 
+  def _setIcSessionAttributes(self):
+    for log in self.getLog():
+      if log.Category != 'Info' or log.Type != 'Application':
+        continue
+
+      if log.Notes == 'Session is started':
+        self.icSessionStart = log.DateTime
+
+      elif log.Notes == 'Session is stopped':
+        self.icSessionEnd = log.DateTime
+
+      else:
+        print('unknown Info/Application message: %s' % msg)
+
   def __repr__ (self):
     """
     Nice string representation for prtinting this class.
@@ -506,27 +531,6 @@ class Loader(Data):
 
     return dict((t, self.getAnimal(n)) for t, n in tag2Animal.items())
 
-  def _appendData(self, fname):
-    """
-    Process one input file and append data to self.data
-    """
-    if self.__verbose:
-      if isinstance(fname, str): #XXX: Python3
-        print('loading data from {}'.format(fname))
-
-      else:
-        print('loading data from {}'.format(fname.encode('utf-8')))
-
-    if fname.endswith('.zip') or os.path.isdir(fname):
-      if isinstance(fname, basestring) and os.path.isdir(fname):
-        zf = PathZipFile(fname)
-
-      else:
-        zf = zipfile.ZipFile(fname)
-
-      self._loadZip(zf, source=fname)
-
-    self._buildCache()
 
 
 class Merger(Data):
