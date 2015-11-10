@@ -19,9 +19,74 @@ Module contents
 
       .. automethod:: __init__
 
-      .. automethod:: appendData
+      .. automethod:: getVisits
+
+      .. automethod:: getLog
+
+      .. automethod:: getEnvironment
+
+      .. automethod:: getHardwareEvents
+
+      .. automethod:: getAnimal
+
+      .. automethod:: getCage
+
+      .. automethod:: getInmates
+
+      .. automethod:: getGroup
+
+      .. automethod:: getStart
+
+      .. automethod:: getEnd
+
+
+   .. autoclass:: Merger
+
+      .. automethod:: __init__
 
       .. automethod:: getVisits
+
+      .. automethod:: getLog
+
+      .. automethod:: getEnvironment
+
+      .. automethod:: getHardwareEvents
+
+      .. automethod:: getAnimal
+
+      .. automethod:: getCage
+
+      .. automethod:: getInmates
+
+      .. automethod:: getGroup
+
+      .. automethod:: getStart
+
+      .. automethod:: getEnd
+
+
+   .. autoclass:: ExperimentTimeline
+
+      .. automethod:: getTime
+
+      .. automethod:: sections
+
+
+   .. autoclass:: DataValidator
+
+      .. automethod:: __call__
+
+
+   .. autoclass:: LickometerLogAnalyzer
+
+
+   .. autoclass:: PresenceLogAnalyzer
+
+
+   .. autoclass:: TestMiceData
+
+      .. automethod:: __call__
+
 
    .. autofunction:: getTutorialData
 
