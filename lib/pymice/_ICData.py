@@ -189,23 +189,7 @@ class Loader(Data):
     :type verbose: bool
     """
     for key, value in kwargs.items():
-      if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
-        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
-        getNp = value
-
-      elif key == 'getLogs':
-        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
-        getLog = value
-
-      elif key == 'getEnvironment':
-        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
-        getEnv = value
-
-      elif key in ('getHardware', 'getHardwareEvents'):
-        warn.deprecated("Obsolete argument %s given for Loader constructor." % key)
-        getHw = value
-
-      elif key in ('loganalyzers', 'logAnalyzers'):
+      if key in ('loganalyzers', 'logAnalyzers'):
         warn.deprecated("Obsolete argument {} given for Loader constructor. ".format(key) +\
                         "Set the getLog argument to True and use the DataValidator " +\
                         "class for log analysis.")
@@ -581,7 +565,6 @@ class Merger(Data):
   Jerry 2
     69
   """
-  #TODO: common interface, not inheritance
   def __init__(self, *dataSources, **kwargs):
     """
     Usage: Merger(data_1, [data_2, ...] [parameters])
@@ -608,28 +591,11 @@ class Merger(Data):
     getLog = kwargs.pop('getLog', False)
     getEnv = kwargs.pop('getEnv', False)
     getHw = kwargs.pop('getHw', False)
-    #logAnalyzers = kwargs.pop('logAnalyzers', [])
 
     self._ignoreMiceDifferences = kwargs.pop('ignoreMiceDifferences', False)
 
     for key, value in kwargs.items():
-      if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
-        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
-        getNp = value
-
-      elif key == 'getLogs':
-        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
-        getLog = value
-
-      elif key == 'getEnvironment':
-        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
-        getEnv = value
-
-      elif key in ('getHardware', 'getHardwareEvents'):
-        warn.deprecated("Obsolete argument %s given for Merger constructor." % key)
-        getHw = value
-
-      elif key in ('loganalyzers', 'logAnalyzers'):
+      if key in ('loganalyzers', 'logAnalyzers'):
         warn.deprecated("Obsolete argument {} given for Merger constructor. ".format(key) +\
                         "Set the getLog argument to True and use the DataValidator " +\
                         "class for log analysis.")

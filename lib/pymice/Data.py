@@ -118,7 +118,7 @@ class Data(object):
     #self._sourceManager._del_()
     #self.__animalsByName._del_()
 
-  def getVisits(self, mice=None, start=None, end=None, order=None, startTime=None, endTime=None):
+  def getVisits(self, mice=None, start=None, end=None, order=None):
     """
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
@@ -161,26 +161,9 @@ class Data(object):
     :param order: attributes that the returned list is ordered by
     :type order: str or unicode or their sequence or None
 
-    :param startTime: deprecated, use start instead
-    :param endTime: deprecated, use end instead
-
     :return: visits
     :rtype: [:py:class:`Visit`, ...]
     """
-    if startTime is not None:
-      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
-      if start is not None:
-        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
-
-      start = startTime
-
-    if endTime is not None:
-      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
-      if end is not None:
-        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
-
-      end = endTime
-
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
       if isinstance(mice, basestring) or not isinstance(mice, Container):
@@ -191,14 +174,7 @@ class Data(object):
     visits = self.__visits.get(selectors)
     return self.__orderBy(visits, order)
 
-  def getLogs(self, *args, **kwargs):
-    """
-    :deprecated: use :py:meth:`getLog` instead.
-    """
-    warn.deprecated("Obsolete method getLogs accessed.")
-    return self.getLog(*args, **kwargs)
-
-  def getLog(self, start=None, end=None, order=None, startTime=None, endTime=None):
+  def getLog(self, start=None, end=None, order=None):
     """
     >>> log = ml_icp3.getLog(order='DateTime')
     >>> for entry in log:
@@ -215,31 +191,14 @@ class Data(object):
     :param order: attributes that the returned list is ordered by
     :type order: str or unicode or their sequence or None
 
-    :param startTime: deprecated, use C{start} instead
-    :param endTime: deprecated, use C{end} instead
-
     :return: log entries
     :rtype: [:py:class:`LogEntry`, ...]
     """
-    if startTime is not None:
-      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
-      if start is not None:
-        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
-
-      start = startTime
-
-    if endTime is not None:
-      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
-      if end is not None:
-        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
-
-      end = endTime
-
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     log = self.__log.get(selectors)
     return self.__orderBy(log, order)
 
-  def getEnvironment(self, start=None, end=None, order=None, startTime=None, endTime=None):
+  def getEnvironment(self, start=None, end=None, order=None):
     """
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print("%.1f" % env.Temperature)
@@ -269,31 +228,14 @@ class Data(object):
     :param order: attributes that the returned list is ordered by
     :type order: str or unicode or their sequence or None
 
-    :param startTime: deprecated, use C{start} instead
-    :param endTime: deprecated, use C{end} instead
-
     :return: sampled environment conditions
     :rtype: [:py:class:`EnvironmentalConditions`, ...]
     """
-    if startTime is not None:
-      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
-      if start is not None:
-        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
-
-      start = startTime
-
-    if endTime is not None:
-      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
-      if end is not None:
-        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
-
-      end = endTime
-
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     env = self.__environment.get(selectors)
     return self.__orderBy(env, order)
 
-  def getHardwareEvents(self, start=None, end=None, order=None, startTime=None, endTime=None):
+  def getHardwareEvents(self, start=None, end=None, order=None):
     """
     :param start: a lower bound of the event DateTime attribute
     :type start: datetime.datetime or None
@@ -304,26 +246,9 @@ class Data(object):
     :param order: attributes that the returned list is ordered by
     :type order: str or unicode or their sequence or None
 
-    :param startTime: deprecated, use C{start} instead
-    :param endTime: deprecated, use C{end} instead
-
     :return: hardware events
     :rtype: [:py:class:`HardwareEvent`, ...]
     """
-    if startTime is not None:
-      warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
-      if start is not None:
-        raise ValueError("Arguments 'start' and 'startTime' are mutually exclusive.")
-
-      start = startTime
-
-    if endTime is not None:
-      warn.deprecated("Obsolete argument 'endTime' used; use 'end' instead")
-      if end is not None:
-        raise ValueError("Arguments 'end' and 'endTime' are mutually exclusive.")
-
-      end = endTime
-
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     hw = self.__hardware.get(selectors)
     return self.__orderBy(hw, order)
@@ -727,22 +652,6 @@ class Data(object):
       buf.truncate()
 
     fh.close()
-
-  # OBSOLETE STUFF
-  @property
-  def _get_npokes(self):
-    warn.deprecated("Obsolete attribute _get_npokes accessed.")
-    return self._getNp
-
-  @property
-  def _getNpokes(self):
-    warn.deprecated("Obsolete attribute _getNpokes accessed.")
-    return self._getNp
-
-  @property
-  def _getLogs(self):
-    warn.deprecated("Obsolete attribute _getLogs accessed.")
-    return self._getLog
 
 # # TO BE MOVED TO DEBUG MODULE
 #import matplotlib.pyplot as plt
