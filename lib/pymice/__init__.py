@@ -94,6 +94,7 @@ DT4L7Vi4l+wex6u695AC7tFSLk+9ag9m5yA0gZLV2BolCzU8DFHt5aS86Rp1cYA=
 =4J/5
 -----END PGP PUBLIC KEY BLOCK-----
 """
+"PGP public key for verifying of package updates from PyPI"
 
 __welcomeMessage = """PyMICE library v. {version}
 (NeuroLex.org ID: {neurolex})
