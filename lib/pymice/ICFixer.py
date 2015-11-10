@@ -173,7 +173,7 @@ class ICFixer(object):
     """
     Read data from the CSV file into directory of lists.
 
-    @type fname: str or file object
+    :type fname: str or file object
     """
     result = None
 
@@ -206,8 +206,8 @@ class ICFixer(object):
     """
     Store data (a directory of equaly long lists) to the CSV file.
 
-    @type fname: file object
-    @type data: dict
+    :type fname: file object
+    :type data: dict
     """
     if len(data) == 0:
       return

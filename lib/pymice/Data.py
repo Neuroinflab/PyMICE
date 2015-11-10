@@ -75,13 +75,13 @@ class Data(object):
                CageManager=IntIdentityManager,
                AnimalManager=dict):
     """
-    @param getNp: whether to load nosepoke data.
+    :param getNp: whether to load nosepoke data.
 
-    @param getLog: whether to load log.
+    :param getLog: whether to load log.
 
-    @param getEnv: whether to load environmental data.
+    :param getEnv: whether to load environmental data.
 
-    @param getHw: whether to load hardware data.
+    :param getHw: whether to load hardware data.
     """
     self.__name2group = {}
 
@@ -149,24 +149,23 @@ class Data(object):
     ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
     2012-12-18 12:30:02.360000 +0000
 
-    @param mice: mouse (or mice) which visits are requested
-    @type mice:
+    :param mice: mouse (or mice) which visits are requested
+    :type mice: str or unicode or :py:class:`Animal` or collection of them or None
 
-    @param start: a lower bound of the visit Start attribute
-    @type start: datetime
+    :param start: a lower bound of the visit Start attribute
+    :type start: datetime.datetime or None
 
-    @param end: an upper bound of the visit Start attribute
-    @type end: datetime
+    :param end: an upper bound of the visit Start attribute
+    :type end: datetime.datetime or None
 
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
 
-    @param startTime: deprecated, use C{start} instead
+    :param startTime: deprecated, use start instead
+    :param endTime: deprecated, use end instead
 
-    @param endTime: deprecated, use C{end} instead
-
-    @return: visits.
-    @rtype: [Visit]
+    :return: visits
+    :rtype: [:py:class:`Visit`, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -194,7 +193,7 @@ class Data(object):
 
   def getLogs(self, *args, **kwargs):
     """
-    @deprecated: use L{getLog} instead.
+    :deprecated: use :py:meth:`getLog` instead.
     """
     warn.deprecated("Obsolete method getLogs accessed.")
     return self.getLog(*args, **kwargs)
@@ -207,21 +206,20 @@ class Data(object):
     Session is started
     Session is stopped
 
-    @param start: a lower bound of the log entries DateTime attribute
-    @type start: datetime
+    :param start: a lower bound of the log entries DateTime attribute
+    :type start: datetime.datetime or None
 
-    @param end: an upper bound of the log entries DateTime attribute
-    @type end: datetime
+    :param end: an upper bound of the log entries DateTime attribute
+    :type end: datetime.datetime or None
 
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
 
-    @param startTime: deprecated, use C{start} instead
+    :param startTime: deprecated, use C{start} instead
+    :param endTime: deprecated, use C{end} instead
 
-    @param endTime: deprecated, use C{end} instead
-
-    @return: log entries.
-    @rtype: [LogEntry, ...]
+    :return: log entries
+    :rtype: [:py:class:`LogEntry`, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -262,21 +260,20 @@ class Data(object):
     22.0
     23.6
 
-    @param start: a lower bound of the sample DateTime attribute
-    @type start: datetime
+    :param start: a lower bound of the sample DateTime attribute
+    :type start: datetime.datetime or None
 
-    @param end: an upper bound of the sample DateTime attribute
-    @type end: datetime
+    :param end: an upper bound of the sample DateTime attribute
+    :type end: datetime.datetime or None
 
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
 
-    @param startTime: deprecated, use C{start} instead
+    :param startTime: deprecated, use C{start} instead
+    :param endTime: deprecated, use C{end} instead
 
-    @param endTime: deprecated, use C{end} instead
-
-    @return: sampled environment conditions.
-    @rtype: [EnvironmentalConditions, ...]
+    :return: sampled environment conditions
+    :rtype: [:py:class:`EnvironmentalConditions`, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -298,21 +295,20 @@ class Data(object):
 
   def getHardwareEvents(self, start=None, end=None, order=None, startTime=None, endTime=None):
     """
-    @param start: a lower bound of the event DateTime attribute
-    @type start: datetime
+    :param start: a lower bound of the event DateTime attribute
+    :type start: datetime.datetime or None
 
-    @param endTime: an upper bound of the event DateTime attribute
-    @type endTime: datetime
+    :param endTime: an upper bound of the event DateTime attribute
+    :type endTime: datetime.datetime or None
 
-    @param order: attributes that the returned list is ordered by
-    @type order: str or (str, ...)
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
 
-    @param startTime: deprecated, use C{start} instead
+    :param startTime: deprecated, use C{start} instead
+    :param endTime: deprecated, use C{end} instead
 
-    @param endTime: deprecated, use C{end} instead
-
-    @return: hardware events.
-    @rtype: [HardwareEvent, ...]
+    :return: hardware events
+    :rtype: [:py:class:`HardwareEvent`, ...]
     """
     if startTime is not None:
       warn.deprecated("Obsolete argument 'startTime' used; use 'start' instead")
@@ -340,8 +336,8 @@ class Data(object):
     >>> ml_icp3.getCage(ml_icp3.getAnimal('Minnie'))
     1
 
-    @return: cage(s) mouse presence has been detected
-    @rtype: convertable to int or (convertable to int, ...)
+    :return: cage(s) mouse presence has been detected
+    :rtype: convertable to int or (convertable to int, ...)
     """
     try:
       cages = self.__animal2cage[unicode(mouse)]
@@ -360,18 +356,18 @@ class Data(object):
 
   def getMice(self):
     """
-    @return: names of registered animals
-    @rtype: frozenset(unicode, ...)
+    :return: names of registered animals
+    :rtype: frozenset(unicode, ...)
     """
     return frozenset(self.__animalsByName)
 
   def getInmates(self, cage=None):
     """
-    @param cage: number of the cage
-    @type cage: convertable to int
+    :param cage: number of the cage
+    :type cage: convertable to int
 
-    @return: cages available in data if cage is C{None} animals detected in the cage otherwise
-    @rtype: frozenset(int, ...) if cage is C{None} C{frozenset(L{Animal}, ...)} otherwise
+    :return: cages available in data if cage is None animals detected in the cage otherwise
+    :rtype: frozenset(int, ...) if cage is None frozenset(:py:class:`Animal`, ...) otherwise
     """
     if cage == None:
       return frozenset(self.__cages)
@@ -380,8 +376,8 @@ class Data(object):
 
   def getStart(self):
     """
-    @return: time of the earliest visit registration
-    @rtype: datetime
+    :return: time of the earliest visit registration
+    :rtype: datetime.datetime or None
     """
     if self.icSessionStart is not None:
       return self.icSessionStart
@@ -395,8 +391,8 @@ class Data(object):
 
   def getEnd(self):
     """
-    @return: time of the latest visit registration
-    @rtype: datetime
+    :return: time of the latest visit registration
+    :rtype: datetime.datetime or None
     """
     if self.icSessionEnd is not None:
       return self.icSessionEnd
@@ -416,11 +412,11 @@ class Data(object):
 
   def getAnimal(self, name=None):
     """
-    @param name: name of the animal
-    @type name: basestring
+    :param name: name of the animal
+    :type name: basestring
 
-    @return: animal data if name or aid given else names of animals
-    @rtype: Animal if name or aid given else frozenset([unicode, ...])
+    :return: animal data if name or aid given else names of animals
+    :rtype: :py:class:`Animal` if name or aid given else frozenset([unicode, ...])
     """
     if name is not None:
       return self.__animalsByName[unicode(name)]
@@ -569,12 +565,12 @@ class Data(object):
     """
     An experimental method for saving the data.
 
-    @param filename: path to the file data has to be saved to; if filename does
+    :param filename: path to the file data has to be saved to; if filename does
                      not end with '.zip', the suffix is being appended.
-    @type filename: basestring
+    :type filename: basestring
 
-    @param force: whether to overwrite an existing file
-    @type force: bool
+    :param force: whether to overwrite an existing file
+    :type force: bool
     """
     if not filename.lower().endswith('.zip'):
       filename += '.zip'

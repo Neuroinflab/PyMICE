@@ -170,23 +170,23 @@ class Loader(Data):
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
                tzinfo=pytz.UTC, verbose=False, **kwargs):
     """
-    @param fname: a path to the data file.
-    @type fname: basestring
+    :param fname: a path to the data file.
+    :type fname: basestring
 
-    @param getNp: whether to load nosepoke data.
-    @type getNp: bool
+    :param getNp: whether to load nosepoke data.
+    :type getNp: bool
 
-    @param getLog: whether to load log.
-    @type getLog: bool
+    :param getLog: whether to load log.
+    :type getLog: bool
 
-    @param getEnv: whether to load environmental data.
-    @type getEnv: bool
+    :param getEnv: whether to load environmental data.
+    :type getEnv: bool
 
-    @param getHw: whether to load hardware data.
-    @type getHw: bool
+    :param getHw: whether to load hardware data.
+    :type getHw: bool
 
-    @param verbose: whether to output verbose messages
-    @type verbose: bool
+    :param verbose: whether to output verbose messages
+    :type verbose: bool
     """
     for key, value in kwargs.items():
       if key in ('get_npokes', 'getNpokes', 'getNosepokes'):
@@ -586,23 +586,23 @@ class Merger(Data):
     """
     Usage: Merger(data_1, [data_2, ...] [parameters])
 
-    @type dataSources: [Data, ...]
+    :type dataSources: [:py:class:`Data`, ...]
 
-    @kwparam getNp: whether to load nosepoke data (defaults to False).
-    @type getNp: bool
+    :keyword getNp: whether to load nosepoke data (defaults to False).
+    :type getNp: bool
 
-    @kwparam getLog: whether to load log (defaults to False).
-    @type getLog: bool
+    :keyword getLog: whether to load log (defaults to False).
+    :type getLog: bool
 
-    @kwparam getEnv: whether to load environmental data (defaults to False).
-    @type getEnv: bool
+    :keyword getEnv: whether to load environmental data (defaults to False).
+    :type getEnv: bool
 
-    @kwparam getHw: whether to load hardware data (defaults to False).
-    @type getHw: bool
+    :keyword getHw: whether to load hardware data (defaults to False).
+    :type getHw: bool
 
-    @kwparam ignoreMiceDifferences: whether to ignore encountered differences
+    :keyword ignoreMiceDifferences: whether to ignore encountered differences
                                     in animal description (e.g. sex)
-    @type ignoreMiceDifferences: bool
+    :type ignoreMiceDifferences: bool
     """
     getNp = kwargs.pop('getNp', True)
     getLog = kwargs.pop('getLog', False)
@@ -684,9 +684,6 @@ class Merger(Data):
            + sourcesByStartPresence.get(False, [])
 
   def __repr__(self):
-    """
-    @return: Nice string representation for prtinting this class.
-    """
     mystring = 'IntelliCage data loaded from: %s' %\
                 str(self._dataSources)
     return mystring

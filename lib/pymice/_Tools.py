@@ -403,15 +403,15 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   """
   Download example dataset(s) used in tutorials.
 
-  @param path: a directory where tutorial data are to be loaded into
+  :param path: a directory where tutorial data are to be loaded into
                (defaults to working directory)
-  @type path: basestring
+  :type path: basestring
 
-  @param quiet: a switch disabling stdout output.
-  @type quiet: bool
+  :param quiet: a switch disabling stdout output.
+  :type quiet: bool
 
-  @param fetch: the datasets to download
-  @type fetch: collection(basestring, ...)
+  :param fetch: the datasets to download
+  :type fetch: collection(basestring, ...)
 
   SetUp
 
@@ -480,6 +480,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   >>> os.rmdir('C57_AB')
   >>> os.chdir(_cwd)
   >>> os.rmdir(_dirname)
+
   """
   downloader = DataDownloader(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
   downloader.download(fetch)
