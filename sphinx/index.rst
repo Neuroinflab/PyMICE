@@ -69,6 +69,8 @@ Package pymice
    --------------
    .. autoclass:: ExperimentTimeline
 
+      .. automethod:: __init__
+
       .. automethod:: getTime
 
       .. automethod:: sections
@@ -76,16 +78,24 @@ Package pymice
 
    .. autoclass:: DataValidator
 
+      .. automethod:: __init__
+
       .. automethod:: __call__
 
 
    .. autoclass:: LickometerLogAnalyzer
 
+      .. automethod:: __init__
+
 
    .. autoclass:: PresenceLogAnalyzer
 
+      .. automethod:: __init__
+
 
    .. autoclass:: TestMiceData
+
+      .. automethod:: __init__
 
       .. automethod:: __call__
 

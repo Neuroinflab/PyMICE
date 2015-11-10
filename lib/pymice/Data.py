@@ -120,6 +120,21 @@ class Data(object):
 
   def getVisits(self, mice=None, start=None, end=None, order=None):
     """
+    :param mice: mouse (or mice) which visits are requested
+    :type mice: str or unicode or :py:class:`Animal` or collection of them or None
+
+    :param start: a lower bound of the visit Start attribute
+    :type start: datetime.datetime or None
+
+    :param end: an upper bound of the visit Start attribute
+    :type end: datetime.datetime or None
+
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
+
+    :return: visits
+    :rtype: [:py:class:`Visit`, ...]
+
     >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
     [4, 1, 2]
     >>> [v.Corner for v in ml_icp3.getVisits(order='Start')]
@@ -137,8 +152,6 @@ class Data(object):
     >>> [v.Corner for v in ml_l1.getVisits(mice=mice, order='Start')]
     [4, 1]
 
-
-
     >>> for v in ml_icp3.getVisits(order='Start'):
     ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
     2012-12-18 12:13:14.139000 +0100
@@ -148,21 +161,6 @@ class Data(object):
     >>> for v in ml_l1.getVisits(mice='Minnie'):
     ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
     2012-12-18 12:30:02.360000 +0000
-
-    :param mice: mouse (or mice) which visits are requested
-    :type mice: str or unicode or :py:class:`Animal` or collection of them or None
-
-    :param start: a lower bound of the visit Start attribute
-    :type start: datetime.datetime or None
-
-    :param end: an upper bound of the visit Start attribute
-    :type end: datetime.datetime or None
-
-    :param order: attributes that the returned list is ordered by
-    :type order: str or unicode or their sequence or None
-
-    :return: visits
-    :rtype: [:py:class:`Visit`, ...]
     """
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
@@ -176,12 +174,6 @@ class Data(object):
 
   def getLog(self, start=None, end=None, order=None):
     """
-    >>> log = ml_icp3.getLog(order='DateTime')
-    >>> for entry in log:
-    ...   print(entry.Notes)
-    Session is started
-    Session is stopped
-
     :param start: a lower bound of the log entries DateTime attribute
     :type start: datetime.datetime or None
 
@@ -193,6 +185,12 @@ class Data(object):
 
     :return: log entries
     :rtype: [:py:class:`LogEntry`, ...]
+
+    >>> log = ml_icp3.getLog(order='DateTime')
+    >>> for entry in log:
+    ...   print(entry.Notes)
+    Session is started
+    Session is stopped
     """
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     log = self.__log.get(selectors)
@@ -200,6 +198,18 @@ class Data(object):
 
   def getEnvironment(self, start=None, end=None, order=None):
     """
+    :param start: a lower bound of the sample DateTime attribute
+    :type start: datetime.datetime or None
+
+    :param end: an upper bound of the sample DateTime attribute
+    :type end: datetime.datetime or None
+
+    :param order: attributes that the returned list is ordered by
+    :type order: str or unicode or their sequence or None
+
+    :return: sampled environment conditions
+    :rtype: [:py:class:`EnvironmentalConditions`, ...]
+
     >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
     ...   print("%.1f" % env.Temperature)
     22.0
@@ -218,18 +228,6 @@ class Data(object):
     23.6
     22.0
     23.6
-
-    :param start: a lower bound of the sample DateTime attribute
-    :type start: datetime.datetime or None
-
-    :param end: an upper bound of the sample DateTime attribute
-    :type end: datetime.datetime or None
-
-    :param order: attributes that the returned list is ordered by
-    :type order: str or unicode or their sequence or None
-
-    :return: sampled environment conditions
-    :rtype: [:py:class:`EnvironmentalConditions`, ...]
     """
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     env = self.__environment.get(selectors)
@@ -255,14 +253,14 @@ class Data(object):
 
   def getCage(self, mouse):
     """
+    :return: cage(s) mouse presence has been detected
+    :rtype: convertable to int or (convertable to int, ...)
+
     >>> ml_icp3.getCage('Minnie')
     1
 
     >>> ml_icp3.getCage(ml_icp3.getAnimal('Minnie'))
     1
-
-    :return: cage(s) mouse presence has been detected
-    :rtype: convertable to int or (convertable to int, ...)
     """
     try:
       cages = self.__animal2cage[unicode(mouse)]
