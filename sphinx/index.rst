@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-Module contents
----------------
+Package pymice
+--------------
 .. automodule:: pymice
 
    .. autoclass:: Loader
@@ -65,6 +65,8 @@ Module contents
       .. automethod:: getEnd
 
 
+   Auxilary tools
+   --------------
    .. autoclass:: ExperimentTimeline
 
       .. automethod:: getTime
@@ -91,7 +93,16 @@ Module contents
    .. autofunction:: getTutorialData
 
    .. autodata:: __PGP_PUBLIC_KEY__
-      :annotation: = a PGP public key for verifying of package updates from PyPI updates
+      :annotation: = < ASCII armored PGP public key >
+
+
+Module pymice.debug
+-------------------
+
+.. automodule:: pymice.debug
+
+   .. autofunction:: plotPhases
+
 
 Indices and tables
 ==================
