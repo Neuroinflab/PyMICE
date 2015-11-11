@@ -253,7 +253,10 @@ class Data(object):
 
   def getCage(self, mouse):
     """
-    :return: cage(s) mouse presence has been detected
+    :param mouse: mouse name or representation
+    :type mouse: basestring or :py:class:`Animal`
+
+    :return: cage(s) where mouse's visits has been registered
     :rtype: convertable to int or (convertable to int, ...)
 
     >>> ml_icp3.getCage('Minnie')
@@ -287,10 +290,11 @@ class Data(object):
   def getInmates(self, cage=None):
     """
     :param cage: number of the cage
-    :type cage: convertable to int
+    :type cage: convertable to int or None
 
-    :return: cages available in data if cage is None animals detected in the cage otherwise
-    :rtype: frozenset(int, ...) if cage is None frozenset(:py:class:`Animal`, ...) otherwise
+    :return: animals detected in the cage if given else available cages
+    :rtype:  frozenset(:py:class:`Animal`, ...) if cage is given
+             else frozenset(int, ...)
     """
     if cage == None:
       return frozenset(self.__cages)
@@ -327,7 +331,14 @@ class Data(object):
     except ValueError:
       return None
 
-  def getGroup(self, name = None):
+  def getGroup(self, name=None):
+    """
+    :param name: name of the group
+    :type name: basestring or None
+
+    :return: group data if name given else names of groups
+    :rtype: :py:class:`Group` if name given else frozenset([unicode, ...])
+    """
     if name != None:
       return self.__name2group[name]
 
@@ -336,10 +347,10 @@ class Data(object):
   def getAnimal(self, name=None):
     """
     :param name: name of the animal
-    :type name: basestring
+    :type name: unicode convertable or None
 
-    :return: animal data if name or aid given else names of animals
-    :rtype: :py:class:`Animal` if name or aid given else frozenset([unicode, ...])
+    :return: animal data if name given else names of animals
+    :rtype: :py:class:`Animal` if name given else frozenset([unicode, ...])
     """
     if name is not None:
       return self.__animalsByName[unicode(name)]

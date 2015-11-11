@@ -34,11 +34,9 @@ try:
 except ImportError:
   from configparser import RawConfigParser, NoSectionError, NoOptionError
 
-import pytz 
-import numpy as np                                           
+import pytz
 import matplotlib.ticker
 import matplotlib.dates as mpd
-import matplotlib.pyplot as plt
 
 from ._Tools import convertTime, warn
 
@@ -477,8 +475,36 @@ class Phase(MetadataNode):
 
 
 class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
-  def __init__(self, path, fname=None, tzone=None, tzinfo=None): 
-    self.tzone = pytz.timezone('CET') if tzone is None else tzone
+  """A class of objects for loading experiment timeline definition files.
+
+  As a subclass of :py:class:`matplotlib.ticker.Formatter` the class is also
+  time axis formatter in :py:mod:`matplotlib.dates` coordinates.
+
+  **File format description**
+
+  The format is a constrained INI format. Every section defined corresponds to
+  phase of same name. The minimal information required about a phase are its
+  boundaries given as ``start`` and ``end`` properties in format
+  ``YYYY-MM-DD HH:MM`` or ``YYYY-MM-DD HH:MM:SS``. Optional information about
+  timezone of ``start`` and ``end`` properties might be provided by ``tzinfo``
+  property (name of timezone defined in :py:mod:`pytz` module).
+  """
+  def __init__(self, path, fname=None, tzinfo=None):
+    """
+    Read the description of the experiment timeline.
+
+    :param path: a path to either the experiment timeline file or a directory
+                 containing experiment timeline file of either ``fname``
+                 or `'config.txt'` or `'config*.(txt|ini)'` name (matching in
+                 that order).
+    :type path: basestring
+
+    :param fname: name of the experiment timeline file in ``path`` directory
+    :type fname: basestring or None
+
+    :param tzinfo: default timezone
+    :type tzinfo: :py:class:`datetime.tzinfo`
+    """
     self.tzinfo = tzinfo
 
     RawConfigParser.__init__(self)
@@ -498,20 +524,20 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
       self.path = os.path.join(path, fname)
 
     self.read(self.path)
-      
-  def gettime(self, sec): 
-    warn.deprecated('Deprecated method gettime() called; use getTime() instead.')
-    return self.getTime(sec)
 
-  def getTime(self, sec): 
+  def getTime(self, phases):
     """
-    Convert start and end time and date read from section sec (might be a list)
-    of the config file to a tuple of times from epoch.
+    :param phases: name(s) of phase(s)
+    :type phases: [basestring, ...] or basestring
+
+    :return: timezone-aware boundaries of minimal period of time covering
+             all phases given
+    :rtype: (:py:class:`datetime.datetime`, :py:class:`datetime.datetime`)
     """
 
-    if isinstance(sec, basestring):
+    if isinstance(phases, basestring):
       try:
-        tzinfo = pytz.timezone(self.get(sec, 'tzinfo'))
+        tzinfo = pytz.timezone(self.get(phases, 'tzinfo'))
 
       except (NoOptionError, pytz.UnknownTimeZoneError):
         tzinfo = self.tzinfo
@@ -519,11 +545,11 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
       times = []
       for option in ('start', 'end'):
         try:
-          value = self.get(sec, option)
+          value = self.get(phases, option)
 
         except NoOptionError:
-          day, month, year = self.get(sec, option + 'date').split('.')
-          time = self.get(sec, option + 'time').split(':')
+          day, month, year = self.get(phases, option + 'date').split('.')
+          time = self.get(phases, option + 'time').split(':')
           ts = map(int, [year, month, day] + time)
           t = datetime(*ts, **{'tzinfo': tzinfo})
 
@@ -536,14 +562,14 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
         times.append(t)
 
       if times[0] > times[1]:
-        warn.warn("Phase %s starts after it ends (%s > %s)" % (sec, times[0], times[1]))
+        warn.warn("Phase %s starts after it ends (%s > %s)" % (phases, times[0], times[1]))
 
       return tuple(times)
         
     else:
       starts = []
       ends = []
-      for ss in sec:
+      for ss in phases:
         st, et = self.getTime(ss)
         starts.append(st)
         ends.append(et)
@@ -557,64 +583,4 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
       if t1 <= x and x < t2:
         return sec
 
-    return 'Unknown'    
-  
-  def mark(self, sec, ax=None):
-    """Mark given phases on the plot"""
-    if ax is None:
-      ax = plt.gca()
-
-    ylims = ax.get_ylim()
-    for tt in self.gettime(sec):
-      ax.plot([mpd.date2num(tt),] * 2, ylims, 'k:')
-
-    plt.draw()
-  
-  def plot_nights(self, *args, **kwargs):
-    warn.deprecated('Deprecated method plot_nights() called; use plotNights() instead.')
-    return self.plotNights(*args, **kwargs)
-
-  def plotNights(self, sections, ax=None):
-    """Plot night from sections"""
-    if ax is None:
-      ax = plt.gca()
-
-    #xlims = ax.get_xlim()
-    if type(sections) == str:
-      sections = [sections]
-
-    for sec in sections:
-      t1, t2 = self.gettime(sec)
-      ax.axvspan(mpd.date2num(t1), mpd.date2num(t2),
-                 color='0.8', alpha=0.5, zorder=-10)
-
-    #ax.set_xlim(xlims)
-    plt.draw()
-
-  def plot_sections(self):
-    warn.deprecated('Deprecated method plot_sections() called; use plotSections() instead.')
-    return self.plotSections()
-
-  def plotSections(self):
-    """Diagnostic plot of sections defined in the config file."""
-    figg = plt.figure()                         
-    for idx, sec in enumerate(self.sections()):
-      t1, t2 = mpd.date2num(self.gettime(sec)) #cf2time(cf, sec)
-      plt.plot([t1, t2], [idx, idx], 'ko-') 
-      plt.plot([t2], [idx], 'bo')
-      plt.text(t2 + 0.5, idx, sec)
-
-    ax = plt.gca()
-    ax.xaxis.set_major_locator(mpd.HourLocator(np.array([00]), 
-                                               tz=self.tzone)) 
-    ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
-    ax.autoscale_view()
-    ax.get_figure().autofmt_xdate()
-    plt.title(self.path) 
-    plt.draw()
-
-
-class ExperimentConfigFile(ExperimentTimeline):
-  def __init__(self, *args, **kwargs):
-    warn.deprecated('Deprecated class ExperimentConfigFile used; use ExperimentTimeline instead.')
-    ExperimentTimeline.__init__(self, *args, **kwargs)
+    return 'Unknown'

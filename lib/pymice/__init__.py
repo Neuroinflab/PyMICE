@@ -30,7 +30,7 @@ A collection of tools to access IntelliCage data.
 
 from ._ICData import Loader, Merger
 from ._Tools import hTime, convertTime, getTutorialData, warn
-from ._Metadata import Phase, ExperimentConfigFile, ExperimentTimeline
+from ._Metadata import Phase, ExperimentTimeline
 from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           TestMiceData, DataValidator)
