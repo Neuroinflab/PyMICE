@@ -168,7 +168,7 @@ class Loader(Data):
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
-               tzinfo=pytz.UTC, verbose=False, **kwargs):
+               verbose=False, **kwargs):
     """
     :param fname: a path to the data file.
     :type fname: basestring
@@ -573,6 +573,7 @@ class Merger(Data):
     """
     Usage: Merger(data_1, [data_2, ...] [parameters])
 
+    :arg dataSources: objects containing IntelliCage data
     :type dataSources: [:py:class:`Data`, ...]
 
     :keyword getNp: whether to load nosepoke data (defaults to False).
