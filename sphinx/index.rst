@@ -90,8 +90,6 @@ Package pymice
 
    .. autoclass:: PresenceLogAnalyzer
 
-      .. automethod:: __init__
-
 
    .. autoclass:: TestMiceData
 

@@ -68,35 +68,44 @@ def plotNights(ec, sections, ax=None, color='0.8', alpha=0.5, zorder=-10, **kwar
   plt.draw()
 
 
-def plotPhases(ec, tzone=None, ax=None):
-  """Diagnostic plot of sections defined in the config file."""
+def plotPhases(timeline, tzone=None, ax=None):
+  """
+  Plot a diagnostic plot of phases of the experiment timeline.
+
+  :param timeline: the timeline
+  :type timeline: :py:class:`pymice.ExperimentTimeline`
+
+  :param tzone: timezone of the plot or None
+  :type tzone: :py:class:`datetime.tzinfo` or None
+
+  :param ax: axis or None
+  :type ax: :py:class:`matplotlib.axes.Axes` or None
+
+  :return: a new figure if ``ax`` parameter not provided else None
+  :rtype: :py:class:`matplotlib.figure.Figure` or None
+  """
   if tzone is None:
     tzone = dateutil.tz.tzlocal()
 
-  sections = ec.sections()
+  sections = timeline.sections()
 
   fig = None
   if ax is None:
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set_title(ec.path) 
-    ax.set_xlim(*mpd.date2num(ec.getTime(sections)))
+    fig, ax = plt.subplots()
+    ax.set_title(timeline.path)
+    ax.set_xlim(*mpd.date2num(timeline.getTime(sections)))
     ax.set_ylim(-1, len(sections))
 
     locator = mpd.AutoDateLocator(tz=tzone)
     formatter = mpd.AutoDateFormatter(locator, tz=tzone)
     ax.xaxis.set_major_locator(locator)
-                               #mpd.HourLocator([0], 
-                               #                tz=tzone)) 
     ax.xaxis.set_major_formatter(formatter)
-                                 #mpd.DateFormatter('%d.%m %H:%M',
-                                 #                  tz=tzone))
     ax.autoscale_view()
     ax.get_figure().autofmt_xdate()
     #plt.draw()
 
   for idx, sec in enumerate(sections):
-    t1, t2 = mpd.date2num(ec.getTime(sec))
+    t1, t2 = mpd.date2num(timeline.getTime(sec))
     ax.plot([t1, t2], [idx, idx], 'ko-') 
     ax.plot([t2], [idx], 'bo')
     ax.text(t2 + 0.5, idx, sec,

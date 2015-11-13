@@ -475,7 +475,8 @@ class Phase(MetadataNode):
 
 
 class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
-  """A class of objects for loading experiment timeline definition files.
+  """
+  A class of objects for loading experiment timeline definition files.
 
   As a subclass of :py:class:`matplotlib.ticker.Formatter` the class is also
   time axis formatter in :py:mod:`matplotlib.dates` coordinates.
