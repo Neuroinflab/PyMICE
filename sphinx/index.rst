@@ -3,13 +3,36 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyMICE's documentation!
-==================================
-
-Contents:
+Introduction
+============
 
 .. toctree::
    :maxdepth: 2
+
+
+.. image:: https://badge.fury.io/py/PyMICE.svg
+    :target: https://badge.fury.io/py/PyMICE
+    :alt: PyPI badge
+
+.. image:: https://travis-ci.org/abukaj/PyMICE.svg?branch=master
+    :target: https://travis-ci.org/abukaj/PyMICE
+    :alt: travis build badge
+
+PyMICE is a Python™ library for mice behavioural data analysis.
+
+The library can be used for loading and analysing of data obtained
+from IntelliCage™ system in an intuitive way in Python programming language.
+
+The library provides user with an object oriented application programming
+interface (API) and a data abstraction layer. It also comes with auxiliary
+tools supporting development of analysis workflows, like data validators and
+a tool for workflow configuration.
+
+For more details please see `The project website
+<https://neuroinflab.wordpress.com/research/pymice/>`_.
+
+PyMICE package manual
+=====================
 
 Package pymice
 --------------
@@ -110,6 +133,12 @@ Module pymice.debug
 .. automodule:: pymice.debug
 
    .. autofunction:: plotPhases
+
+
+Acknowledgement
+===============
+
+Project sponsored by Symfonia NCN grant: UMO-2013/08/W/NZ4/00691
 
 
 Indices and tables

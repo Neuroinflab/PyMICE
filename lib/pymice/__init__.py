@@ -23,8 +23,6 @@
 ###############################################################################
 
 """
-pymice package
-
 A collection of tools to access IntelliCage data.
 """
 
