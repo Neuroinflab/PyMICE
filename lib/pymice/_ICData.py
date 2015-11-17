@@ -207,6 +207,7 @@ class Loader(Data):
     self._appendData(fname)
 
     self._setIcSessionAttributes()
+    self.freeze()
 
 
   def _appendData(self, fname):

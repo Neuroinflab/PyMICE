@@ -592,9 +592,11 @@ class ICCageManagerTest(unittest.TestCase):
     def newCage(cage):
       cages.add(cage)
       return minimock.Mock('ICCage(%s)' % cage,
-                           returns=cage)
+                           returns=cage,
+                           tracker=None)
     pm._ICData.ICCage = minimock.Mock('Data.ICCage',
-                                   returns_func=newCage)
+                                      returns_func=newCage,
+                                      tracker=None)
 
     cageNumber = 1
     cage = self.cageManager[cageNumber]
@@ -611,12 +613,12 @@ class ICCageManagerTest(unittest.TestCase):
         return cages[cage]
 
       except KeyError:
-        item = minimock.Mock('ICCage(%s)' % cage)
+        item = minimock.Mock('ICCage(%s)' % cage, tracker=None)
         item._del_.mock_returns_func = lambda: delCalled.add(cage)
         cages[cage] = item
         return item
 
-    pm._ICData.ICCage = minimock.Mock('Data.ICCage')
+    pm._ICData.ICCage = minimock.Mock('Data.ICCage', tracker=None)
     pm._ICData.ICCage.mock_returns_func = newCage
 
     for i in range(1, 10):
@@ -636,12 +638,13 @@ class DataTest(unittest.TestCase):
     ICCage = pm._ICData.ICCage
 
     def getMockCage(n):
-      cage = minimock.Mock('ICCage')
+      cage = minimock.Mock('ICCage', tracker=None)
       cage._del_ = lambda: cagesDeleted.add(n)
       return cage
 
     pm._ICData.ICCage = minimock.Mock('ICCage',
-                                      returns_func=getMockCage)
+                                      returns_func=getMockCage,
+                                      tracker=None)
 
     deleted = set()
     cagesDeleted = set()
@@ -652,10 +655,10 @@ class DataTest(unittest.TestCase):
     def makeCloneInjector(cage, label):
       toDelete.append(label)
       cagesToDelete.append(cage)
-      cloneInjector = minimock.Mock('CloneInjector')
+      cloneInjector = minimock.Mock('CloneInjector', tracker=None)
       def cloneReporter(sourceManager, cageManager, *args):
         cageManager[cage]
-        clone = minimock.Mock(label)
+        clone = minimock.Mock(label, tracker=None)
         clone._del_.mock_returns_func = lambda: deleted.add(label)
         return clone
 
@@ -716,23 +719,72 @@ class MergerTest(unittest.TestCase):
                      [h._source for h in mm.getHardwareEvents(order='DateTime')])
 
 
-class DataTest(unittest.TestCase):
-  def setUp(self):
-    self.data = Data()
-    self.runSetUpChain()
-
-  def runSetUpChain(self):
-    for cls in reversed(self.__class__.__mro__):
-      if hasattr(cls, '_setUp'):
-        cls._setUp(self)
-
+class MockNodesProvider:
   def getMockNode(self, name):
-    mock = minimock.Mock(name)
+    mock = minimock.Mock(name, tracker=None)
     mock.clone.returns = mock
     return mock
 
   def getMockNodeList(self, name, n):
     return [self.getMockNode(name) for _ in range(n)]
+
+
+class LoaderIntegrationTest(BaseTest, MockNodesProvider):
+  def setUp(self):
+    self.data = self.loadData(
+      os.path.abspath(os.path.join(os.path.dirname(__file__), 'data')))
+    self.runSetUpChain()
+
+  def loadData(self, dataDir):
+    pass
+
+  def testDataAreFrozen(self):
+    if self.data is None:
+      return
+
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertVisits(self.getMockNodeList('Visit', 2))
+
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertLog(self.getMockNodeList('LogEntry', 2))
+
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertEnv(self.getMockNodeList('EnvironmentalConditions', 2))
+
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertHw(self.getMockNodeList('HardwareEvent', 2))
+
+
+class LoadLegacyDataTest(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'legacy_data.zip'))
+
+
+class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'icp3_data.zip'),
+                     getLog=True, getEnv=True)
+
+class LoadEmptyDataTest(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'empty_data.zip'))
+
+class LoadRetaggedDataTest(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'retagged_data.zip'))
+
+@unittest.skip('Not implemented yet')
+class LoadAnalyserDataTest(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'analyzer_data.txt'), getNpokes=True),
+
+
+
+class DataTest(BaseTest, MockNodesProvider):
+  def setUp(self):
+    self.data = Data()
+    self.runSetUpChain()
+
 
 class OnVisitsLoaded(DataTest):
   def _setUp(self):

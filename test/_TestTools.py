@@ -153,3 +153,9 @@ class BaseTest(TestCase):
       # except AssertionError:
       #   print(attr)
       #   raise
+
+  def runSetUpChain(self):
+    for cls in reversed(self.__class__.__mro__):
+      if hasattr(cls, '_setUp'):
+        cls._setUp(self)
+
