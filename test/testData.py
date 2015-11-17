@@ -28,7 +28,7 @@ import unittest
 import doctest
 
 from datetime import datetime, timedelta
-from pytz import utc
+from pytz import utc, timezone
 
 import pymice as pm
 from pymice._ICData import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
@@ -754,6 +754,10 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     with self.assertRaises(Data.UnableToInsertIntoFrozen):
       self.data.insertHw(self.getMockNodeList('HardwareEvent', 2))
 
+  def assertSameDT(self, reference, times):
+    self.assertEqual(reference, times)
+    self.assertEqual([t.hour for t in reference],
+                     [t.hour for t in times])
 
 class LoadLegacyDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
@@ -763,11 +767,56 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
     self.assertEqual([4, 1, 2],
                      [v.Corner for v in self.data.getVisits(order='Start')])
 
+  def testGetOneMouseVisits_fromDoctests(self):
+    self.assertEqual([1],
+                     [v.Corner for v in self.data.getVisits(mice='Mickey')])
+
+  def testGetManyMiceOrderedVisits_fromDoctests(self):
+    self.assertEqual([4, 1],
+                     [v.Corner for v in self.data.getVisits(mice=['Mickey',
+                                                                  'Minnie'],
+                                                            order='Start')])
+
+  def testGetManyMiceOrderedVisitsGivenAnimalsObject_fromDoctests(self):
+    mice = [self.data.getAnimal(m) for m in ['Mickey', 'Minnie']]
+    self.assertEqual([4, 1],
+                     [v.Corner for v in self.data.getVisits(mice=mice,
+                                                            order='Start')])
+
+  def testGetOneMouseVisitsStartTimezones_fromDoctests(self):
+    starts = [datetime(2012, 12, 18, 12, 30, 2, 360000, utc),]
+    self.assertSameDT(starts,
+                      [v.Start for v in self.data.getVisits(mice='Minnie')])
+
 
 class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'icp3_data.zip'),
                      getLog=True, getEnv=True)
+
+  def testGetStartOrderedVisits_fromDoctests(self):
+    self.assertEqual([1, 2, 3],
+                     [v.Corner for v in self.data.getVisits(order='Start')])
+
+  def testGetOneMouseOrderedVisits_fromDoctests(self):
+    self.assertEqual([3],
+                     [v.Corner for v in self.data.getVisits(mice='Jerry',
+                                                            order='Start')])
+
+  def testGetManyMiceOrderedVisits_fromDoctests(self):
+    self.assertEqual([1, 3],
+                     [v.Corner for v in self.data.getVisits(mice=['Jerry',
+                                                                  'Minnie'],
+                                                            order='Start')])
+
+  def testOrderedVisitsStartTimezones_fromDoctests(self):
+    CET = timezone('Etc/GMT-1')
+    starts = [datetime(2012, 12, 18, 12, 13, 14, 139000, CET),
+              datetime(2012, 12, 18, 12, 18, 55, 421000, CET),
+              datetime(2012, 12, 18, 12, 19, 55, 421000, CET),]
+    self.assertSameDT(starts,
+                      [v.Start for v in self.data.getVisits(order='Start')])
+
 
 class LoadEmptyDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
