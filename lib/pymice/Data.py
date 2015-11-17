@@ -90,6 +90,8 @@ class Data(object):
     self._getEnv = getEnv
     self._getHw = getHw
 
+    self.__frozen = False
+
     # change to
     self.__animalsByName = AnimalManager()
 
@@ -402,6 +404,8 @@ class Data(object):
 
 # data management
   def insertLog(self, log):
+    self._raiseIfFrozen()
+
     newLog = self.__cloneObjectsWithSourceCageManagers(log)
     self._insertNewLog(newLog)
 
@@ -409,6 +413,8 @@ class Data(object):
     self.__log.put(lNodes)
 
   def insertEnv(self, env):
+    self._raiseIfFrozen()
+
     newEnv = self.__cloneObjectsWithSourceCageManagers(env)
     self._insertNewEnv(newEnv)
 
@@ -416,11 +422,20 @@ class Data(object):
     self.__environment.put(eNodes)
 
   def insertHw(self, hardwareEvents):
+    self._raiseIfFrozen()
+
     newHw = self.__cloneObjectsWithSourceCageManagers(hardwareEvents)
     self._insertNewHw(newHw)
 
   def _insertNewHw(self, hNodes):
     self.__hardware.put(hNodes)
+
+  def freeze(self):
+    self.__frozen = True
+
+  def _raiseIfFrozen(self):
+    if self.__frozen:
+      raise self.UnableToInsertIntoFrozen
 
   def __cloneObjectsWithSourceCageManagers(self, objects):
     return map(methodcaller('clone', self._sourceManager,
@@ -428,6 +443,8 @@ class Data(object):
                objects)
 
   def insertVisits(self, visits):
+    self._raiseIfFrozen()
+
     newVisits = map(methodcaller('clone', self._sourceManager,
                                  self._cageManager,
                                  self.__animalsByName),
@@ -494,6 +511,9 @@ class Data(object):
       return {}
 
     return {attributeName: Data.__makeTimeFilter(start, end)}
+
+  class UnableToInsertIntoFrozen(TypeError):
+    pass
 
   def _save(self, filename, force=False):
     """

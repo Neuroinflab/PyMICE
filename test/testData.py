@@ -34,6 +34,8 @@ import pymice as pm
 from pymice._ICData import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
                             AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
                             UnknownHardwareEvent, ICCage, ICCageManager)
+from pymice.Data import Data
+
 import minimock
 
 from ._TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
@@ -712,6 +714,65 @@ class MergerTest(unittest.TestCase):
     mm = Merger(self.d1, self.d2, getHw=True)
     self.assertEqual([u'D2', u'D1'],
                      [h._source for h in mm.getHardwareEvents(order='DateTime')])
+
+
+class DataTest(unittest.TestCase):
+  def setUp(self):
+    self.data = Data()
+    self.runSetUpChain()
+
+  def runSetUpChain(self):
+    for cls in reversed(self.__class__.__mro__):
+      if hasattr(cls, '_setUp'):
+        cls._setUp(self)
+
+  def getMockNode(self, name):
+    mock = minimock.Mock(name)
+    mock.clone.returns = mock
+    return mock
+
+  def getMockNodeList(self, name, n):
+    return [self.getMockNode(name) for _ in range(n)]
+
+class OnVisitsLoaded(DataTest):
+  def _setUp(self):
+    self.visits = self.getMockNodeList('Visit', 2)
+    self.data.insertVisits(self.visits)
+
+class OnLogLoaded(DataTest):
+  def _setUp(self):
+    self.log = self.getMockNodeList('LogEntry', 3)
+    self.data.insertLog(self.log)
+
+class OnEnvLoaded(DataTest):
+  def _setUp(self):
+    self.env = self.getMockNodeList('EnvironmentalConditions', 4)
+    self.data.insertEnv(self.env)
+
+class OnHwLoaded(DataTest):
+  def _setUp(self):
+    self.hw = self.getMockNodeList('HardwareEvent', 5)
+    self.data.insertHw(self.hw)
+
+class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
+  def _setUp(self):
+    self.data.freeze()
+
+  def testInsertVisitRaisesUnableToInsertIntoFrozen(self):
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertVisits(self.getMockNodeList('Visit', 2))
+
+  def testInsertLogRaisesUnableToInsertIntoFrozen(self):
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertLog(self.getMockNodeList('LogEntry', 2))
+
+  def testInsertEnvRaisesUnableToInsertIntoFrozen(self):
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertEnv(self.getMockNodeList('EnvironmentalConditions', 2))
+
+  def testInsertEnvRaisesUnableToInsertIntoFrozen(self):
+    with self.assertRaises(Data.UnableToInsertIntoFrozen):
+      self.data.insertHw(self.getMockNodeList('HardwareEvent', 2))
 
 
 def getGlobals():
