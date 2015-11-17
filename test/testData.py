@@ -759,6 +759,10 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'legacy_data.zip'))
 
+  def testGetStartOrderedVisits_fromDoctests(self):
+    self.assertEqual([4, 1, 2],
+                     [v.Corner for v in self.data.getVisits(order='Start')])
+
 
 class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
