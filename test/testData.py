@@ -25,7 +25,6 @@
 import sys
 import os
 import unittest
-import doctest
 
 from datetime import datetime, timedelta
 from pytz import utc, timezone
@@ -680,14 +679,27 @@ class DataTest(unittest.TestCase):
     pm._ICData.ICCage = ICCage
 
 
-class MergerTest(unittest.TestCase):
+class MockNodesProvider:
+  def getMockNode(self, name):
+    mock = minimock.Mock(name, tracker=None)
+    mock.clone.returns = mock
+    return mock
+
+  def getMockNodeList(self, name, n):
+    return [self.getMockNode(name) for _ in range(n)]
+
+
+class MergerTest(BaseTest, MockNodesProvider):
   def setUp(self):
     self.d1 = pm.Data.Data()
     self.d2 = pm.Data.Data()
-    self.time1 = datetime(1970, 1, 1, tzinfo=utc)
+    self.time1 = datetime(1970, 1, 1, 0, tzinfo=utc)
     self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
+    self.runSetUpChain()
 
-  def testLogMerge(self):
+
+class MergerOnLoadedLog(MergerTest):
+  def _setUp(self):
     self.d1.insertLog([LogEntry(self.time1,
                                 u'Test', u'D1',
                                 1, 2, 3,
@@ -698,35 +710,50 @@ class MergerTest(unittest.TestCase):
                                 1, 2, 3,
                                 u'Note',
                                 u'D2', 1)])
+
+  def testLogMerge(self):
     mm = Merger(self.d1, self.d2, getLog=True)
     self.assertEqual([u'D1', u'D2'],
                      [l.Type for l in mm.getLog(order='DateTime')])
 
-  def testEnvMerge(self):
+  def testLogFrozen(self):
+    mm = Merger(self.d1, self.d2, getLog=True)
+    with self.assertRaises(mm.UnableToInsertIntoFrozen):
+      mm.insertLog(self.getMockNodeList('LogEntry', 3))
+
+
+class MergerOnLoadedEnv(MergerTest):
+  def _setUp(self):
     self.d1.insertEnv([EnvironmentalConditions(self.time1,
                                                12.5, 255, 1, u'D1', 1)])
     self.d2.insertEnv([EnvironmentalConditions(self.time2,
                                                11.5, 0, 3, u'D2', 1)])
+
+  def testEnvMerge(self):
     mm = Merger(self.d1, self.d2, getEnv=True)
     self.assertEqual([12.5, 11.5],
                      [l.Temperature for l in mm.getEnvironment(order='DateTime')])
 
-  def testHwMerge(self):
+  def testEnvFrozen(self):
+    mm = Merger(self.d1, self.d2, getEnv=True)
+    with self.assertRaises(mm.UnableToInsertIntoFrozen):
+      mm.insertLog(self.getMockNodeList('EnvironmentalConditions', 4))
+
+
+class MergerOnLoadedHw(MergerTest):
+  def _setUp(self):
     self.d1.insertHw([UnknownHardwareEvent(self.time2, 42, 1, 2, 3, 44, u'D1', 1)])
     self.d2.insertHw([AirHardwareEvent(self.time1, 1, 2, 3, 1, u'D2', 1)])
+
+  def testHwMerge(self):
     mm = Merger(self.d1, self.d2, getHw=True)
     self.assertEqual([u'D2', u'D1'],
                      [h._source for h in mm.getHardwareEvents(order='DateTime')])
 
-
-class MockNodesProvider:
-  def getMockNode(self, name):
-    mock = minimock.Mock(name, tracker=None)
-    mock.clone.returns = mock
-    return mock
-
-  def getMockNodeList(self, name, n):
-    return [self.getMockNode(name) for _ in range(n)]
+  def testHwFrozen(self):
+    mm = Merger(self.d1, self.d2, getHw=True)
+    with self.assertRaises(mm.UnableToInsertIntoFrozen):
+      mm.insertLog(self.getMockNodeList('HardwareEvent', 7))
 
 
 class LoaderIntegrationTest(BaseTest, MockNodesProvider):
@@ -817,14 +844,32 @@ class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(order='Start')])
 
+  def testGetOrderedLog(self):
+    self.assertEqual(['Session is started', 'Session is stopped'],
+                     [l.Notes for l in self.data.getLog(order='DateTime')])
+
+  def testDoubleOrderedEnv(self):
+    self.assertEqual([22.0, 23.6, 22.0, 23.6, 22.0, 23.6, 22.0, 23.6,
+                      22.0, 23.6, 22.0, 23.6, 22.0, 23.6, 22.0, 23.6,],
+                     [e.Temperature for e in self.data.getEnvironment(order=('DateTime', 'Cage'))])
+
+  def testGetCageByAnimalName(self):
+    self.assertEqual(1, self.data.getCage('Minnie'))
+
+  def testGetCageByAnimal(self):
+    minnie = self.data.getAnimal('Minnie')
+    self.assertEqual(1, self.data.getCage(minnie))
+
 
 class LoadEmptyDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'empty_data.zip'))
 
+
 class LoadRetaggedDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'retagged_data.zip'))
+
 
 @unittest.skip('Not implemented yet')
 class LoadAnalyserDataTest(LoaderIntegrationTest):
@@ -892,10 +937,5 @@ def getGlobals():
     'ml_retagged': pm.Loader(os.path.join(dataDir, 'retagged_data.zip')),
   }
 
-def load_tests(loader, tests, ignore):
-  tests.addTests(doctest.DocTestSuite(pm.Data, extraglobs=getGlobals()))
-  return tests
-
 if __name__ == '__main__':
-  doctest.testmod(pm.Data, extraglobs=getGlobals())
   unittest.main()

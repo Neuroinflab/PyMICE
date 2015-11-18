@@ -137,32 +137,17 @@ class Data(object):
     :return: visits
     :rtype: [:py:class:`Visit`, ...]
 
-    >>> [v.Corner for v in ml_l1.getVisits(order='Start')]
-    [4, 1, 2]
-    >>> [v.Corner for v in ml_icp3.getVisits(order='Start')]
-    [1, 2, 3]
-    >>> [v.Corner for v in ml_l1.getVisits(mice='Mickey')]
-    [1]
-    >>> [v.Corner for v in ml_icp3.getVisits(mice='Jerry', order='Start')]
-    [3]
-    >>> [v.Corner for v in ml_l1.getVisits(mice=['Mickey', 'Minnie'], order='Start')]
-    [4, 1]
-    >>> [v.Corner for v in ml_icp3.getVisits(mice=['Jerry', 'Minnie'], order='Start')]
-    [1, 3]
+    >>> data.getVisits(mice='Mickey')
+    [< Visit of "Mickey" to corner #1 of cage #1 (at 2012-12-18 12:31:00.000) >]
 
-    >>> mice = [ml_l1.getAnimal(m) for m in ['Mickey', 'Minnie']]
-    >>> [v.Corner for v in ml_l1.getVisits(mice=mice, order='Start')]
-    [4, 1]
+    >>> data.getVisits(mice=['Mickey', 'Minnie'], order='Start')
+    [< Visit of "Minnie" to corner #4 of cage #1 (at 2012-12-18 12:30:02.360) >,
+     < Visit of "Mickey" to corner #1 of cage #1 (at 2012-12-18 12:31:00.000) >]
 
-    >>> for v in ml_icp3.getVisits(order='Start'):
-    ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
-    2012-12-18 12:13:14.139000 +0100
-    2012-12-18 12:18:55.421000 +0100
-    2012-12-18 12:19:55.421000 +0100
-
-    >>> for v in ml_l1.getVisits(mice='Minnie'):
-    ...   print(v.Start.strftime("%Y-%m-%d %H:%M:%S.%f %z"))
-    2012-12-18 12:30:02.360000 +0000
+    >>> mice = [data.getAnimal(m) for m in ['Mickey', 'Minnie']]
+    >>> data.getVisits(mice=mice, order='Start')
+    [< Visit of "Minnie" to corner #4 of cage #1 (at 2012-12-18 12:30:02.360) >,
+     < Visit of "Mickey" to corner #1 of cage #1 (at 2012-12-18 12:31:00.000) >]
     """
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
@@ -188,11 +173,9 @@ class Data(object):
     :return: log entries
     :rtype: [:py:class:`LogEntry`, ...]
 
-    >>> log = ml_icp3.getLog(order='DateTime')
-    >>> for entry in log:
-    ...   print(entry.Notes)
-    Session is started
-    Session is stopped
+    >>> data.getLog(order='DateTime')
+    [< Log Info, Application (at 2012-12-18 12:13:02.437) >,
+     < Log Info, Application (at 2012-12-18 12:20:37.718) >]
     """
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     log = self.__log.get(selectors)
@@ -212,24 +195,23 @@ class Data(object):
     :return: sampled environment conditions
     :rtype: [:py:class:`EnvironmentalConditions`, ...]
 
-    >>> for env in ml_icp3.getEnvironment(order=('DateTime', 'Cage')):
-    ...   print("%.1f" % env.Temperature)
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
-    22.0
-    23.6
+    >>> data.getEnvironment(order=('DateTime', 'Cage'))
+    [< Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:13:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:13:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:14:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:14:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:15:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:15:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:16:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:16:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:17:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:17:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:18:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:18:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:19:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:19:02.000) >,
+     < Illumination:   0, Temperature: 22.0 (at 2012-12-18 12:20:02.000) >,
+     < Illumination:   0, Temperature: 23.6 (at 2012-12-18 12:20:02.000) >]
     """
     selectors = self.__makeTimeSelectors('DateTime', start, end)
     env = self.__environment.get(selectors)
@@ -261,10 +243,10 @@ class Data(object):
     :return: cage(s) where mouse's visits has been registered
     :rtype: convertable to int or (convertable to int, ...)
 
-    >>> ml_icp3.getCage('Minnie')
+    >>> data.getCage('Minnie')
     1
 
-    >>> ml_icp3.getCage(ml_icp3.getAnimal('Minnie'))
+    >>> data.getCage(data.getAnimal('Minnie'))
     1
     """
     try:

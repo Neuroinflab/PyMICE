@@ -625,6 +625,8 @@ class Merger(Data):
         print("ERROR processing {}".format(dataSource))
         raise
 
+    self.freeze()
+
 
   @staticmethod
   def _sortDataSources(dataSources):
