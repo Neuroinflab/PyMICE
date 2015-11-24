@@ -1,3 +1,5 @@
+include LICENSE
+include COPYING
 include Makefile
 include pymice.h
 recursive-include test *
