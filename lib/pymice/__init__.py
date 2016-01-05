@@ -25,6 +25,7 @@
 """
 A collection of tools to access IntelliCage data.
 """
+import sys
 
 from ._ICData import Loader, Merger
 from ._Tools import hTime, convertTime, getTutorialData, warn
@@ -43,9 +44,9 @@ __welcomeMessage = """PyMICE library v. {version}
 This is a bleeding edge version of the library. It might meet your
 expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
-""".format(version=__version__, neurolex=__NeuroLexID__)
-#print(__welcomeMessage)
 
+""".format(version=__version__, neurolex=__NeuroLexID__)
+#sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library
