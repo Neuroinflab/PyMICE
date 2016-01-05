@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2014-2015 Jakub M. Kowalski (Laboratory of                 #
+#    Copyright (C) 2014-2016 Jakub M. Kowalski (Laboratory of                 #
 #    Neuroinformatics; Nencki Institute of Experimental Biology)              #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
@@ -22,7 +22,7 @@
 #                                                                             #
 ###############################################################################
 
-
+import os
 try:
   from setuptools import setup, Extension
   # XXX a fix for https://bugs.python.org/issue23246 bug
@@ -37,7 +37,9 @@ except ImportError:
 else:
   setuptoolsPresent = True
 
-
+def loadTextFrom(path):
+  return open(os.path.join(os.path.dirname(__FILE__),
+                           path)).read()
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 #install_requires = ['numpy']?
@@ -45,11 +47,7 @@ setup(name = 'PyMICE',
       version = '0.2.2',
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
       description = 'PyMICE - a Python™ library for mice behavioural data analysis',
-      long_description="""PyMICE is a Python™ library for mice behavioural data analysis.
-
-The library can be used for loading and analysing of data obtained from IntelliCage™ system in an intuitive way in Python programming language.
-
-The library provides user with an object oriented application programming interface (API) and a data abstraction layer. It also comes with auxiliary tools supporting development of analysis workflows, like data validators and a tool for workflow configuration.""",
+      long_description = loadTextFrom('README.rst'),
       author="Jakub M. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
       author_email="j.kowalski@nencki.gov.pl, s.leski@nencki.gov.pl",
       license='GPL3',
