@@ -34,7 +34,7 @@ from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           TestMiceData, DataValidator)
 __NeuroLexID__ = 'nlx_158570'
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 __ID__ = __NeuroLexID__ + ' ' + __version__
 __all__ = []
 
