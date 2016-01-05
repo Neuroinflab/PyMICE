@@ -44,7 +44,7 @@ This is a bleeding edge version of the library. It might meet your
 expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
 """.format(version=__version__, neurolex=__NeuroLexID__)
-print(__welcomeMessage)
+#print(__welcomeMessage)
 
 
 # COPYING, LICENSE and PGP key below
