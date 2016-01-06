@@ -256,11 +256,11 @@ class DataDownloadStdoutReporter(object):
   def warnUnknownDownload(self, download):
     print('Warning: unknown download requested({})'.format(download))
 
-  def reportUnnecessaryDownload(self, url):
-    print('{} data already downloaded'.format(url))
+  def reportUnnecessaryFetch(self, dataset):
+    print('{} dataset already present'.format(dataset))
 
-  def reportNothingToDownload(self):
-    print('All data already downloaded.')
+  def reportNothingToFetch(self):
+    print('All datasets already present.')
 
   def printManualDownloadInstruction(self, toDownload):
     print('In case the automatic download fails fetch the data manually.')
@@ -273,7 +273,7 @@ class DataDownloadStdoutReporter(object):
   def printFileDownloadInstruction(self, url, files):
     print('\nDownload archive from: {}'.format(url))
     print('then extract the following files:')
-    for filename, _ in files:
+    for filename in files:
       print('- {}'.format(filename))
 
   def reportDownloadStart(self, url):
@@ -300,18 +300,82 @@ class DataDownloadDummyReporter(object):
     return dummyFunction
 
 
-class DataDownloader(object):
-  DATA = {'C57_AB': ('https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
-                     {'C57_AB/2012-08-28 13.44.51.zip': 86480,
-                      'C57_AB/2012-08-28 15.33.58.zip': 494921,
-                      'C57_AB/2012-08-31 11.46.31.zip': 29344,
-                      'C57_AB/2012-08-31 11.58.22.zip': 3818445,
-                      'C57_AB/timeline.ini': 2894,
-                     }),
-          'demo': ('https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
-                   {'demo.zip': 106091,
-                   }),
+class DataGetter(object):
+  DATA = {'C57_AB': {'C57_AB/2012-08-28 13.44.51.zip': 86480,
+                     'C57_AB/2012-08-28 15.33.58.zip': 494921,
+                     'C57_AB/2012-08-31 11.46.31.zip': 29344,
+                     'C57_AB/2012-08-31 11.58.22.zip': 3818445,
+                     'C57_AB/timeline.ini': 2894,
+                    },
+          'demo': {'demo.zip': 106091,
+                   },
          }
+
+  def __init__(self, path, reporter):
+    self.setPath(path)
+    self._reporter = reporter
+
+  def setPath(self, path):
+    if path is None:
+      path = os.getcwd()
+
+    self.ensureIsDirectory(path)
+    self._path = path
+
+  def ensureIsDirectory(self, path):
+    if not os.path.exists(path):
+      os.makedirs(path)
+
+    elif not os.path.isdir(path):
+      raise OSError("Not a directory: '{}'".format(path))
+
+  def necessaryDataSetsGenerator(self, fetch):
+    for dataset in fetch:
+      if self.isFetchPossibleAndNecessary(dataset):
+        yield dataset
+
+  def isFetchPossibleAndNecessary(self, dataset):
+    try:
+      files = self.DATA[dataset]
+
+    except KeyError:
+      self._reporter.warnUnknownDownload(download)
+      return
+
+    if all(self.fileSizeMatches(fn, fs) for (fn, fs) in files.items()):
+      self._reporter.reportUnnecessaryFetch(dataset)
+      return
+
+    return True
+
+  def fileSizeMatches(self, filename, size):
+    path = os.path.join(self._path, filename)
+    return os.path.isfile(path) and os.path.getsize(path) == size
+
+  def fetch(self, requested):
+    if requested is None:
+      requested = sorted(self.DATA.keys())
+
+    elif isinstance(requested, basestring):
+      requested = (requested,)
+
+    toFetch = list(self.necessaryDataSetsGenerator(requested))
+
+    if not toFetch:
+      self._reporter.reportNothingToFetch()
+      return
+
+    self.fetchDatasets(toFetch)
+
+  def fetchDatasets(self, datasets):
+    for dataset in datasets:
+      self.fetchDataset(dataset)
+
+
+class DataDownloader(DataGetter):
+  URLS = {'C57_AB': 'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
+          'demo': 'https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
+          }
 
   class TemporaryFileName(object):
     def __enter__(self):
@@ -322,70 +386,31 @@ class DataDownloader(object):
     def __exit__(self, exc_type, exc_value, traceback):
       os.remove(self.__filename)
 
-  def __init__(self, path, reporter):
-    self.setPath(path)
-    self.__reporter = reporter
 
-  def setPath(self, path):
-    if path is None:
-      path = os.getcwd()
+  def fetchDatasets(self, toFetch):
+    self.printManualDownloadInstruction(toFetch)
+    super(DataDownloader, self).fetchDatasets(toFetch)
 
-    self.ensureIsDirectory(path)
-    self.__path = path
+  def printManualDownloadInstruction(self, downloads):
+    toDownload = dict(map(self.getDownloadInfo, downloads))
+    self._reporter.printManualDownloadInstruction(toDownload)
 
-  def ensureIsDirectory(self, path):
-    if not os.path.exists(path):
-      os.makedirs(path)
+  def getDownloadInfo(self, dataset):
+    return self.URLS[dataset], sorted(self.DATA[dataset])
 
-    elif not os.path.isdir(path):
-      raise OSError("Not a directory: '{}'".format(path))
-
-  def necesseryDownloadGenerator(self, fetch):
-    for download in fetch:
-      try:
-        url, files = self.DATA[download]
-
-      except KeyError:
-        self.__reporter.warnUnknownDownload(download)
-        continue
-
-      if all(self.fileSizeMatches(fn, fs) for (fn, fs) in files.items()):
-        self.__reporter.reportUnnecessaryDownload(url)
-        continue
-
-      yield url, sorted(files.items())
-
-  def fileSizeMatches(self, filename, size):
-    path = os.path.join(self.__path, filename)
-    return os.path.isfile(path) and os.path.getsize(path) == size
-
-  def download(self, fetch):
-    if fetch is None:
-      fetch = sorted(self.DATA.keys())
-
-    elif isinstance(fetch, basestring):
-      fetch = (fetch,)
-
-    toDownload = dict(self.necesseryDownloadGenerator(fetch))
-
-    if not toDownload:
-      self.__reporter.reportNothingToDownload()
-      return
-
-    self.__reporter.printManualDownloadInstruction(toDownload)
-
-    for url, files in toDownload.items():
-      self.retrieveFiles(url, files)
+  def fetchDataset(self, dataset):
+    self.retrieveFiles(self.URLS[dataset],
+                       sorted(self.DATA[dataset].items()))
 
   def retrieveFiles(self, url, files):
-    self.__reporter.reportDownloadStart(url)
+    self._reporter.reportDownloadStart(url)
     with self.TemporaryFileName() as filename:
       self.downloadArchive(url, filename)
       self.extractFiles(filename, files)
 
   def downloadArchive(self, url, filename):
-    urlretrieve(url, filename, self.__reporter.getReportHook())
-    self.__reporter.reportDownloadEnd()
+    urlretrieve(url, filename, self._reporter.getReportHook())
+    self._reporter.reportDownloadEnd()
 
   def extractFiles(self, archive, files):
     with zipfile.ZipFile(archive) as zf:
@@ -393,10 +418,10 @@ class DataDownloader(object):
         self.extractFile(zf, filename, filesize)
 
   def extractFile(self, zipfile, filename, filesize):
-    self.__reporter.reportFileExtraction(filename)
-    zipfile.extract(filename, self.__path)
-    if os.path.getsize(os.path.join(self.__path, filename)) != filesize:
-      self.__reporter.warnFileSizeMismatch(filename, filesize)
+    self._reporter.reportFileExtraction(filename)
+    zipfile.extract(filename, self._path)
+    if os.path.getsize(os.path.join(self._path, filename)) != filesize:
+      self._reporter.warnFileSizeMismatch(filename, filesize)
 
 
 def getTutorialData(path=None, quiet=False, fetch=None):
@@ -445,11 +470,11 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   extracting file C57_AB/2012-08-31 11.58.22.zip
   extracting file C57_AB/timeline.ini
   >>> getTutorialData(fetch='C57_AB')
-  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
-  All data already downloaded.
+  C57_AB dataset already present
+  All datasets already present.
   >>> getTutorialData(fetch='C57_AB', quiet=True)
   >>> getTutorialData()
-  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
+  C57_AB dataset already present
   In case the automatic download fails fetch the data manually.
   <BLANKLINE>
   Download archive from: https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1
@@ -465,9 +490,9 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   data downloaded
   extracting file demo.zip
   >>> getTutorialData()
-  https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1 data already downloaded
-  https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1 data already downloaded
-  All data already downloaded.
+  C57_AB dataset already present
+  demo dataset already present
+  All datasets already present.
 
   TearDown
 
@@ -483,7 +508,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
 
   """
   downloader = DataDownloader(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
-  downloader.download(fetch)
+  downloader.fetch(fetch)
 
 
 
