@@ -38,7 +38,7 @@ else:
   setuptoolsPresent = True
 
 def loadTextFrom(path):
-  return open(os.path.join(os.path.dirname(__FILE__),
+  return open(os.path.join(os.path.dirname(__file__),
                            path)).read()
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
