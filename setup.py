@@ -72,4 +72,8 @@ setup(name = 'PyMICE',
       keywords ='IntelliCage mice behavioural data loading analysis',
       ext_modules = [cPymice],
       packages = ['pymice'],
-      package_dir = {'': 'lib'})
+      package_dir = {'': 'lib'},
+      package_data={'pymice': ['data/tutorial/demo.zip',
+                               'data/tutorial/C57_AB/*.zip',
+                               'data/tutorial/C57_AB/timeline.ini',
+                               ]})
