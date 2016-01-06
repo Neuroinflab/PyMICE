@@ -24,6 +24,7 @@
 
 import sys
 import os
+import shutil
 from datetime import datetime
 import time
 import warnings
@@ -372,6 +373,31 @@ class DataGetter(object):
       self.fetchDataset(dataset)
 
 
+class ModuleDataGetter(DataGetter):
+  PATHS = {'C57_AB': 'tutorial/C57_AB',
+           'demo': 'tutorial/demo.zip',
+           }
+
+  def fetchDataset(self, dataset):
+    src = os.path.join(os.path.dirname(__file__),
+                       'data',
+                       self.PATHS[dataset])
+    self.copyFiles(src, self._path)
+
+  def copyFiles(self, src, dst):
+    if os.path.isdir(src):
+      path = os.path.join(dst, os.path.basename(src))
+      if not os.path.exists(path):
+        os.mkdir(path)
+
+      for item in os.listdir(src):
+        self.copyFiles(os.path.join(src, item),
+                       path)
+
+    else:
+      shutil.copy(src, dst)
+
+
 class DataDownloader(DataGetter):
   URLS = {'C57_AB': 'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
           'demo': 'https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
@@ -447,48 +473,12 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   >>> os.chdir(_dirname)
   
   >>> getTutorialData(fetch='C57_AB')
-  In case the automatic download fails fetch the data manually.
-  <BLANKLINE>
-  Download archive from: https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1
-  then extract the following files:
-  - C57_AB/2012-08-28 13.44.51.zip
-  - C57_AB/2012-08-28 15.33.58.zip
-  - C57_AB/2012-08-31 11.46.31.zip
-  - C57_AB/2012-08-31 11.58.22.zip
-  - C57_AB/timeline.ini
-  <BLANKLINE>
-  <BLANKLINE>
-  downloading data from https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1
-    1% downloaded
-   25% downloaded
-   50% downloaded
-   75% downloaded
-  data downloaded
-  extracting file C57_AB/2012-08-28 13.44.51.zip
-  extracting file C57_AB/2012-08-28 15.33.58.zip
-  extracting file C57_AB/2012-08-31 11.46.31.zip
-  extracting file C57_AB/2012-08-31 11.58.22.zip
-  extracting file C57_AB/timeline.ini
   >>> getTutorialData(fetch='C57_AB')
   C57_AB dataset already present
   All datasets already present.
   >>> getTutorialData(fetch='C57_AB', quiet=True)
   >>> getTutorialData()
   C57_AB dataset already present
-  In case the automatic download fails fetch the data manually.
-  <BLANKLINE>
-  Download archive from: https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1
-  then extract the following files:
-  - demo.zip
-  <BLANKLINE>
-  <BLANKLINE>
-  downloading data from https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1
-    1% downloaded
-   25% downloaded
-   50% downloaded
-   75% downloaded
-  data downloaded
-  extracting file demo.zip
   >>> getTutorialData()
   C57_AB dataset already present
   demo dataset already present
@@ -507,7 +497,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   >>> os.rmdir(_dirname)
 
   """
-  downloader = DataDownloader(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
+  downloader = ModuleDataGetter(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
   downloader.fetch(fetch)
 
 
