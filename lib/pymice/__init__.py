@@ -34,22 +34,23 @@ from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           TestMiceData, DataValidator)
 __NeuroLexID__ = 'nlx_158570'
+__RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = '0.2.3'
-__ID__ = __NeuroLexID__ + ' ' + __version__
+__ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
 __welcomeMessage = """PyMICE library v. {version}
-(NeuroLex.org ID: {neurolex})
+(Resource identifier: {rrid})
 
 This is a bleeding edge version of the library. It might meet your
 expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
 
-""".format(version=__version__, neurolex=__NeuroLexID__)
+""".format(version=__version__, rrid=__RRID__)
 #sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
-__COPYING__ = """PyMICE library
+__COPYING__ = """PyMICE library v. {version}
 
 Copyright (C) 2012-2016 Jakub M. Kowalski, S. Łęski (Laboratory of
 Neuroinformatics; Nencki Institute of Experimental Biology)
@@ -65,7 +66,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this software.  If not, see http://www.gnu.org/licenses/."""
+along with this software.  If not, see http://www.gnu.org/licenses/.
+""".format(version=__version__)
 "Copyright information"
 
 __LICENSE__ = """
