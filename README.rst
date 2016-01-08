@@ -17,6 +17,10 @@ interface (API) and a data abstraction layer. It also comes with auxiliary
 tools supporting development of analysis workflows, like data validators and
 a tool for workflow configuration.
 
+We ask that PyMICE `resource identifier
+<http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0146300>`_
+(RRID:nlx_158570) is provided in any published research making use of PyMICE.
+
 For more details please see `The project website
 <https://neuroinflab.wordpress.com/research/pymice/>`_.
 
