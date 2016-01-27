@@ -33,6 +33,8 @@ if sys.version_info >= (3, 0):
 import os
 import zipfile
 import csv
+import warnings
+
 try:
   import cStringIO as io
 
@@ -65,11 +67,15 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
 from ._Tools import timeToList, PathZipFile, warn, groupBy
 from ._FixTimezones import inferTimezones, LatticeOrderer
 
+class PmCImportWarning(ImportWarning):
+  pass
+
 try:
   from pymice._C import emptyStringToNone
 
 except Exception as e:
-  print('%s\t%s' % (type(e), e))
+  warnings.warn('%s\t%s' % (type(e), e),
+                PmCImportWarning)
 
   def emptyStringToNone(l):
     for i, x in enumerate(l):
