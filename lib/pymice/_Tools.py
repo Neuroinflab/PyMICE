@@ -307,8 +307,12 @@ class DataGetter(object):
                      'C57_AB/2012-08-31 11.46.31.zip': 29344,
                      'C57_AB/2012-08-31 11.58.22.zip': 3818445,
                      'C57_AB/timeline.ini': 2894,
+                     'C57_AB/COPYING': 697,
+                     'C57_AB/LICENSE': 19467,
                     },
           'demo': {'demo.zip': 106091,
+                   'COPYING': 540,
+                   'LICENSE': 19467,
                    },
          }
 
@@ -374,14 +378,20 @@ class DataGetter(object):
 
 
 class ModuleDataGetter(DataGetter):
-  PATHS = {'C57_AB': 'tutorial/C57_AB',
-           'demo': 'tutorial/demo.zip',
+  PATHS = {'C57_AB': ['tutorial/C57_AB',],
+           'demo': ['tutorial/demo.zip',
+                    'tutorial/LICENSE',
+                    'tutorial/COPYING',],
            }
 
+
+
   def fetchDataset(self, dataset):
-    src = os.path.join(os.path.dirname(__file__),
-                       'data',
-                       self.PATHS[dataset])
+    for path in self.PATHS[dataset]:
+      self.fetchDir(path)
+
+  def fetchDir(self, path):
+    src = os.path.join(os.path.dirname(__file__), 'data', path)
     self.copyFiles(src, self._path)
 
   def copyFiles(self, src, dst):
@@ -487,11 +497,15 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   TearDown
 
   >>> os.remove('demo.zip')
+  >>> os.remove('COPYING')
+  >>> os.remove('LICENSE')
   >>> os.remove('C57_AB/2012-08-28 13.44.51.zip')
   >>> os.remove('C57_AB/2012-08-28 15.33.58.zip')
   >>> os.remove('C57_AB/2012-08-31 11.46.31.zip')
   >>> os.remove('C57_AB/2012-08-31 11.58.22.zip')
   >>> os.remove('C57_AB/timeline.ini')
+  >>> os.remove('C57_AB/COPYING')
+  >>> os.remove('C57_AB/LICENSE')
   >>> os.rmdir('C57_AB')
   >>> os.chdir(_cwd)
   >>> os.rmdir(_dirname)
