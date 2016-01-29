@@ -4,8 +4,9 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2013-2015 Jakub M. Kowalski, S. Łęski (Laboratory of       #
-#    Neuroinformatics; Nencki Institute of Experimental Biology)              #
+#    Copyright (C) 2013-2016 Jakub M. Kowalski, S. Łęski (Laboratory of       #
+#    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
+#    Academy of Sciences)                                                     #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU General Public License as published by     #
@@ -20,7 +21,7 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
-###############################################################################
+##############################################################################################################################################################
 
 import operator
 
