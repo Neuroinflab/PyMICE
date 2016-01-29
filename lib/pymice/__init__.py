@@ -54,7 +54,8 @@ beer it can find there and then eat your cat. Be warned.
 __COPYING__ = """PyMICE library v. {version}
 
 Copyright (C) 2012-2016 Jakub M. Kowalski, S. Łęski (Laboratory of
-Neuroinformatics; Nencki Institute of Experimental Biology)
+Neuroinformatics; Nencki Institute of Experimental Biology of Polish
+Academy of Sciences)
 
 This software is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
