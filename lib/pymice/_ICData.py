@@ -332,7 +332,7 @@ class Loader(Data):
         timeOrderer.coupleTuples(npStarts, npEnds)
         timeOrderer.makeOrderedSequence(npEnds)
 
-        npStarts = np.array(npStarts + [None], dtype=object)
+        npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
 
         npTags = np.array(list(imap(vid2tag.__getitem__, npVids)))
         npSides = np.array(list(imap(int, nosepokes['Side']))) % 2 # no bilocation assumed
