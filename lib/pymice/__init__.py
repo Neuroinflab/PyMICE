@@ -36,7 +36,7 @@ from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           TestMiceData, DataValidator)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 __ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
@@ -48,7 +48,7 @@ expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
 
 """.format(version=__version__, rrid=__RRID__)
-#sys.stderr.write(__welcomeMessage)
+sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
