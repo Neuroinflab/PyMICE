@@ -27,7 +27,7 @@ import sys
 from unittest import TestCase
 
 if sys.version_info >= (3, 0):
-   basestring = str
+  basestring = str
 
 def allInstances(instances, cls):
   return all(isinstance(x, cls) for x in instances)
