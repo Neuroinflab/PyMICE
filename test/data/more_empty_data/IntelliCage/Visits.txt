@@ -1,0 +1,1 @@
+VisitID	AnimalTag	Start	End	ModuleName	Cage	Corner	CornerCondition	PlaceError	AntennaNumber	AntennaDuration	PresenceNumber	PresenceDuration	VisitSolution
