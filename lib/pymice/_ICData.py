@@ -350,6 +350,7 @@ class Loader(Data):
         if vid not in vid2tag:
           warn.warn('Unmatched nosepokes: %s' % vid)
 
+    log = None
     if self._getLog:
       log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
       if sessions is not None:
@@ -358,6 +359,7 @@ class Loader(Data):
       else: #XXX
         timeToFix.extend(log['DateTime'])
 
+    environment = None
     if self._getEnv:
       environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
       if environment is not None:
@@ -371,6 +373,7 @@ class Loader(Data):
         else:
           timeToFix.extend(environment['DateTime'])
 
+    hardware = None
     if self._getHw:
       hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
       if hardware is not None:
@@ -388,30 +391,34 @@ class Loader(Data):
       for t in timeToFix:
         t.append(pytz.utc) # UTC assumed
 
-    visits['Start'] = [datetime(*t) for t in visits['Start']]
-    visits['End'] = [datetime(*t) for t in visits['End']]
-    if self._getNp:
-      nosepokes['Start'] = [datetime(*t) for t in nosepokes['Start']]
-      nosepokes['End'] = [datetime(*t) for t in  nosepokes['End']]
+    self.__convertFieldToDateTime('Start', visits)
+    self.__convertFieldToDateTime('End', visits)
+    if nosepokes is not None:
+      self.__convertFieldToDateTime('Start', nosepokes)
+      self.__convertFieldToDateTime('End', nosepokes)
 
-    visitLoader = ZipLoader(source, self._cageManager, tagToAnimal)
-    vNodes = visitLoader.loadVisits(visits, nosepokes)
+    loader = ZipLoader(source, self._cageManager, tagToAnimal)
+    vNodes = loader.loadVisits(visits, nosepokes)
     self._insertNewVisits(vNodes)
 
-    if self._getLog:
-      log['DateTime'] = [datetime(*x) for x in log['DateTime']]
-      lNodes = visitLoader.loadLog(log)
+    for table in [log, environment, hardware]:
+      if table is not None:
+        self.__convertFieldToDateTime('DateTime', table)
+
+    if log is not None:
+      lNodes = loader.loadLog(log)
       self._insertNewLog(lNodes)
 
-    if self._getEnv:
-      environment['DateTime'] = [datetime(*x) for x in environment['DateTime']]
-      eNodes = visitLoader.loadEnv(environment)
+    if environment is not None:
+      eNodes = loader.loadEnv(environment)
       self._insertNewEnv(eNodes)
 
-    if self._getHw:
-      hardware['DateTime'] = [datetime(*x) for x in hardware['DateTime']]
-      hNodes = visitLoader.loadHw(hardware)
+    if hardware is not None:
+      hNodes = loader.loadHw(hardware)
       self._insertNewHw(hNodes)
+
+  def __convertFieldToDateTime(self, field, table):
+    table[field] = [datetime(*x) for x in table[field]]
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     try:

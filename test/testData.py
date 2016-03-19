@@ -867,6 +867,20 @@ class LoadEmptyDataTest(LoaderIntegrationTest):
     return pm.Loader(os.path.join(dataDir, 'empty_data.zip'))
 
 
+class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegrationTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'more_empty_data.zip'),
+                     getEnv=True, getHw=True)
+
+  def testGetEnvironmentReturnsEmptyList(self):
+    self.assertEqual([],
+                     self.data.getEnvironment())
+
+  def testGetHardwareEventsReturnsEmptyList(self):
+    self.assertEqual([],
+                     self.data.getHardwareEvents())
+
+
 class LoadRetaggedDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'retagged_data.zip'))
