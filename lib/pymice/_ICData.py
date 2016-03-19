@@ -391,33 +391,35 @@ class Loader(Data):
       for t in timeToFix:
         t.append(pytz.utc) # UTC assumed
 
-    self.__convertFieldToDateTime('Start', visits)
-    self.__convertFieldToDateTime('End', visits)
-    if nosepokes is not None:
-      self.__convertFieldToDateTime('Start', nosepokes)
-      self.__convertFieldToDateTime('End', nosepokes)
+    self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
+                                            log, environment, hardware)
 
     loader = ZipLoader(source, self._cageManager, tagToAnimal)
-    vNodes = loader.loadVisits(visits, nosepokes)
-    self._insertNewVisits(vNodes)
 
-    for table in [log, environment, hardware]:
-      if table is not None:
-        self.__convertFieldToDateTime('DateTime', table)
-
+    self._insertNewVisits(loader.loadVisits(visits, nosepokes))
     if log is not None:
-      lNodes = loader.loadLog(log)
-      self._insertNewLog(lNodes)
+      self._insertNewLog(loader.loadLog(log))
 
     if environment is not None:
-      eNodes = loader.loadEnv(environment)
-      self._insertNewEnv(eNodes)
+      self._insertNewEnv(loader.loadEnv(environment))
 
     if hardware is not None:
-      hNodes = loader.loadHw(hardware)
-      self._insertNewHw(hNodes)
+      self._insertNewHw(loader.loadHw(hardware))
 
-  def __convertFieldToDateTime(self, field, table):
+  def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
+                                         log, environment, hardware):
+    self.__convertTimeBoundsToDatetime(visits)
+    if nosepokes is not None:
+      self.__convertTimeBoundsToDatetime(nosepokes)
+    for table in [log, environment, hardware]:
+      if table is not None:
+        self.__convertFieldToDatetime('DateTime', table)
+
+  def __convertTimeBoundsToDatetime(self, visits):
+    self.__convertFieldToDatetime('Start', visits)
+    self.__convertFieldToDatetime('End', visits)
+
+  def __convertFieldToDatetime(self, field, table):
     table[field] = [datetime(*x) for x in table[field]]
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
