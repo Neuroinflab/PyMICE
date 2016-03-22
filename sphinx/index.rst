@@ -18,7 +18,7 @@ Introduction
     :target: https://travis-ci.org/Neuroinflab/PyMICE
     :alt: travis build badge
 
-PyMICE is a Python™ library for mice behavioural data analysis.
+PyMICE is a Python® library for mice behavioural data analysis.
 
 The library can be used for loading and analysing of data obtained
 from IntelliCage™ system in an intuitive way in Python programming language.

@@ -47,7 +47,7 @@ cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'PyMICE',
       version = '0.2.4',
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
-      description = 'PyMICE - a Python™ library for mice behavioural data analysis',
+      description = 'PyMICE - a Python® library for mice behavioural data analysis',
       long_description = loadTextFrom('README.rst'),
       author="Jakub M. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
       author_email="j.kowalski@nencki.gov.pl, s.leski@nencki.gov.pl",
