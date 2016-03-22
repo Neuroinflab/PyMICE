@@ -70,5 +70,5 @@ def load_tests(loader, tests, ignore):
   return tests
 
 if __name__ == '__main__':
-  doctest.testmod(pm._Tools, extraglobs=getGlobs())
+  #doctest.testmod(pm._Tools, extraglobs=getGlobs())
   unittest.main()
