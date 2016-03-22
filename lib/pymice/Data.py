@@ -77,12 +77,16 @@ class Data(object):
                AnimalManager=dict):
     """
     :param getNp: whether to load nosepoke data.
+    :type getNp: bool
 
     :param getLog: whether to load log.
+    :type getLog: bool
 
     :param getEnv: whether to load environmental data.
+    :type getEnv: bool
 
     :param getHw: whether to load hardware data.
+    :type getHw: bool
     """
     self.__name2group = {}
 
