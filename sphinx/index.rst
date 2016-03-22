@@ -14,8 +14,8 @@ Introduction
     :target: https://badge.fury.io/py/PyMICE
     :alt: PyPI badge
 
-.. image:: https://travis-ci.org/abukaj/PyMICE.svg?branch=master
-    :target: https://travis-ci.org/abukaj/PyMICE
+.. image:: https://travis-ci.org/Neuroinflab/PyMICE.svg?branch=master
+    :target: https://travis-ci.org/Neuroinflab/PyMICE
     :alt: travis build badge
 
 PyMICE is a Python™ library for mice behavioural data analysis.

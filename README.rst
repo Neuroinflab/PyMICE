@@ -4,8 +4,8 @@ PyMICE Python library
 .. image:: https://badge.fury.io/py/PyMICE.svg
     :target: https://badge.fury.io/py/PyMICE
 
-.. image:: https://travis-ci.org/abukaj/PyMICE.svg?branch=master
-    :target: https://travis-ci.org/abukaj/PyMICE
+.. image:: https://travis-ci.org/Neuroinflab/PyMICE.svg?branch=master
+    :target: https://travis-ci.org/Neuroinflab/PyMICE
 
 PyMICE is a Python™ library for mice behavioural data analysis.
 
