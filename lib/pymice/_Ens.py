@@ -24,11 +24,30 @@
 ###############################################################################
 
 class Ens(object):
+  """
+  A class of read-only data structures emulating the initializer notation
+  (literal notation) known from JavaScript.
+
+  The class has been designed to facilitate development of data analysis
+  workflows with use of functional programming paradigm.
+  """
+
   class ReadOnlyError(TypeError):
-    pass
+    """
+    An error raised on attempt to modify an Ens object:
+     - attribute assignment,
+     - attribute deletion,
+     - item assignment,
+     - item deletion.
+    """
 
   class AmbiguousInitializationError(ValueError):
-    pass
+    """
+    An error raised in case if initialization of the object is ambiguous:
+     - same attribute is present in many positional constructor arguments,
+     - attribute present in positional argument(s) of the constructor is set
+       also by its keyword argument.
+    """
 
   def __init__(self, *dicts, **kwargs):
     for dict in (kwargs,) + dicts:
@@ -72,5 +91,19 @@ class Ens(object):
     raise Ens.ReadOnlyError
 
   @classmethod
-  def map(cls, ens, f):
-    return cls(dict((k, f(ens[k])) for k in ens))
+  def map(cls, source, function):
+    """
+    Apply a function to every attribute (or item) of a source object. Construct
+    an Ens object with attributes of same names, which values are results of the
+    applied function.
+
+    :param source: the source object
+    :type source: Ens or dict
+
+    :param function: the function to be applied
+    :type function: callable
+
+    :return: the constructed object
+    :rtype: Ens
+    """
+    return cls(dict((k, function(source[k])) for k in source))
