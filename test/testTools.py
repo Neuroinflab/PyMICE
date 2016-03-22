@@ -28,7 +28,8 @@ import collections
 import pymice as pm
 import unittest
 import operator
-from pymice._Tools import groupBy
+from pymice._Tools import groupBy, convertTime
+import datetime
 
 Pair = collections.namedtuple('Pair', ['a', 'b'])
 
@@ -61,7 +62,21 @@ class TestGroupBy(unittest.TestCase):
                       (2, 1): [(2, 1)]},
                      groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b')))
 
-# functions below necessary because of tests of getTutorialData() and convertTime()
+class TestConvertTime(unittest.TestCase):
+  def testConvertsGivenTimestringReturnsNaiveDatetime(self):
+    time = convertTime('1970-01-01 12:34:56.7')
+    self.assertIsInstance(time, datetime.datetime)
+    for (attr, value) in [('year', 1970),
+                          ('month', 1),
+                          ('day', 1),
+                          ('hour', 12),
+                          ('minute', 34),
+                          ('second', 56),
+                          ('microsecond', 700000),
+                          ('tzinfo', None)]:
+      self.assertEqual(value, getattr(time, attr))
+
+# functions below necessary because of tests of getTutorialData()
 def getGlobs():
   return {'Pair': Pair}
 
