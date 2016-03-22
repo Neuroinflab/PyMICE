@@ -28,6 +28,27 @@ class Ens(object):
   A class of read-only data structures emulating the initializer notation
   (literal notation) known from JavaScript.
 
+  >>> oracle = Ens(answer=42)
+  >>> print(oracle.answer)
+  42
+  >>> print(oracle['answer'])
+  42
+  >>> for attr in oracle:
+  ...     print(attr)
+  answer
+  >>> print(oracle.question)
+  None
+  >>> arthur = Ens(oracle,
+  ...              question='What do you get if you multiply six by nine?')
+  >>> for attr in sorted(arthur):
+  ...     print("{attr}: {val}".format(attr=attr, val=arthur[attr]))
+  answer: 42
+  question: What do you get if you multiply six by nine?
+  >>> x = Ens(x=1)
+  >>> y = Ens(y=2)
+  >>> point = Ens(x, y)
+  >>> print("Point at: {p.x}, {p.y}".format(p=point))
+
   The class has been designed to facilitate development of data analysis
   workflows with use of functional programming paradigm.
   """
@@ -93,9 +114,9 @@ class Ens(object):
   @classmethod
   def map(cls, source, function):
     """
-    Apply a function to every attribute (or item) of a source object. Construct
-    an Ens object with attributes of same names, which values are results of the
-    applied function.
+    Apply a function to every non None attribute (or item) of a source object.
+    Construct an Ens object with attributes of same names, which values are
+    results of the applied function.
 
     :param source: the source object
     :type source: Ens or dict
