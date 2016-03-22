@@ -33,35 +33,35 @@ from pymice._Tools import groupBy
 Pair = collections.namedtuple('Pair', ['a', 'b'])
 
 class TestGroupBy(unittest.TestCase):
-  def testKeyFunctionItemgetter(self):
+  def testGivenKeyFunctionAsKeywordAttributeGroupsByItsResult(self):
     self.assertEqual({1: [(1, 1), (2, 1, 8)],
                       2: [(1, 2), (3, 2)],
                       4: [(3, 4)]},
                      groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
                              getKey=operator.itemgetter(1)))
 
-  def testKeyFunctionLambda(self):
+  def testGivenKeyFunctionAsPositionalAttributeGroupsByItsResult(self):
     self.assertEqual({2: [(0, 2), (1, 1), (1, 1)],
                       3: [(1, 2), (2, 1), (3, 0)]},
                      groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
                              getKey=lambda x: x[0] + x[1]))
 
-  def testEmptyKeyFunctionLambda(self):
+  def testGivenNoObjectsReturnsEmptyDict(self):
     self.assertEqual({},
                      groupBy([], getKey=lambda x: x[0] + x[1]))
 
-  def testAttibute(self):
+  def testGivenNameOfAttributeGroupsByTheAttribute(self):
     self.assertEqual({1: [(1, 2), (1, 1)],
                       2: [(2, 1)]},
                      groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], 'a'))
 
-  def testAttributeTuple(self):
+  def testGivenTupleOfNamesOfAttributesGroupsByTheirCombination(self):
     self.assertEqual({(1, 1): [(1, 1)],
                       (1, 2): [(1, 2)],
                       (2, 1): [(2, 1)]},
                      groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b')))
 
-
+# functions below necessary because of tests of getTutorialData() and convertTime()
 def getGlobs():
   return {'Pair': Pair}
 
