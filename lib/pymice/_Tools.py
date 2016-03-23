@@ -463,7 +463,7 @@ class DataDownloader(DataGetter):
 
 def getTutorialData(path=None, quiet=False, fetch=None):
   """
-  Download example dataset(s) used in tutorials.
+  Write to disk example dataset(s) used in tutorials.
 
   :param path: a directory where tutorial data are to be loaded into
                (defaults to working directory)
