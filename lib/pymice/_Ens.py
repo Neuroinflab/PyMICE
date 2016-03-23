@@ -28,17 +28,32 @@ class Ens(object):
   A class of read-only data structures emulating the initializer notation
   (literal notation) known from JavaScript.
 
-  >>> oracle = Ens(answer=42)
-  >>> print(oracle.answer)
+  >>> deepThought = Ens(answer=42)
+
+  Data stored in Ens object may be accessed both as its attributes, and as its
+  items.
+
+  >>> print(deepThought.answer)
   42
-  >>> print(oracle['answer'])
+  >>> print(deepThought['answer'])
   42
-  >>> for attr in oracle:
+
+  Not initialized attributes and items of Ens objects defaults to None.
+
+  >>> print(deepThought.question)
+  None
+  >>> print(deepThought['question'])
+  None
+
+  It is possible to iterate for every attribute/key of the object.
+
+  >>> for attr in deepThought:
   ...     print(attr)
   answer
-  >>> print(oracle.question)
-  None
-  >>> arthur = Ens(oracle,
+
+  Objects can be initialized also with dict or Ens objects.
+
+  >>> arthur = Ens(deepThought,
   ...              question='What do you get if you multiply six by nine?')
   >>> for attr in sorted(arthur):
   ...     print("{attr}: {val}".format(attr=attr, val=arthur[attr]))
@@ -46,8 +61,10 @@ class Ens(object):
   question: What do you get if you multiply six by nine?
   >>> x = Ens(x=1)
   >>> y = Ens(y=2)
-  >>> point = Ens(x, y)
-  >>> print("Point at: {p.x}, {p.y}".format(p=point))
+  >>> z = {'z': 3}
+  >>> point = Ens(x, y, z)
+  >>> print("Point at: {p.x}, {p.y}, {p.z}".format(p=point))
+  Point at: 1, 2, 3
 
   The class has been designed to facilitate development of data analysis
   workflows with use of functional programming paradigm.
@@ -121,6 +138,11 @@ class Ens(object):
     Construct an Ens object with attributes of same names, which values are
     results of the applied function.
 
+    If multiple source objects are given, the function must accept that many
+    positional arguments and is applied for every attribute which is non None
+    for at least one source object. Subsequent arguments of the function are
+    values of the attribute of corresponding source objects.
+
     :param function: the function to be applied
     :type function: callable
 
@@ -128,7 +150,6 @@ class Ens(object):
     :type source: Ens or dict
 
     :param *otherSources: other source objects
-    :type *otherSources: (Ens or dict, ...)
 
     :return: the constructed object
     :rtype: Ens
