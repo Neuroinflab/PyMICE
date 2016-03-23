@@ -1,9 +1,20 @@
 import collections
 import unittest
+from unittest import TestCase
 
 from pymice._Ens import Ens
 
-class GivenEnsBase(unittest.TestCase):
+
+class TestEnsBase(TestCase):
+  def checkEnsEqual(self, reference, ens):
+    self.assertEqual(self.__ensToDict(reference),
+                     self.__ensToDict(ens))
+
+  def __ensToDict(self, ens):
+    return dict((k, ens[k]) for k in ens if ens[k] is not None)
+
+
+class GivenEnsBase(TestEnsBase):
   ATTRS = None
 
   def setUp(self):
@@ -22,14 +33,26 @@ class GivenEnsBase(unittest.TestCase):
       self.assertEqual(value,
                        self.record[key])
 
-
   def testYieldsAllNotNoneAttributesOnceWhenIterated(self):
+    self.checkAllNonNoneAttributesYieldedOnce(self.record)
+
+  def testDirOutputContainsAllNotNoneAttributesOnce(self):
+    self.checkAllNonNoneAttributesYieldedOnce(dir(self.record))
+
+  def checkAllNonNoneAttributesYieldedOnce(self, iterable):
+    self.assertEqual(self.countKeysOfNonNoneValues(self.ATTRS),
+                     self.countItemsInIterable(iterable))
+
+  def countKeysOfNonNoneValues(self, dictionary):
+    return collections.Counter(k for (k, v) in dictionary.items()
+                               if v is not None)
+
+  def countItemsInIterable(self, iterable):
     yieldCounter = collections.Counter()
-    for attribute in self.record:
+    for attribute in iterable:
       yieldCounter[attribute] += 1
 
-    self.assertEqual(collections.Counter(k for (k, v) in self.ATTRS.items() if v is not None),
-                     yieldCounter)
+    return yieldCounter
 
   def testRaisesReadOnlyErrorWhenAttributeDeleted(self):
     for attrname in self.ATTRS:
@@ -49,14 +72,7 @@ class GivenEnsBase(unittest.TestCase):
 
   def testMappedChangesNonNoneAttributes(self):
     self.checkEnsEqual(dict((k, str(v)) for (k, v) in self.ATTRS.items() if v is not None),
-                       Ens.map(self.record, str))
-
-  def checkEnsEqual(self, reference, ens):
-    self.assertEqual(self.__ensToDict(reference),
-                     self.__ensToDict(ens))
-
-  def __ensToDict(self, ens):
-    return dict((k, ens[k]) for k in ens if ens[k] is not None)
+                       Ens.map(str, self.record))
 
 
 class GivenEmptyEns(GivenEnsBase):
@@ -102,7 +118,7 @@ class GivenEnsInitizedWithMapAttribute(GivenEnsBase):
            }
 
 
-class TestEnsInitialization(unittest.TestCase):
+class TestEns(TestEnsBase):
   def testHasAttributeWhenInitializedWithDict(self):
     self.assertEqual(123,
                      Ens({'attr': 123}).attr)
@@ -115,3 +131,10 @@ class TestEnsInitialization(unittest.TestCase):
     with self.assertRaises(Ens.AmbiguousInitializationError):
       Ens({'attr': 123}, attr=42)
 
+  def testMapOverMultipleEnsReturnsAggregatedEns(self):
+    self.checkEnsEqual({'x': 4},
+                       Ens.map(max, Ens(x=1), Ens(x=4)))
+
+  def testMapOverMultipleEnsWithMissingValuesReturnsAggregatedEns(self):
+    self.checkEnsEqual({'x': (None, 4)},
+                       Ens.map(lambda a, b: (a, b), Ens(), Ens(x=4)))

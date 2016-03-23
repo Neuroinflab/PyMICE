@@ -98,6 +98,9 @@ class Ens(object):
 
   def __delattr__(self, name):
     raise Ens.ReadOnlyError
+
+  def __dir__(self):
+    return list(self)
   
   def __iter__(self):
     return iter(Ens.__dict(self))
@@ -112,19 +115,40 @@ class Ens(object):
     raise Ens.ReadOnlyError
 
   @classmethod
-  def map(cls, source, function):
+  def map(cls, function, source, *otherSources):
     """
     Apply a function to every non None attribute (or item) of a source object.
     Construct an Ens object with attributes of same names, which values are
     results of the applied function.
 
+    :param function: the function to be applied
+    :type function: callable
+
     :param source: the source object
     :type source: Ens or dict
 
-    :param function: the function to be applied
-    :type function: callable
+    :param *otherSources: other source objects
+    :type *otherSources: (Ens or dict, ...)
 
     :return: the constructed object
     :rtype: Ens
     """
-    return cls(dict((k, function(source[k])) for k in source))
+    return cls.__map(function, source, *otherSources)
+
+  @classmethod
+  def __map(cls, function, *sources):
+    return cls.__mapForKeys(function, cls.__getAttrNames(*sources),
+                            sources)
+
+  @classmethod
+  def __getAttrNames(cls, source, *otherSources):
+    return frozenset(source).union(*otherSources)
+
+  @classmethod
+  def __mapForKeys(cls, function, keys, sources):
+    return cls.__fromPairs((k, function(*[s[k] for s in sources]))
+                           for k in keys)
+
+  @classmethod
+  def __fromPairs(cls, pairs):
+    return cls(dict(pairs))
