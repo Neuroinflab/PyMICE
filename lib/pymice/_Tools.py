@@ -259,10 +259,10 @@ class DataDownloadStdoutReporter(object):
     print('Warning: unknown download requested({})'.format(download))
 
   def reportUnnecessaryFetch(self, dataset):
-    print('{} dataset already present'.format(dataset))
+    sys.stderr.write(u'{} dataset already present\n'.format(dataset))
 
   def reportNothingToFetch(self):
-    print('All datasets already present.')
+    sys.stderr.write(u'All datasets already present.\n')
 
   def printManualDownloadInstruction(self, toDownload):
     print('In case the automatic download fails fetch the data manually.')
@@ -475,41 +475,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
   :param fetch: the datasets to download
   :type fetch: collection(basestring, ...)
 
-  SetUp
 
-  >>> import tempfile
-  >>> import os
-  >>> _dirname = tempfile.mkdtemp(prefix='.tmp_ToolsDoctests')
-  >>> _cwd = os.getcwd()
-  >>> os.chdir(_dirname)
-  
-  >>> getTutorialData(fetch='C57_AB')
-  >>> getTutorialData(fetch='C57_AB')
-  C57_AB dataset already present
-  All datasets already present.
-  >>> getTutorialData(fetch='C57_AB', quiet=True)
-  >>> getTutorialData()
-  C57_AB dataset already present
-  >>> getTutorialData()
-  C57_AB dataset already present
-  demo dataset already present
-  All datasets already present.
-
-  TearDown
-
-  >>> os.remove('demo.zip')
-  >>> os.remove('COPYING')
-  >>> os.remove('LICENSE')
-  >>> os.remove('C57_AB/2012-08-28 13.44.51.zip')
-  >>> os.remove('C57_AB/2012-08-28 15.33.58.zip')
-  >>> os.remove('C57_AB/2012-08-31 11.46.31.zip')
-  >>> os.remove('C57_AB/2012-08-31 11.58.22.zip')
-  >>> os.remove('C57_AB/timeline.ini')
-  >>> os.remove('C57_AB/COPYING')
-  >>> os.remove('C57_AB/LICENSE')
-  >>> os.rmdir('C57_AB')
-  >>> os.chdir(_cwd)
-  >>> os.rmdir(_dirname)
 
   """
   downloader = ModuleDataGetter(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
