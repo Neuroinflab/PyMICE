@@ -25,15 +25,15 @@
 
 import sys
 
-from ._Tools import toDt, isString
 from ._ICNodesBase import DurationAware, getTimeString
+from ._Tools import toDt, isString
 
 if sys.version_info >= (3, 0):
-  from ._ICNodes3 import BaseNode, Visit # Visit imported to facilitate recursive import
+  from ._Python3.ICNodes import BaseNode, Visit  # Visit imported to facilitate recursive import
   unicode = str
 
 else:
-  from ._ICNodes2 import BaseNode, Visit # Visit imported to facilitate recursive import
+  from ._Python2.ICNodes import BaseNode, Visit  # Visit imported to facilitate recursive import
 
 
 class SideAware(object):
