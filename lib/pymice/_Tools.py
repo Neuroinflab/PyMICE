@@ -48,12 +48,11 @@ from ._FixTimezones import LatticeOrderer
 
 
 if sys.version_info >= (3, 0):
-  def isString(obj):
-    return isinstance(obj, str)
+  from ._Python3.Tools import isString
 
 else:
-  def isString(obj):
-    return isinstance(obj, basestring)
+  from ._Python2.Tools import isString
+
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
