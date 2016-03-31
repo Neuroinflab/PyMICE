@@ -27,7 +27,13 @@ import sys
 from unittest import TestCase
 
 if sys.version_info >= (3, 0):
-  basestring = str
+  def isString(obj):
+    return isinstance(obj, str)
+
+else:
+  def isString(obj):
+    return isinstance(obj, basestring)
+
 
 def allInstances(instances, cls):
   return all(isinstance(x, cls) for x in instances)
@@ -125,7 +131,7 @@ class BaseTest(TestCase):
 
   def checkAttributes(self, obj, testList):
     for test in testList:
-      if isinstance(test, basestring):
+      if isString(test):
         self.checkAttribute(obj, test)
 
       else:

@@ -38,11 +38,11 @@ from pymice.Data import Data
 
 import minimock
 
-from ._TestTools import Mock, MockIntDictManager, MockStrDictManager, BaseTest
+from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                         isString)
 
 if sys.version_info >= (3, 0):
   unicode = str
-  basestring = str
 
 
 def toStrings(seq):
@@ -198,7 +198,7 @@ class TestZipLoader(BaseTest):
       inCols = dict(inputCollumns)
       outCols = dict(outputColumns)
       if descCol is not None:
-        inCol, outCol = (descCol, descCol) if isinstance(descCol, basestring) else descCol
+        inCol, outCol = (descCol, descCol) if isString(descCol) else descCol
         inCols.pop(inCol)
         outCols.pop(outCol)
 
