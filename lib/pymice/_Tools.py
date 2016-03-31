@@ -33,12 +33,6 @@ from operator import attrgetter
 
 import pytz
 
-try:
-  from itertools import imap
-
-except ImportError:
-  imap = map
-
 #from numbers import Number
 #import numpy as np
 #if not issubclass(np.floating, Number):
@@ -46,12 +40,12 @@ except ImportError:
 
 from ._FixTimezones import LatticeOrderer
 
-
+# XXX: isString, mapAsList are imported from elsewhere
 if sys.version_info >= (3, 0):
-  from ._Python3.Tools import isString
+  from ._Python3.Tools import isString, mapAsList
 
 else:
-  from ._Python2.Tools import isString
+  from ._Python2.Tools import isString, mapAsList
 
 
 def timeString(x, tz=None):
@@ -174,7 +168,7 @@ def convertTime(tStr, tzinfo=None):
   datetime.datetime(1970, 1, 1, 12, 34, 56, 700000)
   """
   tSplit = tStr.replace('-', ' ').replace(':', ' ').split()
-  args = list(imap(int, tSplit[:5]))
+  args = mapAsList(int, tSplit[:5])
   secs = int(float(tSplit[5]) * 1000000) if len(tSplit) == 6 else 0
   args.extend((secs // 1000000, secs % 1000000, tzinfo))
   return datetime(*args)

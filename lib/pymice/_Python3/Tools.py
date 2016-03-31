@@ -25,3 +25,6 @@
 
 def isString(obj):
   return isinstance(obj, str)
+
+def mapAsList(*args):
+  return list(map(*args))

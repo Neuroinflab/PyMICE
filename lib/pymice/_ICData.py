@@ -49,12 +49,11 @@ from xml.dom import minidom
 
 from operator import methodcaller, attrgetter, itemgetter
 try:
-  from itertools import izip, imap, repeat, count
+  from itertools import izip, repeat, count
 
 except ImportError:
   from itertools import repeat, count
   izip = zip
-  imap = map
 
 from datetime import datetime, timedelta, MINYEAR 
 
@@ -64,7 +63,8 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import timeToList, PathZipFile, warn, groupBy, isString
+from ._Tools import (timeToList, PathZipFile, warn, groupBy, isString,
+                     mapAsList)
 from ._FixTimezones import inferTimezones, LatticeOrderer
 
 class PmCImportWarning(ImportWarning):
@@ -304,7 +304,7 @@ class Loader(Data):
 
       timeOrderer.coupleTuples(vStarts, vEnds)
       timeOrderer.makeOrderedSequence(vEnds)
-      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(list(imap(int, vids)))])
+      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(mapAsList(int, vids))])
 
     else: #XXX
       timeToFix = visits['End'] + visits['Start']
@@ -333,8 +333,8 @@ class Loader(Data):
 
         npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
 
-        npTags = np.array(list(imap(vid2tag.__getitem__, npVids)))
-        npSides = np.array(list(imap(int, nosepokes['Side']))) % 2 # no bilocation assumed
+        npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
+        npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
         # XXX                   ^ - ugly... possibly duplicated
 
         for tag in tagToAnimal:
@@ -483,7 +483,7 @@ class Loader(Data):
     if convert is not None:
       for label, f in convert.items():
         if label in data:
-          data[label] = list(imap(f, data[label]))
+          data[label] = mapAsList(f, data[label])
 
     return data
 
@@ -515,11 +515,11 @@ class Loader(Data):
 
     animalGroup = animals.pop('Group')
     tags = animals['Tag']
-    animals = list(imap(Animal.fromRow,
+    animals = mapAsList(Animal.fromRow,
                         animals['Name'],
                         tags,
                         animals.get('Sex', repeat(None)),
-                        animals.get('Notes', repeat(None))))
+                        animals.get('Notes', repeat(None)))
 
     animalNames = set()
     groups = {}
@@ -1032,7 +1032,7 @@ class ZipLoader(object):
     vLines = count(1)
     vColValues.append(vLines)
     vColValues.append(vNosepokes)
-    return list(imap(self.__makeVisit, *vColValues))
+    return mapAsList(self.__makeVisit, *vColValues)
 
   def __assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
@@ -1100,7 +1100,7 @@ class ZipLoader(object):
 
   def __columnsToObjects(self, columns, columnNames, objectFactory):
     colValues = self._getColumnValues(columnNames, columns)
-    return list(imap(objectFactory, *colValues))
+    return mapAsList(objectFactory, *colValues)
 
   __hwClass = {'0': AirHardwareEvent,
                '1': DoorHardwareEvent,

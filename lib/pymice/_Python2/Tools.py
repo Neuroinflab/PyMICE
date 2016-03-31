@@ -23,5 +23,10 @@
 #                                                                             #
 ###############################################################################
 
+from itertools import imap
+
 def isString(obj):
   return isinstance(obj, basestring)
+
+def mapAsList(*args):
+  return list(imap(*args))
