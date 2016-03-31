@@ -25,16 +25,15 @@
 
 import sys
 
-from ._Tools import toDt
+from ._Tools import toDt, isString
 from ._ICNodesBase import DurationAware, getTimeString
 
 if sys.version_info >= (3, 0):
-  from ._ICNodes3 import BaseNode, Visit
+  from ._ICNodes3 import BaseNode, Visit # Visit imported to facilitate recursive import
   unicode = str
-  basestring = str
 
 else:
-  from ._ICNodes2 import BaseNode, Visit
+  from ._ICNodes2 import BaseNode, Visit # Visit imported to facilitate recursive import
 
 
 class SideAware(object):
@@ -73,7 +72,7 @@ class Animal(BaseNode):
                           self.__Notes)
 
   def __eq__(self, other):
-    if isinstance(other, basestring):
+    if isString(other):
       return other.__class__(self) == other
 
     if self.__Name != other.__Name:
@@ -85,7 +84,7 @@ class Animal(BaseNode):
     return NotImplemented
 
   def __ne__(self, other):
-    if isinstance(other, basestring):
+    if isString(other):
       return other.__class__(self) != other
 
     if self.__Name != other.__Name:

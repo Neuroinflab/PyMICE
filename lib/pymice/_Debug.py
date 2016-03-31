@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 import dateutil.tz
 
 
-from ._Tools import mergeIntervalsValues, groupBy
+from ._Tools import mergeIntervalsValues, groupBy, isString
 
 
 
@@ -141,7 +141,7 @@ def plotEnv(md, env='Illumination', ax=None, cages=None, start=None, end=None, l
   if cages is None:
     cages = set(byCages)
 
-  elif isinstance(cages, basestring):
+  elif isString(cages):
     cages = {int(cages)}
 
   else:
@@ -240,7 +240,7 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None,
   if cages is None:
     cages = set(byCages)
 
-  elif isinstance(cages, basestring):
+  elif isString(cages):
     cages = {int(cages)}
 
   else:

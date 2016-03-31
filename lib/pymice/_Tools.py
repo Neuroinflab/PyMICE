@@ -48,7 +48,12 @@ from ._FixTimezones import LatticeOrderer
 
 
 if sys.version_info >= (3, 0):
-  basestring = str
+  def isString(obj):
+    return isinstance(obj, str)
+
+else:
+  def isString(obj):
+    return isinstance(obj, basestring)
 
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
@@ -105,7 +110,7 @@ warn = PmWarnings()
 #
 #   Convert '' to None.
 #   """
-#   if isinstance(x, basestring):
+#   if isString(x):
 #     if x == '':
 #       return None
 #
@@ -376,7 +381,7 @@ def groupBy(objects, getKey):
   (2, 1) [Pair(a=2, b=1)]
   """
   if not hasattr(getKey, '__call__'):
-    getKey = attrgetter(getKey) if isinstance(getKey, basestring) else attrgetter(*getKey)
+    getKey = attrgetter(getKey) if isString(getKey) else attrgetter(*getKey)
 
   result = {}
   for o in objects:

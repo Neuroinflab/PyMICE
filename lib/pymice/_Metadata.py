@@ -39,10 +39,7 @@ import pytz
 import matplotlib.ticker
 import matplotlib.dates as mpd
 
-from ._Tools import convertTime, warn
-
-if sys.version_info >= (3, 0):
-  basestring = str
+from ._Tools import convertTime, warn, isString
 
 
 class MetadataNode(object):
@@ -537,7 +534,7 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
     :rtype: (:py:class:`datetime.datetime`, :py:class:`datetime.datetime`)
     """
 
-    if isinstance(phases, basestring):
+    if isString(phases):
       try:
         tzinfo = pytz.timezone(self.get(phases, 'tzinfo'))
 

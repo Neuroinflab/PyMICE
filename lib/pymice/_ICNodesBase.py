@@ -30,11 +30,10 @@ if sys.version_info < (3, 0):
 
 else:
   imap = map
-  basestring = str
 
 from operator import attrgetter
 
-
+from ._Tools import isString
 
 def makePrivateSlots(attributes, name):
   prefix = '_%s__' % name
@@ -82,7 +81,7 @@ class VisitMetaclass(BaseNodeMetaclass):
 
   @classmethod
   def __makeNosepokeSummaryPropertyPair(cls, arg, start):
-    propName, attrName = (arg, arg) if isinstance(arg, basestring) else arg
+    propName, attrName = (arg, arg) if isString(arg) else arg
     return propName, cls.__makeNosepokeAggregativeProperty(attrName, start)
 
   @staticmethod

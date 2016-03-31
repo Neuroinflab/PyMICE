@@ -2,8 +2,8 @@ import os
 import shutil
 import sys
 
-if sys.version_info >= (3, 0):
-  basestring = str
+from ._Tools import isString
+
 
 class FetchStdoutReporter(object):
   def warnUnknownDataset(self, dataset):
@@ -84,7 +84,7 @@ class DataGetter(object):
     if requested is None:
       requested = sorted(self.DATA.keys())
 
-    elif isinstance(requested, basestring):
+    elif isString(requested):
       requested = (requested,)
 
     toFetch = list(self.necessaryDataSetsGenerator(requested))

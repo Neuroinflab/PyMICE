@@ -25,7 +25,6 @@
 
 import sys
 if sys.version_info >= (3, 0):
-  basestring = str
   unicode = str
 
 import os
@@ -42,7 +41,7 @@ from collections import Container
 
 from .ICNodes import Group # XXX: unnecessary dependency
 
-from ._Tools import timeString, toTimestampUTC, warn
+from ._Tools import timeString, toTimestampUTC, warn, isString
 from ._ObjectBase import ObjectBase
 
 
@@ -156,7 +155,7 @@ class Data(object):
     """
     selectors = self.__makeTimeSelectors('Start', start, end)
     if mice is not None:
-      if isinstance(mice, basestring) or not isinstance(mice, Container):
+      if isString(mice) or not isinstance(mice, Container):
         mice = [mice]
 
       selectors['Animal.Name'] = map(unicode, mice)
@@ -475,7 +474,7 @@ class Data(object):
     if order is None:
       return list(data)
 
-    key = attrgetter(order) if isinstance(order, basestring) else attrgetter(*order)
+    key = attrgetter(order) if isString(order) else attrgetter(*order)
     return sorted(data, key=key)
 
   @staticmethod

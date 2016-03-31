@@ -28,7 +28,6 @@
 
 import sys
 if sys.version_info >= (3, 0):
-  basestring = str
   unicode = str
 
 import os
@@ -65,7 +64,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import timeToList, PathZipFile, warn, groupBy
+from ._Tools import timeToList, PathZipFile, warn, groupBy, isString
 from ._FixTimezones import inferTimezones, LatticeOrderer
 
 class PmCImportWarning(ImportWarning):
@@ -229,7 +228,7 @@ class Loader(Data):
         print('loading data from {}'.format(fname.encode('utf-8')))
 
     if fname.endswith('.zip') or os.path.isdir(fname):
-      if isinstance(fname, basestring) and os.path.isdir(fname):
+      if isString(fname) and os.path.isdir(fname):
         zf = PathZipFile(fname)
 
       else:
@@ -446,7 +445,7 @@ class Loader(Data):
 
   @staticmethod
   def _fromCSV(fname, source=None, aliases=None, convert=None, oldLabels=None):
-    if isinstance(fname, basestring):
+    if isString(fname):
       fname = open(fname, 'rb')
 
     reader = csv.reader(fname, delimiter='\t')
