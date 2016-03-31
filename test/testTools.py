@@ -106,6 +106,9 @@ class TestGetTutorialDataBase(unittest.TestCase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
       self.__restoreSysOutput()
+      if exc_type is not None:
+        return False
+
       self.__checkIfOutputWasAsExpected()
 
     def __checkIfOutputWasAsExpected(self):
@@ -147,6 +150,11 @@ class GivenNoDatasetPresent(TestGetTutorialDataBase):
   def testWhenDatasetFetchedNoNotificationIsDisplayed(self):
     with self.MockOutput('', ''):
       getTutorialData(fetch='C57_AB')
+
+  def testWhenUnknownDatasetRequestedNotificationIsDisplayed(self):
+    with self.MockOutput('',
+                         'Warning: unknown download requested (unknownDataset)\nAll datasets already present.\n'):
+      getTutorialData(fetch='unknownDataset')
 
 
 class GivenC57_ABDatasetPresent(TestGetTutorialDataBase):

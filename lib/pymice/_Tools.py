@@ -255,8 +255,8 @@ class DataDownloadStdoutReporter(object):
   #   def __call__(self, blockcount, blocksize, totalsize):
   #     self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
 
-  def warnUnknownDownload(self, download):
-    print('Warning: unknown download requested({})'.format(download))
+  def warnUnknownDataset(self, dataset):
+    sys.stderr.write(u'Warning: unknown download requested ({})\n'.format(dataset))
 
   def reportUnnecessaryFetch(self, dataset):
     sys.stderr.write(u'{} dataset already present\n'.format(dataset))
@@ -345,7 +345,7 @@ class DataGetter(object):
       files = self.DATA[dataset]
 
     except KeyError:
-      self._reporter.warnUnknownDownload(download)
+      self._reporter.warnUnknownDataset(dataset)
       return
 
     if all(self.fileSizeMatches(fn, fs) for (fn, fs) in files.items()):
