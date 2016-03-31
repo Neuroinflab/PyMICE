@@ -228,33 +228,7 @@ class PathZipFile(object):
     return open(fn, mode)
 
 
-class DataDownloadStdoutReporter(object):
-  # class DownloadPercentReporter(object):
-  #   def __init__(self, checkpoints):
-  #     self.__checkpoints = iter(checkpoints)
-  #     self.setNextCheckpoint()
-  #
-  #   def isAtCheckpoint(self, downloaded):
-  #     return downloaded > self.__checkpoint
-  #
-  #   def setNextCheckpoint(self):
-  #     try:
-  #       self.__checkpoint = next(self.__checkpoints)
-  #
-  #     except StopIteration:
-  #       self.__checkpoint = float('inf')
-  #
-  #   def reportCheckpoint(self):
-  #     print("{:3d}% downloaded".format(self.__checkpoint))
-  #
-  #   def reportAtCheckpoint(self, downloaded):
-  #     if self.isAtCheckpoint(downloaded):
-  #       self.reportCheckpoint()
-  #       self.setNextCheckpoint()
-  #
-  #   def __call__(self, blockcount, blocksize, totalsize):
-  #     self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
-
+class FetchStdoutReporter(object):
   def warnUnknownDataset(self, dataset):
     sys.stderr.write(u'Warning: unknown download requested ({})\n'.format(dataset))
 
@@ -264,37 +238,8 @@ class DataDownloadStdoutReporter(object):
   def reportNothingToFetch(self):
     sys.stderr.write(u'All datasets already present.\n')
 
-  # def printManualDownloadInstruction(self, toDownload):
-  #   print('In case the automatic download fails fetch the data manually.')
-  #
-  #   for url, files in toDownload.items():
-  #     self.printFileDownloadInstruction(url, files)
-  #
-  #   print("\n")
-  #
-  # def printFileDownloadInstruction(self, url, files):
-  #   print('\nDownload archive from: {}'.format(url))
-  #   print('then extract the following files:')
-  #   for filename in files:
-  #     print('- {}'.format(filename))
-  #
-  # def reportDownloadStart(self, url):
-  #   print('downloading data from {}'.format(url))
-  #
-  # def getReportHook(self):
-  #   return self.DownloadPercentReporter([1, 25, 50, 75])
-  #
-  # def reportDownloadEnd(self):
-  #   print('data downloaded')
-  #
-  # def reportFileExtraction(self, filename):
-  #   print('extracting file {}'.format(filename))
-  #
-  # def warnFileSizeMismatch(self, filename, filesize):
-  #   print('Warning: size of extracted file differs')
 
-
-class DataDownloadDummyReporter(object):
+class FetchDummyReporter(object):
   def __getattribute__(self, attribute):
     def dummyFunction(*args, **kwargs):
       return None
@@ -459,6 +404,63 @@ class ModuleDataGetter(DataGetter):
 #     zipfile.extract(filename, self._path)
 #     if os.path.getsize(os.path.join(self._path, filename)) != filesize:
 #       self._reporter.warnFileSizeMismatch(filename, filesize)
+#
+#
+# class DownloadStdoutReporter(FetchStdoutReporter):
+#   class DownloadPercentReporter(object):
+#     def __init__(self, checkpoints):
+#       self.__checkpoints = iter(checkpoints)
+#       self.setNextCheckpoint()
+#
+#     def isAtCheckpoint(self, downloaded):
+#       return downloaded > self.__checkpoint
+#
+#     def setNextCheckpoint(self):
+#       try:
+#         self.__checkpoint = next(self.__checkpoints)
+#
+#       except StopIteration:
+#         self.__checkpoint = float('inf')
+#
+#     def reportCheckpoint(self):
+#       print("{:3d}% downloaded".format(self.__checkpoint))
+#
+#     def reportAtCheckpoint(self, downloaded):
+#       if self.isAtCheckpoint(downloaded):
+#         self.reportCheckpoint()
+#         self.setNextCheckpoint()
+#
+#     def __call__(self, blockcount, blocksize, totalsize):
+#       self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
+#
+#   def printManualDownloadInstruction(self, toDownload):
+#     print('In case the automatic download fails fetch the data manually.')
+#
+#     for url, files in toDownload.items():
+#       self.printFileDownloadInstruction(url, files)
+#
+#     print("\n")
+#
+#   def printFileDownloadInstruction(self, url, files):
+#     print('\nDownload archive from: {}'.format(url))
+#     print('then extract the following files:')
+#     for filename in files:
+#       print('- {}'.format(filename))
+#
+#   def reportDownloadStart(self, url):
+#     print('downloading data from {}'.format(url))
+#
+#   def getReportHook(self):
+#     return self.DownloadPercentReporter([1, 25, 50, 75])
+#
+#   def reportDownloadEnd(self):
+#     print('data downloaded')
+#
+#   def reportFileExtraction(self, filename):
+#     print('extracting file {}'.format(filename))
+#
+#   def warnFileSizeMismatch(self, filename, filesize):
+#     print('Warning: size of extracted file differs')
 
 
 def getTutorialData(path=None, quiet=False, fetch=None):
@@ -478,7 +480,7 @@ def getTutorialData(path=None, quiet=False, fetch=None):
 
 
   """
-  downloader = ModuleDataGetter(path, DataDownloadDummyReporter() if quiet else DataDownloadStdoutReporter())
+  downloader = ModuleDataGetter(path, FetchDummyReporter() if quiet else FetchStdoutReporter())
   downloader.fetch(fetch)
 
 
