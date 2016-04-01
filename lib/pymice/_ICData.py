@@ -473,20 +473,31 @@ class Loader(Data):
       return dict((l, []) for l in labels)
 
     emptyStringToNone(data)
-    data = dict(zip(labels, zip(*data)))
-    if source is not None:
-      assert '_source' not in data
-      data['_source'] = [source] * n
+    return Loader.__DictOfColumns(labels, data, source, convert)
 
-      assert '_line' not in data
-      data['_line'] = range(1, n + 1)
+  class __DictOfColumns(dict):
+    def __init__(self, labels, rows, source, conversions):
+      dict.__init__(self, zip(labels, zip(*rows)))
+      self.__rowCount = len(rows)
 
-    if convert is not None:
-      for label, f in convert.items():
-        if label in data:
-          data[label] = mapAsList(f, data[label])
+      if source is not None:
+        self.__appendDebugInformation(source)
 
-    return data
+      if conversions is not None:
+        self.__convertCollumns(conversions)
+
+    def __appendDebugInformation(self, source):
+      assert '_source' not in self
+      self['_source'] = [source] * self.__rowCount
+
+      assert '_line' not in self
+      self['_line'] = range(1, self.__rowCount + 1)
+
+    def __convertCollumns(self, conversions):
+      for label, f in conversions.items():
+        if label in self:
+          self[label] = mapAsList(f, self[label])
+
 
   def _setIcSessionAttributes(self):
     for log in self.getLog():
@@ -500,7 +511,7 @@ class Loader(Data):
         self.icSessionEnd = log.DateTime
 
       else:
-        print('unknown Info/Application message: %s' % msg)
+        print('unknown Info/Application message: {0.Notes}'.format(log))
 
   def __repr__ (self):
     """
