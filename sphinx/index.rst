@@ -135,6 +135,22 @@ Module pymice.debug
    .. autofunction:: plotPhases
 
 
+..
+    Module pymice._Ens
+    ------------------
+
+    .. automodule:: pymice._Ens
+
+       .. autoclass:: Ens
+
+          .. autoclass:: ReadOnlyError
+
+          .. autoclass:: AmbiguousInitializationError
+
+          .. automethod:: map
+
+
+
 Acknowledgement
 ===============
 
