@@ -935,7 +935,7 @@ class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
     with self.assertRaises(Data.UnableToInsertIntoFrozen):
       self.data.insertEnv(self.getMockNodeList('EnvironmentalConditions', 2))
 
-  def testInsertEnvRaisesUnableToInsertIntoFrozen(self):
+  def testInsertHwRaisesUnableToInsertIntoFrozen(self):
     with self.assertRaises(Data.UnableToInsertIntoFrozen):
       self.data.insertHw(self.getMockNodeList('HardwareEvent', 2))
 
