@@ -176,6 +176,7 @@ class ICFixer(object):
 
     :type fname: str or file object
     """
+    labels = None
     result = None
 
     if type(fname) is str:
