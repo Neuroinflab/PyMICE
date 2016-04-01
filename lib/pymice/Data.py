@@ -226,8 +226,8 @@ class Data(object):
     :param start: a lower bound of the event DateTime attribute
     :type start: datetime.datetime or None
 
-    :param endTime: an upper bound of the event DateTime attribute
-    :type endTime: datetime.datetime or None
+    :param end: an upper bound of the event DateTime attribute
+    :type end: datetime.datetime or None
 
     :param order: attributes that the returned list is ordered by
     :type order: str or unicode or their sequence or None
