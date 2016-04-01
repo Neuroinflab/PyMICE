@@ -382,6 +382,8 @@ class DataNode(object):
     return cls(**d)
 
   def merge(self, **kwargs):
+    import warnings # A quick dependency fix - just in case the code was not dead
+
     updated = {}
     for k in self._keys:
       v = kwargs.pop(k, None)
