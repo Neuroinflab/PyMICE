@@ -63,7 +63,7 @@ class ExcludeMiceData(object):
   """
   A class for storing information about excluded data segments / modalities
   """
-  def __init__(self, startTime=0., endTime=0., logType=None, notes=None, **kwargs):
+  def __init__(self, startTime, endTime, logType=None, notes=None, **kwargs):
     self.startTime = startTime
     self.endTime = endTime
     self.logType = logType
