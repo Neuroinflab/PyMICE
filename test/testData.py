@@ -623,7 +623,7 @@ class ICCageManagerTest(unittest.TestCase):
 
     for i in range(1, 10):
       for j in range(1, i + 1):
-        self.cageManager[j]
+        self.cageManager[j] # FIXME: what it is doing?
 
     self.cageManager._del_()
     for cage in cages:
@@ -657,7 +657,7 @@ class DataTest(unittest.TestCase):
       cagesToDelete.append(cage)
       cloneInjector = minimock.Mock('CloneInjector', tracker=None)
       def cloneReporter(sourceManager, cageManager, *args):
-        cageManager[cage]
+        cageManager[cage] # FIXME: what is it doing?
         clone = minimock.Mock(label, tracker=None)
         clone._del_.mock_returns_func = lambda: deleted.add(label)
         return clone
