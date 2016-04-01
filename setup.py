@@ -23,7 +23,7 @@
 #                                                                             #
 ###############################################################################
 
-import os, sys
+import os
 
 try:
   from setuptools import setup, Extension
@@ -74,7 +74,8 @@ setup(name = 'PyMICE',
       keywords ='IntelliCage mice behavioural data loading analysis',
       ext_modules = [cPymice],
       packages = ['pymice',
-                  'pymice._Python{.major}'.format(sys.version_info),
+                  'pymice._Python2',
+                  'pymice._Python3',
                   ],
       package_dir = {'': 'lib'},
       package_data={'pymice': ['data/tutorial/demo.zip',
