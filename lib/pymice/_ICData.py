@@ -317,37 +317,38 @@ class Loader(Data):
 
       npVids = nosepokes['VisitID']
 
-      if sessions is not None:
-        # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
-        #   ee._type = 'n.End'
-        #   ee._source = ss
-        #   ee._line = ll
-        #   es._type = 'n.Start'
-        #   es._source = ss
-        #   es._line = ll
+      if len(npVids) > 0: # disables annoying warning on comparison of empty array
+        if sessions is not None:
+          # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
+          #   ee._type = 'n.End'
+          #   ee._source = ss
+          #   ee._line = ll
+          #   es._type = 'n.Start'
+          #   es._source = ss
+          #   es._line = ll
 
-        npEnds = nosepokes['End']
-        npStarts = nosepokes['Start']
-        timeOrderer.coupleTuples(npStarts, npEnds)
-        timeOrderer.makeOrderedSequence(npEnds)
+          npEnds = nosepokes['End']
+          npStarts = nosepokes['Start']
+          timeOrderer.coupleTuples(npStarts, npEnds)
+          timeOrderer.makeOrderedSequence(npEnds)
 
-        npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
+          npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
 
-        npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
-        npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
-        # XXX                   ^ - ugly... possibly duplicated
+          npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
+          npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
+          # XXX                   ^ - ugly... possibly duplicated
 
-        for tag in tagToAnimal:
-          for side in (0, 1): # tailpokes correction
-            timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
+          for tag in tagToAnimal:
+            for side in (0, 1): # tailpokes correction
+              timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
 
-      else: #XXX
-        timeToFix.extend(nosepokes['End'])
-        timeToFix.extend(nosepokes['Start'])
+        else: #XXX
+          timeToFix.extend(nosepokes['End'])
+          timeToFix.extend(nosepokes['Start'])
 
-      for vid in npVids:
-        if vid not in vid2tag:
-          warn.warn('Unmatched nosepokes: %s' % vid)
+        for vid in npVids:
+          if vid not in vid2tag:
+            warn.warn('Unmatched nosepokes: %s' % vid)
 
     log = None
     if self._getLog:
