@@ -2,7 +2,7 @@ import collections
 import unittest
 from unittest import TestCase
 
-from pymice._Ens import Ens
+from pymice._Ens import Ens, JS
 
 
 class TestEnsBase(TestCase):
@@ -138,3 +138,72 @@ class TestEns(TestEnsBase):
   def testMapOverMultipleEnsWithMissingValuesReturnsAggregatedEns(self):
     self.checkEnsEqual({'x': (None, 4)},
                        Ens.map(lambda a, b: (a, b), Ens(), Ens(x=4)))
+
+
+
+class TestJSBase(TestCase):
+  def checkHas(self, js, **items):
+    for key, value in items.items():
+      self.assertEqual(value, js[key])
+
+
+class TestJS(TestJSBase):
+  def testCanBeInitializedWithDict(self):
+    self.checkHas(JS({'a': 42}), a=42)
+
+  def testCanBeInitializedWithManyDicts(self):
+    self.checkHas(JS({'a': 42}, {'b': 1337}),
+                  a=42, b=1337)
+
+  def testCanBeInitializedWithKwargs(self):
+    self.checkHas(JS(a=42), a=42)
+
+  def testWhenInitializedKwargsOverrideDicts(self):
+    self.checkHas(JS({'a': None}, a=42),
+                  a=42)
+
+  def testWhenDirCalledItDoesNotReturnNonStringItems(self):
+    self.assertTrue(1 not in dir(JS({1: 2})))
+
+
+class GivenEmptyJS(TestJSBase):
+  def setUp(self):
+    self.js = JS()
+
+  def testWhenItemSetItCanBeAccessedAsAttribute(self):
+    self.js['a'] = 42
+    self.assertEqual(42, self.js.a)
+
+  def testWhenAttributeSetItCanBeAccessedAsItem(self):
+    self.js.a = 42
+    self.assertEqual(42, self.js['a'])
+
+  def testWhenAttributeAccessedRaisesAttributeError(self):
+    with self.assertRaises(AttributeError):
+      self.js.a
+
+  def testWhenAttributeDeletedRaisesAttributeError(self):
+    with self.assertRaises(AttributeError):
+      del self.js.a
+
+  def testWhenUpdatedWithEnsUpdatesItsAttributes(self):
+    self.js.update(Ens(a=42))
+    self.checkHas(self.js, a=42)
+
+  def testWhenUpdatedWithKwargUpdatesItsAttributes(self):
+    self.js.update(E=42)
+    self.checkHas(self.js, E=42)
+
+
+class GivenOneAttributeJS(TestJSBase):
+  def setUp(self):
+    self.js = JS(attribute=42)
+
+  def testWhenDeletedAttributeAccessedRaisesAttributeError(self):
+    del self.js.attribute
+    with self.assertRaises(AttributeError):
+      self.js.attribute
+
+
+if __name__ == '__main__':
+  unittest.main()

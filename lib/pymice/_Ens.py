@@ -173,3 +173,36 @@ class Ens(object):
   @classmethod
   def __fromPairs(cls, pairs):
     return cls(dict(pairs))
+
+
+class JS(dict):
+  def __init__(self, *dicts, **items):
+    super(JS, self).__init__()
+    self.update(*dicts, **items)
+
+  def __getattr__(self, item):
+    try:
+      return self[item]
+
+    except KeyError:
+      raise AttributeError
+
+  def __setattr__(self, key, value):
+    self[key] = value
+
+  def __delattr__(self, item):
+    try:
+      del self[item]
+
+    except KeyError:
+      raise AttributeError
+
+  def update(self, *dicts, **items):
+    for d in dicts:
+      super(JS, self).update(_asSuitableForDictUpdate(d))
+
+    super(JS, self).update(items)
+
+
+def _asSuitableForDictUpdate(obj):
+  return ((k, obj[k]) for k in obj) if isinstance(obj, Ens) else obj
