@@ -23,7 +23,8 @@
 #                                                                             #
 ###############################################################################
 
-import os
+import os, sys
+
 try:
   from setuptools import setup, Extension
   # XXX a fix for https://bugs.python.org/issue23246 bug
@@ -72,7 +73,9 @@ setup(name = 'PyMICE',
                      'Topic :: Software Development :: Libraries :: Python Modules'],
       keywords ='IntelliCage mice behavioural data loading analysis',
       ext_modules = [cPymice],
-      packages = ['pymice'],
+      packages = ['pymice',
+                  'pymice._Python{.major}'.format(sys.version_info),
+                  ],
       package_dir = {'': 'lib'},
       package_data={'pymice': ['data/tutorial/demo.zip',
                                'data/tutorial/LICENSE',
