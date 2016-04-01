@@ -27,5 +27,5 @@
 A collection of auxilary validation tools for PyMICE library.
 """
 
-from ._Debug import plotPhases
+from ._Debug import plotPhases # facilitates recurrent import
 __all__ = []
