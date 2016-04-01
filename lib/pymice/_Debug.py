@@ -295,7 +295,7 @@ def plotVisitPeriods(md, window=60, ax=None, cages=None, start=None, end=None,
 
 
 
-def plotData(mds):
+def plotData(mds, tzone=None):
   """Diagnostic plot of data from multiple sources"""
   fig = plt.figure()
   ax = fig.add_subplot(1, 1, 1)
@@ -307,11 +307,11 @@ def plotData(mds):
     ax.plot([t1, t2], [idx, idx], 'ko-') 
     ax.plot([t2], [idx], 'bo')
 
-  ax.xaxis.set_major_locator(mpd.HourLocator([00], tz=self.tzone)) 
-  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=self.tzone))
+  ax.xaxis.set_major_locator(mpd.HourLocator([00], tz=tzone))
+  ax.xaxis.set_major_formatter(mpd.DateFormatter('%d.%m %H:%M', tz=tzone))
   ax.autoscale_view()
   ax.get_figure().autofmt_xdate()
-  ax.set_title(ec.path) 
+  #ax.set_title(ec.path)
   plt.draw()
 
 def checkData(mds):
