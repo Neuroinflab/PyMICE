@@ -311,13 +311,13 @@ class Loader(Data):
 
     nosepokes = None
     if self._getNp:
-      vid2tag = dict(zip(vids, visits['AnimalTag']))
-
       nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
 
       npVids = nosepokes['VisitID']
 
       if len(npVids) > 0: # disables annoying warning on comparison of empty array
+        vid2tag = dict(zip(vids, visits['AnimalTag']))
+
         if sessions is not None:
           # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
           #   ee._type = 'n.End'
