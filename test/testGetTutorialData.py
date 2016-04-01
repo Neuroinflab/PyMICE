@@ -33,10 +33,12 @@ import unittest
 from pymice._GetTutorialData import getTutorialData
 
 class TestGetTutorialDataBase(unittest.TestCase):
-  class MockOutput(unittest.TestCase):
-    _type_equality_funcs = {} # hack for unittest in Python3
+  def mockOutput(self, expectedStdout, expectedStderr):
+    return self.MockOutput(self, expectedStdout, expectedStderr)
 
-    def __init__(self, expectedStdout, expectedStderr):
+  class MockOutput(object):
+    def __init__(self, testCase, expectedStdout, expectedStderr):
+      self.__testCase = testCase
       self.__expectedStdout = expectedStdout
       self.__expectedStderr = expectedStderr
       self.__stdout = io.StringIO()
@@ -62,8 +64,8 @@ class TestGetTutorialDataBase(unittest.TestCase):
       self.__checkIfOutputWasAsExpected()
 
     def __checkIfOutputWasAsExpected(self):
-      self.assertEqual(self.__expectedStdout, self.__stdout.getvalue())
-      self.assertEqual(self.__expectedStderr, self.__stderr.getvalue())
+      self.__testCase.assertEqual(self.__expectedStdout, self.__stdout.getvalue())
+      self.__testCase.assertEqual(self.__expectedStderr, self.__stderr.getvalue())
 
     def __restoreSysOutput(self):
       sys.stderr = self.__oldStderr
@@ -98,11 +100,11 @@ class GivenNoDatasetPresent(TestGetTutorialDataBase):
                     'C57_AB/LICENSE')
 
   def testWhenDatasetFetchedNoNotificationIsDisplayed(self):
-    with self.MockOutput('', ''):
+    with self.mockOutput('', ''):
       getTutorialData(fetch='C57_AB')
 
   def testWhenUnknownDatasetRequestedNotificationIsDisplayed(self):
-    with self.MockOutput('',
+    with self.mockOutput('',
                          'Warning: unknown download requested (unknownDataset)\nAll datasets already present.\n'):
       getTutorialData(fetch='unknownDataset')
 
@@ -113,12 +115,12 @@ class GivenC57_ABDatasetPresent(TestGetTutorialDataBase):
     getTutorialData(fetch='C57_AB')
 
   def testWhenTheDatasetFetchedNotificationIsDisplayed(self):
-    with self.MockOutput('',
+    with self.mockOutput('',
                          'C57_AB dataset already present\nAll datasets already present.\n'):
       getTutorialData(fetch='C57_AB')
 
   def testWhenTheDatasetFetchedWithQuietFlagNoNotificationDisplayed(self):
-    with self.MockOutput('', ''):
+    with self.mockOutput('', ''):
       getTutorialData(fetch='C57_AB', quiet=True)
 
   def testWhenAllDatasetsFetchedMissingDatasetIsSavedInTheCurrentDirectory(self):
@@ -126,7 +128,7 @@ class GivenC57_ABDatasetPresent(TestGetTutorialDataBase):
     self.checkExist('demo.zip', 'COPYING', 'LICENSE')
 
   def testWhenAllDatasetsFetchedNotificationIsDisplayed(self):
-    with self.MockOutput('',
+    with self.mockOutput('',
                          'C57_AB dataset already present\n'):
       getTutorialData()
 
@@ -137,6 +139,6 @@ class GivenAllDatasetsPresent(TestGetTutorialDataBase):
     getTutorialData()
 
   def testWhenAllDatasetsFetchedNotificationIsDisplayed(self):
-    with self.MockOutput('',
+    with self.mockOutput('',
                          'C57_AB dataset already present\ndemo dataset already present\nAll datasets already present.\n'):
       getTutorialData()
