@@ -14,11 +14,11 @@ Introduction
     :target: https://badge.fury.io/py/PyMICE
     :alt: PyPI badge
 
-.. image:: https://travis-ci.org/abukaj/PyMICE.svg?branch=master
-    :target: https://travis-ci.org/abukaj/PyMICE
+.. image:: https://travis-ci.org/Neuroinflab/PyMICE.svg?branch=master
+    :target: https://travis-ci.org/Neuroinflab/PyMICE
     :alt: travis build badge
 
-PyMICE is a Python™ library for mice behavioural data analysis.
+PyMICE is a Python® library for mice behavioural data analysis.
 
 The library can be used for loading and analysing of data obtained
 from IntelliCage™ system in an intuitive way in Python programming language.
@@ -135,10 +135,42 @@ Module pymice.debug
    .. autofunction:: plotPhases
 
 
+..
+    Module pymice._Ens
+    ------------------
+
+    .. automodule:: pymice._Ens
+
+       .. autoclass:: Ens
+
+          .. autoclass:: ReadOnlyError
+
+          .. autoclass:: AmbiguousInitializationError
+
+          .. automethod:: map
+
+
+Authors
+=======
+
+* The library
+
+  * Jakub Kowalski
+  * Szymon Łęski
+
+
+* Tutorial data
+
+  * Alicja Puścian
+
+
 Acknowledgement
 ===============
 
-Project sponsored by Symfonia NCN grant: UMO-2013/08/W/NZ4/00691
+JK and SŁ supported by Symfonia NCN grant: UMO-2013/08/W/NZ4/00691.
+
+AP supported by a grant from Switzerland through the Swiss Contribution to the
+enlarged European Union (PSPB-210/2010 to Ewelina Knapska and Hans-Peter Lipp).
 
 
 Indices and tables
