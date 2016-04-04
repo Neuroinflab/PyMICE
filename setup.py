@@ -23,7 +23,7 @@
 #                                                                             #
 ###############################################################################
 
-import os
+import os, sys
 
 try:
   from setuptools import setup, Extension
@@ -39,9 +39,16 @@ except ImportError:
 else:
   setuptoolsPresent = True
 
+
+def loadUTF8(path):
+  if sys.version_info.major >= 3:
+    return open(path, encoding='utf-8').read()
+
+  return open(path).read().decode('utf-8')
+
 def loadTextFrom(path):
-  return open(os.path.join(os.path.dirname(__file__),
-                           path)).read()
+  return loadUTF8(os.path.join(os.path.dirname(__file__),
+                               path))
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 #install_requires = ['numpy']?
