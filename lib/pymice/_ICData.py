@@ -195,14 +195,7 @@ class Loader(Data):
     :type verbose: bool
     """
     for key, value in kwargs.items():
-      if key in ('loganalyzers', 'logAnalyzers'):
-        warn.deprecated("Obsolete argument {} given for Loader constructor. ".format(key) +\
-                        "Set the getLog argument to True and use the DataValidator " +\
-                        "class for log analysis.")
-        getLog = True
-
-      else:
-        warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
+      warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
                   CageManager=ICCageManager)
@@ -628,14 +621,8 @@ class Merger(Data):
     self._ignoreMiceDifferences = kwargs.pop('ignoreMiceDifferences', False)
 
     for key, value in kwargs.items():
-      if key in ('loganalyzers', 'logAnalyzers'):
-        warn.deprecated("Obsolete argument {} given for Merger constructor. ".format(key) +\
-                        "Set the getLog argument to True and use the DataValidator " +\
-                        "class for log analysis.")
-        getLog = True
-
-      else:
-        warn.warn("Unknown argument %s given for Merger constructor" % key, stacklevel=2)
+      warn.warn("Unknown argument %s given for Merger constructor" % key,
+                stacklevel=2)
 
     Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
                   CageManager=ICCageManager)
