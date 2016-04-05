@@ -90,11 +90,11 @@ Package pymice
 
    Auxilary tools
    --------------
-   .. autoclass:: ExperimentTimeline
+   .. autoclass:: Timeline
 
       .. automethod:: __init__
 
-      .. automethod:: getTime
+      .. automethod:: getTimeBounds
 
       .. automethod:: sections
 
