@@ -95,12 +95,11 @@ class PmWarnings(object):
 
 warn = PmWarnings()
 
-def deprecated(aliasedFunction, kind='method'):
+def deprecatedAlias(aliasedFunction, kind='method'):
   def alias(*args, **kwargs):
     warn.deprecated('{} deprecated - use {} instead'.format(kind,
-                                                            aliasedFunction.__name__),
-                    2)
-    return aliasedFunction(args, **kwargs)
+                                                            aliasedFunction.__name__))
+    return aliasedFunction(*args, **kwargs)
 
   return alias
 
