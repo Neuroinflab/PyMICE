@@ -38,7 +38,7 @@ import pytz
 import matplotlib.ticker
 import matplotlib.dates as mpd
 
-from ._Tools import convertTime, warn, isString
+from ._Tools import convertTime, warn, isString, deprecatedAlias
 
 
 class MetadataNode(object):
@@ -523,7 +523,7 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
 
     self.read(self.path)
 
-  def getTime(self, phases):
+  def getTimeBounds(self, phases):
     """
     :param phases: name(s) of phase(s)
     :type phases: [basestring, ...] or basestring
@@ -582,3 +582,5 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
         return sec
 
     return 'Unknown'
+
+  getTime = deprecatedAlias(getTimeBounds)
