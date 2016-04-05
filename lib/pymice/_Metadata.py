@@ -471,7 +471,7 @@ class Phase(MetadataNode):
 
 
 
-class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
+class Timeline(RawConfigParser, matplotlib.ticker.Formatter):
   """
   A class of objects for loading experiment timeline definition files.
 
@@ -571,3 +571,9 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
     return 'Unknown'
 
   getTime = deprecatedAlias(getTimeBounds)
+
+
+class ExperimentTimeline(Timeline):
+  def __init__(self, *args, **kwargs):
+    warn.deprecated('Class ExperimentTimeline is deprecated; use Timeline class instead')
+    super(ExperimentTimeline, self).__init__(*args, **kwargs)

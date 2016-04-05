@@ -31,7 +31,7 @@ import sys
 from ._ICData import Loader, Merger
 from ._Tools import hTime, convertTime, warn
 from ._GetTutorialData import getTutorialData
-from ._Metadata import Phase, ExperimentTimeline
+from ._Metadata import Phase, ExperimentTimeline, Timeline
 from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           TestMiceData, DataValidator)
