@@ -95,34 +95,14 @@ class PmWarnings(object):
 
 warn = PmWarnings()
 
-# def ensureFloat(x):
-#   """
-#   Convert x to float if possible.
-#
-#   Accept ',' used as a decimal mark.
-#
-#   Convert '' to None.
-#   """
-#   if isString(x):
-#     if x == '':
-#       return None
-#
-#     return float(x.replace(',', '.'))
-#
-#   if x is not None:
-#     return float(x)
-#
-#
-# def ensureInt(x):
-#   """
-#   Convert x to int if possible.
-#
-#   Convert '' to None.
-#   """
-#   if x == '' or x is None:
-#     return None
-#
-#   return int(x)
+def deprecated(aliasedFunction):
+  def alias(*args, **kwargs):
+    warn.deprecated('function/method deprecated - use {} instead'.format(aliasedFunction.__name__),
+                    2)
+    return aliasedFunction(args, **kwargs)
+
+  return alias
+
 
 
 def hTime(t):
@@ -216,121 +196,6 @@ class PathZipFile(object):
     return open(fn, mode)
 
 
-# import tempfile
-# import zipfile
-# try:
-#   from urllib import urlretrieve
-#
-# except ImportError:
-#   from urllib.request import urlretrieve
-#
-# class DataDownloader(DataGetter):
-#   URLS = {'C57_AB': 'https://www.dropbox.com/s/0o5faojp14llalm/C57_AB.zip?dl=1',
-#           'demo': 'https://www.dropbox.com/s/yo2fpxcuardo3ji/demo.zip?dl=1',
-#           }
-#
-#   class TemporaryFileName(object):
-#     def __enter__(self):
-#       fh, self.__filename = tempfile.mkstemp(suffix=".zip", prefix="PyMICE_download_tmp_")
-#       os.close(fh)
-#       return self.__filename
-#
-#     def __exit__(self, exc_type, exc_value, traceback):
-#       os.remove(self.__filename)
-#
-#
-#   def fetchDatasets(self, toFetch):
-#     self.printManualDownloadInstruction(toFetch)
-#     super(DataDownloader, self).fetchDatasets(toFetch)
-#
-#   def printManualDownloadInstruction(self, downloads):
-#     toDownload = dict(map(self.getDownloadInfo, downloads))
-#     self._reporter.printManualDownloadInstruction(toDownload)
-#
-#   def getDownloadInfo(self, dataset):
-#     return self.URLS[dataset], sorted(self.DATA[dataset])
-#
-#   def fetchDataset(self, dataset):
-#     self.retrieveFiles(self.URLS[dataset],
-#                        sorted(self.DATA[dataset].items()))
-#
-#   def retrieveFiles(self, url, files):
-#     self._reporter.reportDownloadStart(url)
-#     with self.TemporaryFileName() as filename:
-#       self.downloadArchive(url, filename)
-#       self.extractFiles(filename, files)
-#
-#   def downloadArchive(self, url, filename):
-#     urlretrieve(url, filename, self._reporter.getReportHook())
-#     self._reporter.reportDownloadEnd()
-#
-#   def extractFiles(self, archive, files):
-#     with zipfile.ZipFile(archive) as zf:
-#       for filename, filesize in files:
-#         self.extractFile(zf, filename, filesize)
-#
-#   def extractFile(self, zipfile, filename, filesize):
-#     self._reporter.reportFileExtraction(filename)
-#     zipfile.extract(filename, self._path)
-#     if os.path.getsize(os.path.join(self._path, filename)) != filesize:
-#       self._reporter.warnFileSizeMismatch(filename, filesize)
-#
-#
-# class DownloadStdoutReporter(FetchStdoutReporter):
-#   class DownloadPercentReporter(object):
-#     def __init__(self, checkpoints):
-#       self.__checkpoints = iter(checkpoints)
-#       self.setNextCheckpoint()
-#
-#     def isAtCheckpoint(self, downloaded):
-#       return downloaded > self.__checkpoint
-#
-#     def setNextCheckpoint(self):
-#       try:
-#         self.__checkpoint = next(self.__checkpoints)
-#
-#       except StopIteration:
-#         self.__checkpoint = float('inf')
-#
-#     def reportCheckpoint(self):
-#       print("{:3d}% downloaded".format(self.__checkpoint))
-#
-#     def reportAtCheckpoint(self, downloaded):
-#       if self.isAtCheckpoint(downloaded):
-#         self.reportCheckpoint()
-#         self.setNextCheckpoint()
-#
-#     def __call__(self, blockcount, blocksize, totalsize):
-#       self.reportAtCheckpoint(blockcount * blocksize * 100 // totalsize)
-#
-#   def printManualDownloadInstruction(self, toDownload):
-#     print('In case the automatic download fails fetch the data manually.')
-#
-#     for url, files in toDownload.items():
-#       self.printFileDownloadInstruction(url, files)
-#
-#     print("\n")
-#
-#   def printFileDownloadInstruction(self, url, files):
-#     print('\nDownload archive from: {}'.format(url))
-#     print('then extract the following files:')
-#     for filename in files:
-#       print('- {}'.format(filename))
-#
-#   def reportDownloadStart(self, url):
-#     print('downloading data from {}'.format(url))
-#
-#   def getReportHook(self):
-#     return self.DownloadPercentReporter([1, 25, 50, 75])
-#
-#   def reportDownloadEnd(self):
-#     print('data downloaded')
-#
-#   def reportFileExtraction(self, filename):
-#     print('extracting file {}'.format(filename))
-#
-#   def warnFileSizeMismatch(self, filename, filesize):
-#     print('Warning: size of extracted file differs')
 
 
 
