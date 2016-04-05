@@ -542,20 +542,7 @@ class ExperimentTimeline(RawConfigParser, matplotlib.ticker.Formatter):
 
       times = []
       for option in ('start', 'end'):
-        try:
-          value = self.get(phases, option)
-
-        except NoOptionError:
-          day, month, year = self.get(phases, option + 'date').split('.')
-          time = self.get(phases, option + 'time').split(':')
-          ts = map(int, [year, month, day] + time)
-          t = datetime(*ts, **{'tzinfo': tzinfo})
-
-          warn.deprecated('Deprecated options %sdate and %stime used, use %s instead.' %\
-                     (option, option, option))
-
-        else:
-          t = convertTime(value, tzinfo)
+        t = convertTime(self.get(phases, option), tzinfo)
 
         times.append(t)
 
