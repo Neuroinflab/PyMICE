@@ -31,7 +31,7 @@ import collections
 import numpy as np
 import matplotlib.mlab as mmlab
 
-from ._Tools import toTimestampUTC
+from ._Tools import toTimestampUTC, warn
 
 
 class DataValidator(object):
