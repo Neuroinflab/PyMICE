@@ -332,7 +332,7 @@ class InspectFailures(object):
 class TestMiceData(InspectFailures):
   def __init__(self, *args, **kwargs):
     warn.deprecated('Classes Test... are deprecated; use InspectFailures class instead')
-    super(InspectFailures, self).__init__(*args, **kwargs)
+    super(TestMiceData, self).__init__(*args, **kwargs)
 
 
 class TestLickometer(TestMiceData):
