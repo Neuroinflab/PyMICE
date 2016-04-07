@@ -21,7 +21,7 @@
 #    You should have received a copy of the GNU General Public License        #
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
-##############################################################################################################################################################
+###############################################################################
 
 import operator
 
@@ -46,7 +46,7 @@ def plotLimits(ec, sections, ax=None, color='k', linestyle=':', **kwargs):
   if ax is None:
     ax = plt.gca()
 
-  for tt in ec.getTime(sections):
+  for tt in ec.getTimeBounds(sections):
     ax.axvline(mpd.date2num(tt), color=color, linestyle=linestyle, **kwargs)
 
   plt.draw()
@@ -61,7 +61,7 @@ def plotNights(ec, sections, ax=None, color='0.8', alpha=0.5, zorder=-10, **kwar
     sections = [sections]
 
   for sec in sections:
-    t1, t2 = ec.getTime(sec)
+    t1, t2 = ec.getTimeBounds(sec)
     ax.axvspan(mpd.date2num(t1), mpd.date2num(t2),
                color=color, alpha=alpha, zorder=zorder, **kwargs)
 
@@ -94,7 +94,7 @@ def plotPhases(timeline, tzone=None, ax=None):
   if ax is None:
     fig, ax = plt.subplots()
     ax.set_title(timeline.path)
-    ax.set_xlim(*mpd.date2num(timeline.getTime(sections)))
+    ax.set_xlim(*mpd.date2num(timeline.getTimeBounds(sections)))
     ax.set_ylim(-1, len(sections))
 
     locator = mpd.AutoDateLocator(tz=tzone)
@@ -106,7 +106,7 @@ def plotPhases(timeline, tzone=None, ax=None):
     #plt.draw()
 
   for idx, sec in enumerate(sections):
-    t1, t2 = mpd.date2num(timeline.getTime(sec))
+    t1, t2 = mpd.date2num(timeline.getTimeBounds(sec))
     ax.plot([t1, t2], [idx, idx], 'ko-') 
     ax.plot([t2], [idx], 'bo')
     ax.text(t2 + 0.5, idx, sec,
