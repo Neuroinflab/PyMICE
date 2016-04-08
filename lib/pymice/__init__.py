@@ -49,7 +49,7 @@ expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
 
 """.format(version=__version__, rrid=__RRID__)
-sys.stderr.write(__welcomeMessage)
+#sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
