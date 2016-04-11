@@ -1,3 +1,5 @@
+include AUTHOR
+include INSTALLATION
 include LICENSE
 include COPYING
 include Makefile
