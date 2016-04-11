@@ -226,7 +226,7 @@ class ICFixer(object):
 
 if __name__ == '__main__':
   if len(sys.argv) != 3:
-    print('Usage: %s <src> <dst>' % sys.argv[0])
+    print('Usage: {} <src> <dst>'.format(sys.argv[0]))
 
   else:
     icf = ICFixer(sys.argv[1])
