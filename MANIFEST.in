@@ -1,7 +1,7 @@
 include AUTHOR
+include COPYING
 include INSTALLATION
 include LICENSE
-include COPYING
 include Makefile
 include pymice.h
 recursive-include test *
