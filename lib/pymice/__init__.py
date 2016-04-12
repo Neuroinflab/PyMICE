@@ -34,7 +34,7 @@ from ._GetTutorialData import getTutorialData
 from ._Metadata import Phase, ExperimentTimeline, Timeline
 from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
-                          InspectFailures, DataValidator, TestMiceData)
+                          FailureInspector, DataValidator, TestMiceData)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = '1.0.0'
@@ -49,7 +49,7 @@ expectations, however it might also go to your fridge, drink all the
 beer it can find there and then eat your cat. Be warned.
 
 """.format(version=__version__, rrid=__RRID__)
-sys.stderr.write(__welcomeMessage)
+#sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}

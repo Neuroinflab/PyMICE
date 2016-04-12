@@ -1,8 +1,10 @@
-include LICENSE
+include AUTHOR
 include COPYING
+include INSTALLATION
+include LICENSE
 include Makefile
 include pymice.h
 recursive-include test *
 prune test/data/*.zip
-include tutorial/*/timeline.ini
 include tutorial/*/*.ipynb
+include lib/pymice/_Python?/*.py

@@ -114,7 +114,7 @@ Package pymice
    .. autoclass:: PresenceLogAnalyzer
 
 
-   .. autoclass:: InspectFailures
+   .. autoclass:: FailureInspector
 
       .. automethod:: __init__
 
