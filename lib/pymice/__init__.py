@@ -34,7 +34,7 @@ from ._GetTutorialData import getTutorialData
 from ._Metadata import Phase, ExperimentTimeline, Timeline
 from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
-                          InspectFailures, DataValidator, TestMiceData)
+                          FailureInspector, DataValidator, TestMiceData)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = '1.0.0'
