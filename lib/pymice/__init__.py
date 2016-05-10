@@ -42,14 +42,12 @@ __ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
 __welcomeMessage = """PyMICE library v. {version}
-(Resource identifier: {rrid})
 
-This is a bleeding edge version of the library. It might meet your
-expectations, however it might also go to your fridge, drink all the
-beer it can find there and then eat your cat. Be warned.
+The library is available under GPL3 license; we ask that the resource identifier
+({rrid}) is provided in any published research making use of PyMICE.
 
 """.format(version=__version__, rrid=__RRID__)
-#sys.stderr.write(__welcomeMessage)
+sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
