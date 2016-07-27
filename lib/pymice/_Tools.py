@@ -238,9 +238,13 @@ def groupBy(objects, getKey):
   (1, 2) [Pair(a=1, b=2)]
   (2, 1) [Pair(a=2, b=1)]
   """
-  if not hasattr(getKey, '__call__'):
-    getKey = attrgetter(getKey) if isString(getKey) else attrgetter(*getKey)
+  return __groupByKey(objects,
+                      getKey if hasattr(getKey, '__call__') else __attrGetter(getKey))
 
+def __attrGetter(attrs):
+  return attrgetter(attrs) if isString(attrs) else attrgetter(*attrs)
+
+def __groupByKey(objects, getKey):
   result = {}
   for o in objects:
     key = getKey(o)
