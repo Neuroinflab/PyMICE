@@ -62,6 +62,10 @@ class DataGetter(object):
                    'COPYING': 540,
                    'LICENSE': 19467,
                    },
+          'FVB': {'FVB/2016-07-20 10.11.11.zip': 931977,
+                  'FVB/COPYING': 584,
+                  'FVB/LICENSE': 19467,
+                  'FVB/timeline.ini': 1040,},
          }
 
   def __init__(self, path, reporter):
@@ -130,6 +134,7 @@ class ModuleDataGetter(DataGetter):
            'demo': ['tutorial/demo.zip',
                     'tutorial/LICENSE',
                     'tutorial/COPYING',],
+           'FVB': ['tutorial/FVB',],
            }
 
 

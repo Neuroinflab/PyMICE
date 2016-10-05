@@ -89,19 +89,28 @@ class TestGetTutorialDataBase(unittest.TestCase):
 
 
 class GivenNoDatasetPresent(TestGetTutorialDataBase):
+  DATASETS = {'C57_AB': ['C57_AB/2012-08-28 13.44.51.zip',
+                         'C57_AB/2012-08-28 15.33.58.zip',
+                         'C57_AB/2012-08-31 11.46.31.zip',
+                         'C57_AB/2012-08-31 11.58.22.zip',
+                         'C57_AB/timeline.ini',
+                         'C57_AB/COPYING',
+                         'C57_AB/LICENSE'],
+              'FVB': ['FVB/2016-07-20 10.11.11.zip',
+                      'FVB/COPYING',
+                      'FVB/LICENSE',
+                      'FVB/timeline.ini'],
+              }
+
   def testWhenDatasetFetchedItIsSavedInTheCurrentDirectory(self):
-    getTutorialData(fetch='C57_AB')
-    self.checkExist('C57_AB/2012-08-28 13.44.51.zip',
-                    'C57_AB/2012-08-28 15.33.58.zip',
-                    'C57_AB/2012-08-31 11.46.31.zip',
-                    'C57_AB/2012-08-31 11.58.22.zip',
-                    'C57_AB/timeline.ini',
-                    'C57_AB/COPYING',
-                    'C57_AB/LICENSE')
+    for name, files in self.DATASETS.items():
+      getTutorialData(fetch=name)
+      self.checkExist(*files)
 
   def testWhenDatasetFetchedNoNotificationIsDisplayed(self):
-    with self.mockOutput('', ''):
-      getTutorialData(fetch='C57_AB')
+    for name in self.DATASETS:
+      with self.mockOutput('', ''):
+        getTutorialData(fetch=name)
 
   def testWhenUnknownDatasetRequestedNotificationIsDisplayed(self):
     with self.mockOutput('',
@@ -140,5 +149,5 @@ class GivenAllDatasetsPresent(TestGetTutorialDataBase):
 
   def testWhenAllDatasetsFetchedNotificationIsDisplayed(self):
     with self.mockOutput('',
-                         'C57_AB dataset already present\ndemo dataset already present\nAll datasets already present.\n'):
+                         'C57_AB dataset already present\nFVB dataset already present\ndemo dataset already present\nAll datasets already present.\n'):
       getTutorialData()
