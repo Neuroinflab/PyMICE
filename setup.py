@@ -91,4 +91,8 @@ setup(name = 'PyMICE',
                                'data/tutorial/C57_AB/timeline.ini',
                                'data/tutorial/C57_AB/LICENSE',
                                'data/tutorial/C57_AB/COPYING',
+                               'data/tutorial/FVB/*.zip',
+                               'data/tutorial/FVB/timeline.ini',
+                               'data/tutorial/FVB/LICENSE',
+                               'data/tutorial/FVB/COPYING',
                                ]})
