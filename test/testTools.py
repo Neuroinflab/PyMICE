@@ -61,6 +61,16 @@ class TestGroupBy(unittest.TestCase):
                       (2, 1): [(2, 1)]},
                      groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b')))
 
+  def testKeyFunctionDefaultsToIdentity(self):
+    self.assertEqual({1: [1],
+                      2: [2]},
+                     groupBy([1, 2]))
+
+  # def testOutputAlwaysContainsRequiredKeys(self):
+  #   self.assertEqual({1: [1],
+  #                     'a': []},
+  #                    groupBy([1], ))
+
 
 class TestConvertTime(unittest.TestCase):
   def testConvertsGivenTimestringReturnsNaiveDatetime(self):
