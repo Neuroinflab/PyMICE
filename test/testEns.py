@@ -10,7 +10,7 @@ class TestEnsBase(TestCase):
                      self.__ensToDict(ens))
 
   def __ensToDict(self, ens):
-    return dict((k, ens[k]) for k in ens if ens[k] is not None)
+    return dict((k, ens[k]) for k in ens)
 
 
 class GivenEnsBase(TestEnsBase):
@@ -32,19 +32,24 @@ class GivenEnsBase(TestEnsBase):
       self.assertEqual(value,
                        self.ens[key])
 
-  def testYieldsAllNotNoneAttributesOnceWhenIterated(self):
-    self.checkAllNonNoneAttributesYieldedOnce(self.ens)
+  def testContainsAllItems(self):
+    for key in self.ATTRS:
+      self.assertIn(key, self.ens)
+      self.assertTrue(key in self.ens)
+      self.assertFalse(key not in self.ens)
 
-  def testDirOutputContainsAllNotNoneAttributesOnce(self):
-    self.checkAllNonNoneAttributesYieldedOnce(dir(self.ens))
+  def testYieldsAllAttributesOnceWhenIterated(self):
+    self.checkAllAttributesYieldedOnce(self.ens)
 
-  def checkAllNonNoneAttributesYieldedOnce(self, iterable):
-    self.assertEqual(self.countKeysOfNonNoneValues(self.ATTRS),
+  def testDirOutputContainsAllAttributesOnce(self):
+    self.checkAllAttributesYieldedOnce(dir(self.ens))
+
+  def checkAllAttributesYieldedOnce(self, iterable):
+    self.assertEqual(self.countKeysOfValues(self.ATTRS),
                      self.countItemsInIterable(iterable))
 
-  def countKeysOfNonNoneValues(self, dictionary):
-    return collections.Counter(k for (k, v) in dictionary.items()
-                               if v is not None)
+  def countKeysOfValues(self, dictionary):
+    return collections.Counter(k for (k, v) in dictionary.items())
 
   def countItemsInIterable(self, iterable):
     yieldCounter = collections.Counter()
@@ -69,8 +74,8 @@ class GivenEnsBase(TestEnsBase):
     with self.assertRaises(Ens.ReadOnlyError):
       del self.ens[key]
 
-  def testMappedChangesNonNoneAttributes(self):
-    self.checkEnsEqual(dict((k, str(v)) for (k, v) in self.ATTRS.items() if v is not None),
+  def testMappedChangesAttributes(self):
+    self.checkEnsEqual(dict((k, str(v)) for (k, v) in self.ATTRS.items()),
                        Ens.map(str, self.ens))
 
 
@@ -82,6 +87,11 @@ class GivenEmptyEns(GivenEnsBase):
 
   def testReturnsNoneWhenItemAccessed(self):
     self.assertIsNone(self.ens["anyAttr"])
+
+  def testDoesNotContainAnyItem(self):
+    self.assertNotIn('anyAttr', self.ens)
+    self.assertFalse('anyAttr' in self.ens)
+    self.assertTrue('anyAttr' not in self.ens)
 
   def testRaisesReadOnlyErrorWhenAttributeAssigned(self):
     with self.assertRaises(Ens.ReadOnlyError):
@@ -143,7 +153,8 @@ class TestEns(TestEnsBase):
                        Ens.map(str, {'x': 42}))
 
 class TestAsMapping(TestCase):
-  ATTRS = {'answer': 42}
+  ATTRS = {'answer': 42,
+           'noneAttribute': None}
 
   def setUp(self):
     self.mapping = Ens.asMapping(Ens(self.ATTRS))

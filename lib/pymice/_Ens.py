@@ -102,8 +102,7 @@ class Ens(object):
     if name in attributeDict:
       raise cls.AmbiguousInitializationError
 
-    if value is not None:
-      attributeDict[name] = value
+    attributeDict[name] = value
 
   def __getattribute__(self, name):
     if name == '__dict__':
@@ -135,12 +134,12 @@ class Ens(object):
   @classmethod
   def map(cls, function, source, *otherSources):
     """
-    Apply a function to every non None attribute (or item) of a source object.
+    Apply a function to every defined attribute (or item) of a source object.
     Construct an Ens object with attributes of same names, which values are
     results of the applied function.
 
     If multiple source objects are given, the function must accept that many
-    positional arguments and is applied for every attribute which is non None
+    positional arguments and is applied for every attribute which is defined
     for at least one source object. Subsequent arguments of the function are
     values of the attribute of corresponding source objects.
 
@@ -190,5 +189,14 @@ class Ens(object):
 
 
   @classmethod
-  def asMapping(cls, ens):
-    return cls.Mapping(ens)
+  def asMapping(cls, source):
+    """
+    Create a mapping-API wrapper for the source Ens object.
+
+    :param source: the source object
+    :type source: Ens
+
+    :return: the mapping object
+    :rtype: Mapping
+    """
+    return cls.Mapping(source)
