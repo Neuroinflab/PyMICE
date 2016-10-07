@@ -1,5 +1,4 @@
 import collections
-import unittest
 from unittest import TestCase
 
 from pymice._Ens import Ens
@@ -21,23 +20,23 @@ class GivenEnsBase(TestEnsBase):
     if self.ATTRS is None:
       self.skipTest('Tests declared in abstract class')
 
-    self.record = Ens(**self.ATTRS)
+    self.ens = Ens(**self.ATTRS)
 
   def testHasAllAttributes(self):
     for attribute, value in self.ATTRS.items():
       self.assertEqual(value,
-                       getattr(self.record, attribute))
+                       getattr(self.ens, attribute))
 
   def testHasAllItems(self):
     for key, value in self.ATTRS.items():
       self.assertEqual(value,
-                       self.record[key])
+                       self.ens[key])
 
   def testYieldsAllNotNoneAttributesOnceWhenIterated(self):
-    self.checkAllNonNoneAttributesYieldedOnce(self.record)
+    self.checkAllNonNoneAttributesYieldedOnce(self.ens)
 
   def testDirOutputContainsAllNotNoneAttributesOnce(self):
-    self.checkAllNonNoneAttributesYieldedOnce(dir(self.record))
+    self.checkAllNonNoneAttributesYieldedOnce(dir(self.ens))
 
   def checkAllNonNoneAttributesYieldedOnce(self, iterable):
     self.assertEqual(self.countKeysOfNonNoneValues(self.ATTRS),
@@ -60,7 +59,7 @@ class GivenEnsBase(TestEnsBase):
 
   def checkRaisesReadOnlyErrorWhenAttributeDeleted(self, attrname):
     with self.assertRaises(Ens.ReadOnlyError):
-      delattr(self.record, attrname)
+      delattr(self.ens, attrname)
 
   def testRaisesReadOnlyErrorWhenItemDeleted(self):
     for key in self.ATTRS:
@@ -68,32 +67,32 @@ class GivenEnsBase(TestEnsBase):
 
   def checkRaisesReadOnlyErrorWhenItemDeleted(self, key):
     with self.assertRaises(Ens.ReadOnlyError):
-      del self.record[key]
+      del self.ens[key]
 
   def testMappedChangesNonNoneAttributes(self):
     self.checkEnsEqual(dict((k, str(v)) for (k, v) in self.ATTRS.items() if v is not None),
-                       Ens.map(str, self.record))
+                       Ens.map(str, self.ens))
 
 
 class GivenEmptyEns(GivenEnsBase):
   ATTRS = {}
 
   def testReturnsNoneWhenAttributeAccessed(self):
-    self.assertIsNone(self.record.anyAttr)
+    self.assertIsNone(self.ens.anyAttr)
 
   def testReturnsNoneWhenItemAccessed(self):
-    self.assertIsNone(self.record["anyAttr"])
+    self.assertIsNone(self.ens["anyAttr"])
 
   def testRaisesReadOnlyErrorWhenAttributeAssigned(self):
     with self.assertRaises(Ens.ReadOnlyError):
-      self.record.anyAttr = 123
+      self.ens.anyAttr = 123
 
   def testRaisesReadOnlyErrorWhenItemAssigned(self):
     with self.assertRaises(Ens.ReadOnlyError):
-      self.record["anyAttr"] = 123
+      self.ens["anyAttr"] = 123
 
   def testMapAttributeIsNone(self):
-    self.assertIsNone(self.record.map)
+    self.assertIsNone(self.ens.map)
 
 
 class GivenEnsOfOneAttribute(GivenEnsBase):
@@ -111,7 +110,7 @@ class GivenEnsInitizedWithNoneAttribute(GivenEnsBase):
            'noneAttr': None,
            }
 
-class GivenEnsInitizedWithMapAttribute(GivenEnsBase):
+class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
   ATTRS = {'attr1': 1337,
            'attr2': 42,
            'map': 666,
@@ -123,7 +122,7 @@ class TestEns(TestEnsBase):
     self.assertEqual(123,
                      Ens({'attr': 123}).attr)
 
-  def testHasAttributeWhenInitializedWithDataRecord(self):
+  def testHasAttributeWhenInitializedWithEns(self):
     self.assertEqual(123,
                      Ens(Ens(attr=123)).attr)
 
@@ -142,3 +141,34 @@ class TestEns(TestEnsBase):
   def testMapAcceptsDictsAsInput(self):
     self.checkEnsEqual({'x': '42'},
                        Ens.map(str, {'x': 42}))
+
+class TestAsMapping(TestCase):
+  ATTRS = {'answer': 42}
+
+  def setUp(self):
+    self.mapping = Ens.asMapping(Ens(self.ATTRS))
+
+  def testHasItemsWhichTheEnsHad(self):
+    for key, value in self.ATTRS.items():
+      self.assertEqual(value,
+                       self.mapping[key])
+
+  def testHasKeysMethodReturningKeysDefinedInTheEns(self):
+    self.assertEqual(sorted(self.ATTRS),
+                     sorted(self.mapping.keys()))
+
+  def testHasLength(self):
+    self.assertEqual(len(self.ATTRS),
+                     len(self.mapping))
+
+  def testIteratesItsKeys(self):
+    self.assertEqual(sorted(self.mapping.keys()),
+                     sorted(self.mapping))
+
+  def testContainsItsKeys(self):
+    for key in self.mapping.keys():
+      self.assertTrue(key in self.mapping)
+
+  def testHasItemsMethodReturningKeyValuePairsOfEns(self):
+    self.assertEqual(sorted(self.ATTRS.items()),
+                     sorted(self.mapping.items()))

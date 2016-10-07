@@ -23,6 +23,8 @@
 #                                                                             #
 ###############################################################################
 
+import collections
+
 class Ens(object):
   """
   A class of read-only data structures emulating the initializer notation
@@ -172,3 +174,21 @@ class Ens(object):
   @classmethod
   def __fromPairs(cls, pairs):
     return cls(dict(pairs))
+
+  class Mapping(collections.Mapping):
+    def __init__(self, ens):
+      self.__ens = ens
+
+    def __getitem__(self, item):
+      return self.__ens[item]
+
+    def __len__(self):
+      return len(self.__ens.__dict__)
+
+    def __iter__(self):
+      return iter(self.__ens)
+
+
+  @classmethod
+  def asMapping(cls, ens):
+    return cls.Mapping(ens)
