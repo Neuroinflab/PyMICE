@@ -131,6 +131,13 @@ class Ens(object):
   def __delitem__(self, key):
     raise Ens.ReadOnlyError
 
+  def __repr__(self):
+    return 'Ens({})'.format(', '.join(Ens.__reprAttrs(self)))
+
+  def __reprAttrs(self):
+    for attr in sorted(self):
+      yield '{}={!r}'.format(attr, self[attr])
+
   @classmethod
   def map(cls, function, source, *otherSources):
     """

@@ -37,7 +37,7 @@ from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           FailureInspector, DataValidator, TestMiceData)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
@@ -47,7 +47,7 @@ The library is available under GPL3 license; we ask that the resource identifier
 ({rrid}) is provided in any published research making use of PyMICE.
 
 """.format(version=__version__, rrid=__RRID__)
-sys.stderr.write(__welcomeMessage)
+#sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
