@@ -138,3 +138,7 @@ class TestEns(TestEnsBase):
   def testMapOverMultipleEnsWithMissingValuesReturnsAggregatedEns(self):
     self.checkEnsEqual({'x': (None, 4)},
                        Ens.map(lambda a, b: (a, b), Ens(), Ens(x=4)))
+
+  def testMapAcceptsDictsAsInput(self):
+    self.checkEnsEqual({'x': '42'},
+                       Ens.map(str, {'x': 42}))
