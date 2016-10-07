@@ -204,7 +204,7 @@ class PathZipFile(object):
 
 
 
-def groupBy(objects, getKey=lambda x: x):
+def groupBy(objects, getKey=lambda x: x, requiredKeys=()):
   """
   >>> import operator
   >>> output = groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
@@ -243,15 +243,19 @@ def groupBy(objects, getKey=lambda x: x):
   ...   print("{} {}".format(k, output[k]))
   1 [1]
   2 [2]
+
+  >>> groupBy([], requiredKeys=['a'])
+  {'a': []}
   """
   return __groupByKey(objects,
-                      getKey if hasattr(getKey, '__call__') else __attrGetter(getKey))
+                      getKey if hasattr(getKey, '__call__') else __attrGetter(getKey),
+                      requiredKeys)
 
 def __attrGetter(attrs):
   return attrgetter(attrs) if isString(attrs) else attrgetter(*attrs)
 
-def __groupByKey(objects, getKey):
-  result = {}
+def __groupByKey(objects, getKey, requiredKeys):
+  result = {key: [] for key in requiredKeys}
   for o in objects:
     key = getKey(o)
     try:

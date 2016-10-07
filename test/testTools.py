@@ -66,10 +66,14 @@ class TestGroupBy(unittest.TestCase):
                       2: [2]},
                      groupBy([1, 2]))
 
-  # def testOutputAlwaysContainsRequiredKeys(self):
-  #   self.assertEqual({1: [1],
-  #                     'a': []},
-  #                    groupBy([1], ))
+  def testOutputAlwaysContainsRequiredKeys(self):
+    self.assertEqual({1: [1],
+                      'a': []},
+                     groupBy([1], requiredKeys=['a']))
+
+  def testRequiredKeysDoNotConflictWithKeysDefinedByInput(self):
+    self.assertEqual({1: [1]},
+                     groupBy([1], requiredKeys=[1]))
 
 
 class TestConvertTime(unittest.TestCase):
