@@ -154,3 +154,17 @@ class ResultsCSV(object):
 
     except KeyError:
       raise KeyError('Field %s not set for ID %s.' % (field, id))
+
+
+def lazyAttribute(computeValue):
+  name = computeValue.__name__
+
+  def attributeProxy(self):
+    try:
+      return self.__dict__[name]
+
+    except KeyError:
+      value = self.__dict__[name] = computeValue(self)
+      return value
+
+  return property(attributeProxy)
