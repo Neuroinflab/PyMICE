@@ -1,10 +1,15 @@
 import collections
 from unittest import TestCase, skip
 
+try:
+  from ._TestTools import BaseTest
+except (ImportError, SystemError):
+  from _TestTools import BaseTest
+
 from pymice._Ens import Ens
 
 
-class TestEnsBase(TestCase):
+class TestEnsBase(BaseTest):
   def checkEnsEqual(self, reference, ens):
     self.assertEqual(self.__ensToDict(reference),
                      self.__ensToDict(ens))
@@ -12,9 +17,6 @@ class TestEnsBase(TestCase):
   def __ensToDict(self, ens):
     return dict((k, ens[k]) for k in ens)
 
-  def checkIsSubclass(self, subclass, superclass):
-    self.assertTrue(issubclass(subclass,
-                               superclass))
 
 
 class GivenEnsBase(TestEnsBase):

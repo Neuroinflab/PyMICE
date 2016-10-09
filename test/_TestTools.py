@@ -166,3 +166,7 @@ class BaseTest(TestCase):
       if hasattr(cls, '_setUp'):
         cls._setUp(self)
 
+
+  def checkIsSubclass(self, subclass, superclass):
+    self.assertTrue(issubclass(subclass,
+                               superclass))
