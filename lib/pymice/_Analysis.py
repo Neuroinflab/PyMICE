@@ -25,9 +25,53 @@
 from ._Ens import Ens
 
 class Analysis(object):
+  class Results(object):
+    class CircularDependencyError(RuntimeError):
+      pass
+
+    class UnknownDependencyError(RuntimeError):
+      pass
+
+    class ObjectWrapper(tuple):
+      def __new__(cls, seq, result):
+        return tuple.__new__(cls, seq)
+
+      def __init__(self, seq, result):
+        self.result = result
+
+    def __init__(self, objects, analysers):
+      self.__objects = self.ObjectWrapper(objects, self)
+      self.__analysers = dict(analysers)
+      self.__lock = set()
+      self.__values = {}
+
+    def __getattr__(self, item):
+      try:
+        return self.__values[item]
+
+      except KeyError:
+        if item in self.__lock:
+          raise self.CircularDependencyError
+
+        self.__lock.add(item)
+        try:
+          value = self.__analysers[item](self.__objects)
+        except KeyError:
+          raise self.UnknownDependencyError
+
+        self.__values[item] = value
+        return value
+
+    def __enter__(self):
+      return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+      del self.__objects
+
   def __init__(self, **analysers):
     self.__analysers = analysers
 
   def __call__(self, objects):
-    return Ens({name: analyser(objects)
-                for name, analyser in self.__analysers.items()})
+    with self.Results(objects, self.__analysers) as results:
+      return Ens({name: getattr(results, name)
+                  for name in self.__analysers})
