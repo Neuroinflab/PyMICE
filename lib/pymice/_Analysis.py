@@ -25,9 +25,9 @@
 from ._Ens import Ens
 
 class Analysis(object):
-    def __init__(self, **analysers):
-        self.__analysers = analysers
+  def __init__(self, **analysers):
+    self.__analysers = analysers
 
-    def __call__(self, objects):
-        return Ens({name: analyser(objects)
-                    for name, analyser in self.__analysers.items()})
+  def __call__(self, objects):
+    return Ens({name: analyser(objects)
+                for name, analyser in self.__analysers.items()})
