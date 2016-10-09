@@ -12,6 +12,10 @@ class TestEnsBase(TestCase):
   def __ensToDict(self, ens):
     return dict((k, ens[k]) for k in ens)
 
+  def checkIsSubclass(self, subclass, superclass):
+    self.assertTrue(issubclass(subclass,
+                               superclass))
+
 
 class GivenEnsBase(TestEnsBase):
   ATTRS = None
@@ -82,11 +86,13 @@ class GivenEnsBase(TestEnsBase):
 class GivenEmptyEns(GivenEnsBase):
   ATTRS = {}
 
-  def testReturnsNoneWhenAttributeAccessed(self):
-    self.assertIsNone(self.ens.anyAttr)
+  def testRaisesUndefinedAttributeErrorWhenAttributeAccessed(self):
+    with self.assertRaises(Ens.UndefinedAttributeError):
+      self.ens.anyAttr
 
-  def testReturnsNoneWhenItemAccessed(self):
-    self.assertIsNone(self.ens["anyAttr"])
+  def testRaisesUndefinedKeyErrorWhenItemAccessed(self):
+    with self.assertRaises(Ens.UndefinedKeyError):
+      self.ens["anyAttr"]
 
   def testDoesNotContainAnyItem(self):
     self.assertNotIn('anyAttr', self.ens)
@@ -101,8 +107,13 @@ class GivenEmptyEns(GivenEnsBase):
     with self.assertRaises(Ens.ReadOnlyError):
       self.ens["anyAttr"] = 123
 
-  def testMapAttributeIsNone(self):
-    self.assertIsNone(self.ens.map)
+  def testMapAttributeDoesNotExist(self):
+    with self.assertRaises(Ens.UndefinedAttributeError):
+      self.ens.map
+
+  def testAsMappingAttributeDoesNotExist(self):
+    with self.assertRaises(Ens.UndefinedAttributeError):
+      self.ens.asMapping
 
 
 class GivenEnsOfOneAttribute(GivenEnsBase):
@@ -178,6 +189,23 @@ class TestEns(TestEnsBase):
   def testMapAcceptsDictsAsInput(self):
     self.checkEnsEqual({'x': '42'},
                        Ens.map(str, {'x': 42}))
+
+  def testUndefinedKeyErrorIsKeyError(self):
+    self.checkIsSubclass(Ens.UndefinedKeyError,
+                         KeyError)
+
+  def testUndefinedAttributeErrorIsAttributeError(self):
+    self.checkIsSubclass(Ens.UndefinedAttributeError,
+                         AttributeError)
+
+  def testAmbiguousInitializationErrorIsValueError(self):
+    self.checkIsSubclass(Ens.AmbiguousInitializationError,
+                         ValueError)
+
+  def testReadOnlyErrorIsTypeError(self):
+    self.checkIsSubclass(Ens.ReadOnlyError,
+                         TypeError)
+
 
 class TestAsMapping(TestCase):
   ATTRS = {'answer': 42,

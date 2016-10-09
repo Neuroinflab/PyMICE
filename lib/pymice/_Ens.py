@@ -40,13 +40,6 @@ class Ens(object):
   >>> print(deepThought['answer'])
   42
 
-  Not initialized attributes and items of Ens objects defaults to None.
-
-  >>> print(deepThought.question)
-  None
-  >>> print(deepThought['question'])
-  None
-
   It is possible to iterate for every attribute/key of the object.
 
   >>> for attr in deepThought:
@@ -89,6 +82,16 @@ class Ens(object):
        also by its keyword argument.
     """
 
+  class UndefinedAttributeError(AttributeError):
+    """
+    An error raised in case of access to undefined attribute.
+    """
+
+  class UndefinedKeyError(KeyError):
+    """
+    An error raised in case of access to undefined item.
+    """
+
   def __init__(self, *dicts, **kwargs):
     for dict in (kwargs,) + dicts:
       for key in dict:
@@ -105,7 +108,11 @@ class Ens(object):
     attributeDict[name] = value
 
   def __getattribute__(self, name):
-    return Ens._dict(self).get(name)
+    try:
+      return Ens._dict(self)[name]
+
+    except KeyError:
+      raise Ens.UndefinedAttributeError
 
   def __setattr__(self, name, value):
     raise Ens.ReadOnlyError
@@ -120,7 +127,11 @@ class Ens(object):
     return iter(Ens._dict(self))
 
   def __getitem__(self, key):
-    return Ens._dict(self).get(key)
+    try:
+      return Ens._dict(self)[key]
+
+    except KeyError:
+      raise Ens.UndefinedKeyError
 
   def __setitem__(self, key, value):
     raise Ens.ReadOnlyError
@@ -171,8 +182,16 @@ class Ens(object):
 
   @classmethod
   def __mapForKeys(cls, function, keys, sources):
-    return cls.__fromPairs((k, function(*[s[k] for s in sources]))
+    return cls.__fromPairs((k, function(*[cls.__tryToGetItemRetunNoneOnFailure(s, k) for s in sources]))
                            for k in keys)
+
+  @staticmethod
+  def __tryToGetItemRetunNoneOnFailure(mapping, item):
+    try:
+      return mapping[item]
+
+    except KeyError:
+      return None
 
   @classmethod
   def __fromPairs(cls, pairs):
