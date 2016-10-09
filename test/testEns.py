@@ -126,6 +126,11 @@ class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
            'map': 666,
            }
 
+class GivenEnsInitializedWithDictAttribute(GivenEnsBase):
+  ATTRS = {'attr1': 1337,
+           'attr2': 42,
+           '__dict__': 666,
+           }
 
 class TestEns(TestEnsBase):
   def testHasAttributeWhenInitializedWithDict(self):

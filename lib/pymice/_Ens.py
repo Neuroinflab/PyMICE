@@ -92,9 +92,9 @@ class Ens(object):
   def __init__(self, *dicts, **kwargs):
     for dict in (kwargs,) + dicts:
       for key in dict:
-        Ens.__tryToSetAttribute(self.__dict__, key, dict[key])
+        Ens.__tryToSetAttribute(Ens._dict(self), key, dict[key])
 
-  def __dict(self):
+  def _dict(self):
     return super(Ens, self).__getattribute__('__dict__')
 
   @classmethod
@@ -105,10 +105,7 @@ class Ens(object):
     attributeDict[name] = value
 
   def __getattribute__(self, name):
-    if name == '__dict__':
-      return super(Ens, self).__getattribute__(name)
-
-    return self.__dict__.get(name)
+    return Ens._dict(self).get(name)
 
   def __setattr__(self, name, value):
     raise Ens.ReadOnlyError
@@ -120,10 +117,10 @@ class Ens(object):
     return list(self)
   
   def __iter__(self):
-    return iter(self.__dict__)
+    return iter(Ens._dict(self))
 
   def __getitem__(self, key):
-    return self.__dict__.get(key)
+    return Ens._dict(self).get(key)
 
   def __setitem__(self, key, value):
     raise Ens.ReadOnlyError
@@ -189,7 +186,7 @@ class Ens(object):
       return self.__ens[item]
 
     def __len__(self):
-      return len(self.__ens.__dict__)
+      return len(Ens._dict(self.__ens))
 
     def __iter__(self):
       return iter(self.__ens)
