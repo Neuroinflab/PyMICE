@@ -1,5 +1,5 @@
 import collections
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from pymice._Ens import Ens
 
@@ -131,6 +131,28 @@ class GivenEnsInitializedWithDictAttribute(GivenEnsBase):
            'attr2': 42,
            '__dict__': 666,
            }
+
+class GivenEnsInitializedWithNumericAttribute(GivenEnsBase):
+  ATTRS = {'attr1': 1337,
+           'attr2': 42,
+           666: 'numeric',
+           }
+
+  def setUp(self):
+    self.ens = Ens(self.ATTRS)
+
+  @skip('numeric attribute name is incompatible with delattr()')
+  def testRaisesReadOnlyErrorWhenAttributeDeleted(self):
+    pass
+
+  @skip('numeric attribute name is incompatible with getattr()')
+  def testHasAllAttributes(self):
+    pass
+
+  @skip('numeric attribute name is incompatible with dir()')
+  def testDirOutputContainsAllAttributesOnce(self):
+    pass
+
 
 class TestEns(TestEnsBase):
   def testHasAttributeWhenInitializedWithDict(self):
