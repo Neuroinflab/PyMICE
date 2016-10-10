@@ -140,11 +140,11 @@ class Ens(object):
     raise Ens.ReadOnlyError
 
   def __repr__(self):
-    return 'Ens({})'.format(', '.join(Ens.__reprAttrs(self)))
+    return 'Ens({{{}}})'.format(', '.join(Ens.__reprAttrs(self)))
 
   def __reprAttrs(self):
-    for attr in sorted(self):
-      yield '{}={!r}'.format(attr, self[attr])
+    for attr in sorted(self, key=repr):
+      yield '{!r}: {!r}'.format(attr, self[attr])
 
   @classmethod
   def map(cls, function, source, *otherSources):

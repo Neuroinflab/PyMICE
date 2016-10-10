@@ -119,14 +119,14 @@ class GivenEmptyEns(GivenEnsBase):
       self.ens.asMapping
 
   def testRepr(self):
-      self.checkRepr('Ens()')
+      self.checkRepr('Ens({})')
 
 
 class GivenEnsOfOneAttribute(GivenEnsBase):
   ATTRS = {'attr': 123}
 
   def testRepr(self):
-    self.checkRepr('Ens(attr=123)')
+    self.checkRepr('Ens({{{!r}: 123}})'.format('attr'))
 
 class GivenEnsOfManyAttributes(GivenEnsBase):
   ATTRS = {'attr1': 1337,
@@ -134,7 +134,7 @@ class GivenEnsOfManyAttributes(GivenEnsBase):
            }
 
   def testRepr(self):
-    self.checkRepr('Ens(attr1=1337, attr2=42)')
+    self.checkRepr('Ens({{{!r}: 1337, {!r}: 42}})'.format('attr1', 'attr2'))
 
 
 class GivenEnsInitializedWithNoneAttribute(GivenEnsBase):
@@ -144,7 +144,7 @@ class GivenEnsInitializedWithNoneAttribute(GivenEnsBase):
            }
 
   def testRepr(self):
-    self.checkRepr('Ens(attr1=1337, attr2=42, noneAttr=None)')
+    self.checkRepr('Ens({{{!r}: 1337, {!r}: 42, {!r}: None}})'.format('attr1', 'attr2', 'noneAttr'))
 
 
 class GivenEnsInitializedWithStrAttributeValue(GivenEnsBase):
@@ -154,7 +154,7 @@ class GivenEnsInitializedWithStrAttributeValue(GivenEnsBase):
            }
 
   def testRepr(self):
-    self.checkRepr('Ens(attr1=1337, attr2=42, strAttr={!r})'.format('str'))
+    self.checkRepr('Ens({{{!r}: 1337, {!r}: 42, {!r}: {!r}}})'.format('attr1', 'attr2', 'strAttr', 'str'))
 
 
 class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
@@ -164,7 +164,7 @@ class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
            }
 
   def testRepr(self):
-    self.checkRepr('Ens(attr1=1337, attr2=42, map=666)')
+    self.checkRepr('Ens({{{!r}: 1337, {!r}: 42, {!r}: 666}})'.format('attr1', 'attr2', 'map'))
 
 
 class GivenEnsInitializedWithDictAttribute(GivenEnsBase):
@@ -182,6 +182,9 @@ class GivenEnsInitializedWithNumericAttribute(GivenEnsBase):
 
   def setUp(self):
     self.ens = Ens(self.ATTRS)
+
+  def testRepr(self):
+    self.checkRepr('Ens({{{!r}: 1337, {!r}: 42, 666: {!r}}})'.format('attr1', 'attr2', 'numeric'))
 
   @skip('numeric attribute name is incompatible with delattr()')
   def testRaisesReadOnlyErrorWhenAttributeDeleted(self):
