@@ -82,6 +82,9 @@ class GivenEnsBase(TestEnsBase):
     self.checkEnsEqual(dict((k, str(v)) for (k, v) in self.ATTRS.items()),
                        Ens.map(str, self.ens))
 
+  def checkRepr(self, representation):
+      self.assertEqual(representation, repr(self.ens))
+
 
 class GivenEmptyEns(GivenEnsBase):
   ATTRS = {}
@@ -115,21 +118,44 @@ class GivenEmptyEns(GivenEnsBase):
     with self.assertRaises(Ens.UndefinedAttributeError):
       self.ens.asMapping
 
+  def testRepr(self):
+      self.checkRepr('Ens()')
+
 
 class GivenEnsOfOneAttribute(GivenEnsBase):
   ATTRS = {'attr': 123}
 
+  def testRepr(self):
+    self.checkRepr('Ens(attr=123)')
 
 class GivenEnsOfManyAttributes(GivenEnsBase):
   ATTRS = {'attr1': 1337,
            'attr2': 42,
            }
 
-class GivenEnsInitizedWithNoneAttribute(GivenEnsBase):
+  def testRepr(self):
+    self.checkRepr('Ens(attr1=1337, attr2=42)')
+
+
+class GivenEnsInitializedWithNoneAttribute(GivenEnsBase):
   ATTRS = {'attr1': 1337,
            'attr2': 42,
            'noneAttr': None,
            }
+
+  def testRepr(self):
+    self.checkRepr('Ens(attr1=1337, attr2=42, noneAttr=None)')
+
+
+class GivenEnsInitializedWithStrAttributeValue(GivenEnsBase):
+  ATTRS = {'attr1': 1337,
+           'attr2': 42,
+           'strAttr': 'str',
+           }
+
+  def testRepr(self):
+    self.checkRepr('Ens(attr1=1337, attr2=42, strAttr={!r})'.format('str'))
+
 
 class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
   ATTRS = {'attr1': 1337,
@@ -137,11 +163,16 @@ class GivenEnsInitializedWithMapAttribute(GivenEnsBase):
            'map': 666,
            }
 
+  def testRepr(self):
+    self.checkRepr('Ens(attr1=1337, attr2=42, map=666)')
+
+
 class GivenEnsInitializedWithDictAttribute(GivenEnsBase):
   ATTRS = {'attr1': 1337,
            'attr2': 42,
            '__dict__': 666,
            }
+
 
 class GivenEnsInitializedWithNumericAttribute(GivenEnsBase):
   ATTRS = {'attr1': 1337,
