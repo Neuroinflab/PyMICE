@@ -81,3 +81,15 @@ class Analyser(object):
     results = self.Results(objects, self.__analysers)
     return Ens({name: getattr(results, name)
                 for name in self.__analysers})
+
+
+class Analysis(Analyser):
+  @staticmethod
+  def report(f):
+    f._report = True
+    return f
+
+  def __init__(self):
+    members = {name: getattr(self, name) for name in dir(self)}
+    analysers = {name: f for name, f in members.items() if getattr(f, '_report', False)}
+    super(Analysis, self).__init__(**analysers)

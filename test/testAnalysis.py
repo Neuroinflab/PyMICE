@@ -7,11 +7,14 @@ except (ImportError, SystemError):
 
 from collections import Counter
 
-from pymice._Analysis import Analyser
+from pymice._Analysis import Analyser, Analysis
 from pymice._Ens import Ens
 
 class TestGivenAnalyser(TestCase):
-  ANALYSERS = ['min', 'max', 'span']
+  DATA = [1, 2, 3]
+  RESULTS = {'min': 1,
+             'max': 3,
+             'span': 2}
 
   def min(self, objects):
     return min(objects)
@@ -24,21 +27,19 @@ class TestGivenAnalyser(TestCase):
 
   def setUp(self):
     self.analyser = Analyser(**{name: getattr(self, name)
-                                for name in self.ANALYSERS})
+                                for name in self.RESULTS})
 
   def testResultHasAllAnalyses(self):
-    self.checkResult({'min': 1,
-                      'max': 3,
-                      'span': 2},
-                     self.analyser([1, 2, 3]))
+    self.checkResult(self.RESULTS,
+                     self.analyser(self.DATA))
 
   def testResultIsEns(self):
-    self.assertIsInstance(self.analyser([1]),
+    self.assertIsInstance(self.analyser(self.DATA),
                           Ens)
 
   def testResultHasNoExtraAttributes(self):
-    result = self.analyser([1])
-    self.assertEqual(sorted(self.ANALYSERS),
+    result = self.analyser(self.DATA)
+    self.assertEqual(sorted(self.RESULTS),
                      sorted(dir(result)))
 
   def checkResult(self, expected, result):
@@ -51,7 +52,7 @@ class TestAnalyserLaziness(TestGivenAnalyser):
   def setUp(self):
     self.callCounter = Counter()
     self.analyser = Analyser(**{name: self.getMock(getattr(self, name))
-                                for name in self.ANALYSERS})
+                                for name in self.RESULTS})
 
   def getMock(self, analyser):
     def increaseCallCounterAfterSuccessfulCall(*args):
@@ -63,7 +64,7 @@ class TestAnalyserLaziness(TestGivenAnalyser):
 
   def testEveryAnalyserCalledOnce(self):
     self.analyser([1])
-    for name in self.ANALYSERS:
+    for name in self.RESULTS:
       self.assertEqual(1, self.callCounter[name], name)
 
 
@@ -87,3 +88,22 @@ class TestAnalyser(BaseTest):
   def testUnknownDependencyErrorIsRuntimeError(self):
     self.checkIsSubclass(Analyser.Results.UnknownDependencyError,
                          RuntimeError)
+
+
+class TestAnalysis(TestGivenAnalyser):
+  class AnalysisClass(Analysis):
+    @Analysis.report
+    def max(self, data):
+      return max(data)
+
+    @Analysis.report
+    def min(self, data):
+      return min(data)
+
+    @Analysis.report
+    def span(self, results, data):
+      return results.max - results.min
+
+  def setUp(self):
+    self.analyser = self.AnalysisClass()
+
