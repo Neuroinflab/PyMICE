@@ -71,12 +71,12 @@ class TestAnalyserLaziness(TestGivenAnalyser):
 class TestMisbehavingAnalyser(TestCase):
   def testCircularDependencyError(self):
     analyser = Analyser(res=lambda x, y: x.res)
-    with self.assertRaises(Analyser.Results.CircularDependencyError):
+    with self.assertRaises(Analyser.Result.CircularDependencyError):
       analyser([])
 
   def testUnknownDependencyError(self):
     analyser = Analyser(res=lambda x, y: x.unknown)
-    with self.assertRaises(Analyser.Results.UnknownDependencyError):
+    with self.assertRaises(Analyser.Result.UnknownDependencyError):
       analyser([])
 
   def testReadOnlyError(self):
@@ -85,21 +85,21 @@ class TestMisbehavingAnalyser(TestCase):
       return 666
 
     analyser = Analyser(misbehave=misbehave)
-    with self.assertRaises(Analyser.Results.ReadOnlyError):
+    with self.assertRaises(Analyser.Result.ReadOnlyError):
       analyser([])
 
 
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):
-    self.checkIsSubclass(Analyser.Results.CircularDependencyError,
+    self.checkIsSubclass(Analyser.Result.CircularDependencyError,
                          RuntimeError)
 
   def testUnknownDependencyErrorIsRuntimeError(self):
-    self.checkIsSubclass(Analyser.Results.UnknownDependencyError,
+    self.checkIsSubclass(Analyser.Result.UnknownDependencyError,
                          RuntimeError)
 
   def testReadOnlyErrorIsTypeError(self):
-    self.checkIsSubclass(Analyser.Results.ReadOnlyError,
+    self.checkIsSubclass(Analyser.Result.ReadOnlyError,
                          TypeError)
 
 

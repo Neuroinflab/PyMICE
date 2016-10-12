@@ -25,7 +25,7 @@
 from ._Ens import Ens
 
 class Analyser(object):
-  class Results(object):
+  class Result(object):
     class CircularDependencyError(RuntimeError):
       pass
 
@@ -84,7 +84,7 @@ class Analyser(object):
     self.__analysers = analysers
 
   def __call__(self, objects):
-    results = self.Results(objects, self.__analysers)
+    results = self.Result(objects, self.__analysers)
     return Ens({name: getattr(results, name)
                 for name in self.__analysers})
 
