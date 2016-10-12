@@ -120,3 +120,7 @@ class TestAnalysis(TestGivenAnalyser):
   def setUp(self):
     self.analyser = self.AnalysisClass()
 
+  def testIsAnalyser(self):
+    self.assertIsInstance(self.analyser,
+                          Analyser)
+
