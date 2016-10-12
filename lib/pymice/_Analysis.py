@@ -24,7 +24,7 @@
 
 from ._Ens import Ens
 
-class Analysis(object):
+class Analyser(object):
   class Results(object):
     class CircularDependencyError(RuntimeError):
       pass
@@ -32,46 +32,52 @@ class Analysis(object):
     class UnknownDependencyError(RuntimeError):
       pass
 
-    class ObjectWrapper(tuple):
-      def __new__(cls, seq, result):
-        return tuple.__new__(cls, seq)
-
-      def __init__(self, seq, result):
-        self.result = result
-
-    def __init__(self, objects, analysers):
-      self.__objects = self.ObjectWrapper(objects, self)
+    def __init__(self, data, analysers):
+      self.__data = data
       self.__analysers = dict(analysers)
       self.__lock = set()
       self.__values = {}
 
-    def __getattr__(self, item):
+    def __getattr__(self, name):
       try:
-        return self.__values[item]
+        return self.__values[name]
 
       except KeyError:
-        if item in self.__lock:
-          raise self.CircularDependencyError
+        return self.__createAttribute(name)
 
-        self.__lock.add(item)
-        try:
-          value = self.__analysers[item](self.__objects)
-        except KeyError:
-          raise self.UnknownDependencyError
+    def __createAttribute(self, name):
+      self.__ensureNoPreviousAttemptsToCreate(name)
+      return self.__calculateAndStoreAttribute(name)
 
-        self.__values[item] = value
-        return value
+    def __ensureNoPreviousAttemptsToCreate(self, item):
+      if item in self.__lock:
+        raise self.CircularDependencyError
 
-    def __enter__(self):
-      return self
+      self.__lock.add(item)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-      del self.__objects
+    def __calculateAndStoreAttribute(self, name):
+      value = self.__callAnalyser(self.__getAnalyser(name))
+      self.__values[name] = value
+      return value
+
+    def __getAnalyser(self, item):
+      try:
+        return self.__analysers[item]
+
+      except KeyError:
+        raise self.UnknownDependencyError
+
+    def __callAnalyser(self, analyser):
+      try:
+        return analyser(self.__data)
+
+      except TypeError:
+        return analyser(self, self.__data)
 
   def __init__(self, **analysers):
     self.__analysers = analysers
 
   def __call__(self, objects):
-    with self.Results(objects, self.__analysers) as results:
-      return Ens({name: getattr(results, name)
-                  for name in self.__analysers})
+    results = self.Results(objects, self.__analysers)
+    return Ens({name: getattr(results, name)
+                for name in self.__analysers})

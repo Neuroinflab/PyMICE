@@ -7,7 +7,7 @@ except (ImportError, SystemError):
 
 from collections import Counter
 
-from pymice._Analysis import Analysis
+from pymice._Analysis import Analyser
 from pymice._Ens import Ens
 
 class TestGivenAnalyser(TestCase):
@@ -19,11 +19,11 @@ class TestGivenAnalyser(TestCase):
   def max(self, objects):
     return max(objects)
 
-  def span(self, objects):
-    return objects.result.max - objects.result.min
+  def span(self, result, objects):
+    return result.max - result.min
 
   def setUp(self):
-    self.analyser = Analysis(**{name: getattr(self, name)
+    self.analyser = Analyser(**{name: getattr(self, name)
                                 for name in self.ANALYSERS})
 
   def testResultHasAllAnalyses(self):
@@ -50,15 +50,16 @@ class TestGivenAnalyser(TestCase):
 class TestAnalyserLaziness(TestGivenAnalyser):
   def setUp(self):
     self.callCounter = Counter()
-    self.analyser = Analysis(**{name: self.getMock(getattr(self, name))
+    self.analyser = Analyser(**{name: self.getMock(getattr(self, name))
                                 for name in self.ANALYSERS})
 
   def getMock(self, analyser):
-    def mockAnalyser(objects):
+    def increaseCallCounterAfterSuccessfulCall(*args):
+      result = analyser(*args)
       self.callCounter[analyser.__name__] += 1
-      return analyser(objects)
+      return result
 
-    return mockAnalyser
+    return increaseCallCounterAfterSuccessfulCall
 
   def testEveryAnalyserCalledOnce(self):
     self.analyser([1])
@@ -68,21 +69,21 @@ class TestAnalyserLaziness(TestGivenAnalyser):
 
 class TestMisbehavingAnalyser(TestCase):
   def testCircularDependencyError(self):
-    analyser = Analysis(res=lambda x: x.result.res)
-    with self.assertRaises(Analysis.Results.CircularDependencyError):
+    analyser = Analyser(res=lambda x, y: x.res)
+    with self.assertRaises(Analyser.Results.CircularDependencyError):
       analyser([])
 
   def testUnknownDependencyError(self):
-    analyser = Analysis(res=lambda x: x.result.unknown)
-    with self.assertRaises(Analysis.Results.UnknownDependencyError):
+    analyser = Analyser(res=lambda x, y: x.unknown)
+    with self.assertRaises(Analyser.Results.UnknownDependencyError):
       analyser([])
 
 
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):
-    self.checkIsSubclass(Analysis.Results.CircularDependencyError,
+    self.checkIsSubclass(Analyser.Results.CircularDependencyError,
                          RuntimeError)
 
   def testUnknownDependencyErrorIsRuntimeError(self):
-    self.checkIsSubclass(Analysis.Results.UnknownDependencyError,
+    self.checkIsSubclass(Analyser.Results.UnknownDependencyError,
                          RuntimeError)
