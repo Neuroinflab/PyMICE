@@ -79,6 +79,15 @@ class TestMisbehavingAnalyser(TestCase):
     with self.assertRaises(Analyser.Results.UnknownDependencyError):
       analyser([])
 
+  def testReadOnlyError(self):
+    def misbehave(result, data):
+      result.res = 666
+      return 666
+
+    analyser = Analyser(misbehave=misbehave)
+    with self.assertRaises(Analyser.Results.ReadOnlyError):
+      analyser([])
+
 
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):
@@ -88,6 +97,10 @@ class TestAnalyser(BaseTest):
   def testUnknownDependencyErrorIsRuntimeError(self):
     self.checkIsSubclass(Analyser.Results.UnknownDependencyError,
                          RuntimeError)
+
+  def testReadOnlyErrorIsTypeError(self):
+    self.checkIsSubclass(Analyser.Results.ReadOnlyError,
+                         TypeError)
 
 
 class TestAnalysis(TestGivenAnalyser):

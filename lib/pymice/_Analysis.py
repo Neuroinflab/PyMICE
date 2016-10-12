@@ -32,47 +32,53 @@ class Analyser(object):
     class UnknownDependencyError(RuntimeError):
       pass
 
+    class ReadOnlyError(TypeError):
+      pass
+
     def __init__(self, data, analysers):
-      self.__data = data
-      self.__analysers = dict(analysers)
-      self.__lock = set()
-      self.__values = {}
+      self.__dict__['_data'] = data
+      self.__dict__['_analysers'] = dict(analysers)
+      self.__dict__['_lock'] = set()
+      self.__dict__['_values'] = {}
 
     def __getattr__(self, name):
       try:
-        return self.__values[name]
+        return self._values[name]
 
       except KeyError:
         return self.__createAttribute(name)
+
+    def __setattr__(self, key, value):
+      raise self.ReadOnlyError
 
     def __createAttribute(self, name):
       self.__ensureNoPreviousAttemptsToCreate(name)
       return self.__calculateAndStoreAttribute(name)
 
     def __ensureNoPreviousAttemptsToCreate(self, item):
-      if item in self.__lock:
+      if item in self._lock:
         raise self.CircularDependencyError
 
-      self.__lock.add(item)
+      self._lock.add(item)
 
     def __calculateAndStoreAttribute(self, name):
       value = self.__callAnalyser(self.__getAnalyser(name))
-      self.__values[name] = value
+      self._values[name] = value
       return value
 
     def __getAnalyser(self, item):
       try:
-        return self.__analysers[item]
+        return self._analysers[item]
 
       except KeyError:
         raise self.UnknownDependencyError
 
     def __callAnalyser(self, analyser):
       try:
-        return analyser(self.__data)
+        return analyser(self._data)
 
       except TypeError:
-        return analyser(self, self.__data)
+        return analyser(self, self._data)
 
   def __init__(self, **analysers):
     self.__analysers = analysers
