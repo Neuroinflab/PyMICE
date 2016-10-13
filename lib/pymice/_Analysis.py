@@ -23,6 +23,7 @@
 ###############################################################################
 
 from ._Ens import Ens
+from ._Tools import groupBy
 
 class Analyser(object):
   class Result(object):
@@ -62,7 +63,8 @@ class Analyser(object):
       self._lock.add(item)
 
     def __calculateAndStoreAttribute(self, name):
-      value = self.__callAnalyser(self.__getAnalyser(name))
+      analyser = self.__getAnalyser(name)
+      value = self.__callAnalyser(analyser)
       self._values[name] = value
       return value
 
@@ -99,3 +101,16 @@ class Analysis(Analyser):
     members = {name: getattr(self, name) for name in dir(self)}
     analysers = {name: f for name, f in members.items() if getattr(f, '_report', False)}
     super(Analysis, self).__init__(**analysers)
+
+
+class Aggregator(object):
+  def __init__(self, getKey=lambda x: x, aggregateFunction=lambda x: x, requiredKeys=()):
+    self.__getKey = getKey
+    self.__requiredKeys = requiredKeys
+    self.__aggregateFunction = aggregateFunction
+
+  def __call__(self, sequence):
+    return Ens.map(self.__aggregateFunction,
+                   groupBy(sequence,
+                           getKey=self.__getKey,
+                           requiredKeys=self.__requiredKeys))

@@ -7,7 +7,7 @@ except (ImportError, SystemError):
 
 from collections import Counter
 
-from pymice._Analysis import Analyser, Analysis
+from pymice._Analysis import Analyser, Analysis, Aggregator
 from pymice._Ens import Ens
 
 class TestGivenAnalyser(TestCase):
@@ -123,4 +123,48 @@ class TestAnalysis(TestGivenAnalyser):
   def testIsAnalyser(self):
     self.assertIsInstance(self.analyser,
                           Analyser)
+
+
+
+
+class TestAggregator(TestCase):
+  def setUp(self):
+    self.aggregator = Aggregator(**self.getAttributeOrSkipTheTest('AGGREGATOR_PARAMETERS'))
+
+  def getAttributeOrSkipTheTest(self, name):
+    try:
+      return getattr(self, name)
+
+    except AttributeError:
+      self.skipTest('{} sttribute required for test missing'.format(name))
+
+  def testEmptySequence(self):
+    self.assertEqual(self.getAttributeOrSkipTheTest('EMPTY_SEQUENCE_RESULT'),
+                     self.aggregator([]))
+
+  def testNumberSequence(self):
+    self.assertEqual(self.getAttributeOrSkipTheTest('NUMBER_SEQUENCE_RESULT'),
+                     self.aggregator([2, 1, 2]))
+
+class GivenAggregateWithNoArguments(TestAggregator):
+  AGGREGATOR_PARAMETERS = {}
+  EMPTY_SEQUENCE_RESULT = Ens()
+  NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2]})
+
+class GivenAggregateWithFunctionGetKey(GivenAggregateWithNoArguments):
+  AGGREGATOR_PARAMETERS = {'getKey': str}
+  NUMBER_SEQUENCE_RESULT = Ens({'1': [1], '2': [2, 2]})
+
+class GivenAggregateWithStringGetKey(GivenAggregateWithNoArguments):
+  AGGREGATOR_PARAMETERS = {'getKey': '__class__.__name__'}
+  NUMBER_SEQUENCE_RESULT = Ens({'int': [2, 1, 2]})
+
+class GivenAggregateWithAggregateFunction(GivenAggregateWithNoArguments):
+  AGGREGATOR_PARAMETERS = {'aggregateFunction': len}
+  NUMBER_SEQUENCE_RESULT = Ens({1: 1, 2: 2})
+
+class GivenAggregateWithRequiredKeys(TestAggregator):
+  AGGREGATOR_PARAMETERS = {'requiredKeys': ['a', 'b']}
+  EMPTY_SEQUENCE_RESULT = Ens(a=[], b=[])
+  NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2], 'a': [], 'b': []})
 
