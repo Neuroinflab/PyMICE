@@ -85,7 +85,31 @@ class GivenEnsBase(TestEnsBase):
                        Ens.map(str, self.ens))
 
   def checkRepr(self, representation):
-      self.assertEqual(representation, repr(self.ens))
+    self.assertEqual(representation, repr(self.ens))
+
+  def testEqualEnsOfSameMembers(self):
+    other = Ens(self.ATTRS)
+    self.assertTrue(self.ens == other)
+    self.assertFalse(self.ens != other)
+
+  def testNotEqualEnsOfDifferentMembers(self):
+    other = Ens(self.ens, otherMember='a')
+    self.assertTrue(self.ens != other)
+    self.assertFalse(self.ens == other)
+
+  def testEqualDictOfSameMembers(self):
+    self.assertTrue(self.ens == self.ATTRS)
+    self.assertFalse(self.ens != self.ATTRS)
+    self.assertTrue(self.ATTRS == self.ens)
+    self.assertFalse(self.ATTRS != self.ens)
+
+
+  def testNotEqualDictOfDifferentMembers(self):
+    other = {'otherMember': 'a'}
+    self.assertTrue(self.ens != other)
+    self.assertFalse(self.ens == other)
+    self.assertTrue(other != self.ens)
+    self.assertFalse(other == self.ens)
 
 
 class GivenEmptyEns(GivenEnsBase):

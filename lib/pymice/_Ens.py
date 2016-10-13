@@ -139,6 +139,12 @@ class Ens(object):
   def __delitem__(self, key):
     raise Ens.ReadOnlyError
 
+  def __eq__(self, other):
+    return Ens._dict(self) == other
+
+  def __ne__(self, other):
+    return not Ens.__eq__(self, other)
+
   def __repr__(self):
     return 'Ens({{{}}})'.format(', '.join(Ens.__reprAttrs(self)))
 
