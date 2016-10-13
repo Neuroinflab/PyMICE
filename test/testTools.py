@@ -44,7 +44,13 @@ class TestGroupBy(unittest.TestCase):
     self.assertEqual({2: [(0, 2), (1, 1), (1, 1)],
                       3: [(1, 2), (2, 1), (3, 0)]},
                      groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
-                             getKey=lambda x: x[0] + x[1]))
+                             lambda x: x[0] + x[1]))
+
+  def testGivenTypeAsKeyFunctionGroupsByItsResult(self):
+    self.assertEqual({'2': [2, 2],
+                      '3': [3]},
+                     groupBy([2, 3, 2],
+                             getKey=str))
 
   def testGivenNoObjectsReturnsEmptyDict(self):
     self.assertEqual({},
