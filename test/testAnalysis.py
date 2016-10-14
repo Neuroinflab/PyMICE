@@ -12,46 +12,9 @@ from pymice._Ens import Ens
 
 class TestGivenAnalyser(TestCase):
   DATA = [1, 2, 3]
-  RESULTS = {'min': 1,
-             'max': 3,
-             'span': 2}
-
-  def min(self, objects):
-    return min(objects)
-
-  def max(self, objects):
-    return max(objects)
-
-  def span(self, result, objects):
-    return result.max - result.min
-
-  def setUp(self):
-    self.analyser = Analyser(**{name: getattr(self, name)
-                                for name in self.RESULTS})
-
-  def testResultHasAllAnalyses(self):
-    self.checkResult(self.RESULTS,
-                     self.analyser(self.DATA))
-
-  def testResultIsEns(self):
-    self.assertIsInstance(self.analyser(self.DATA),
-                          Ens)
-
-  def testResultHasNoExtraAttributes(self):
-    result = self.analyser(self.DATA)
-    self.assertEqual(sorted(self.RESULTS),
-                     sorted(dir(result)))
-
-  def checkResult(self, expected, result):
-    for name, value in expected.items():
-      self.assertEqual(value,
-                       getattr(result, name))
-
-
-class TestAnalyserLaziness(TestGivenAnalyser):
-  def setUp(self):
-    self.callCounter = Counter()
-    super(TestAnalyserLaziness, self).setUp()
+  RESULT = {'min': 1,
+            'max': 3,
+            'span': 2}
 
   def min(self, objects):
     self.callCounter['min'] += 1
@@ -65,10 +28,49 @@ class TestAnalyserLaziness(TestGivenAnalyser):
     self.callCounter['span'] += 1
     return result.max - result.min
 
+  def setUp(self):
+    self.callCounter = Counter()
+    self.analyser = Analyser(**{name: getattr(self, name)
+                                for name in self.RESULT})
+
+  def testResultHasAllAnalyses(self):
+    self.assertEqual(self.RESULT,
+                     self.analyser(self.DATA))
+
+  def testResultIsEns(self):
+    self.assertIsInstance(self.analyser(self.DATA),
+                          Ens)
+
   def testEveryAnalyserCalledOnce(self):
-    self.analyser([1])
-    for name in self.RESULTS:
-      self.assertEqual(1, self.callCounter[name], name)
+    self.analyser(self.DATA)
+    for name in self.RESULT:
+      self.checkCalledOnce(name)
+
+  def checkCalledOnce(self, name):
+    self.assertEqual(1, self.numberOfCallsTo(name), name)
+
+  def numberOfCallsTo(self, name):
+    return self.callCounter[name]
+
+
+class TestGivenPreprocessingAnalyser(TestGivenAnalyser):
+  RESULT = {'min': 1,
+             'max': 9,
+             'span': 8}
+
+  def preprocess(self, objects):
+    self.callCounter['preprocess'] += 1
+    return [o ** 2 for o in objects]
+
+  def setUp(self):
+    self.callCounter = Counter()
+    self.analyser = Analyser(self.preprocess,
+                             **{name: getattr(self, name)
+                                for name in self.RESULT})
+
+  def testPreprocessorCalledOnce(self):
+    self.analyser(self.DATA)
+    self.checkCalledOnce('preprocess')
 
 
 class TestMisbehavingAnalyser(TestCase):
@@ -105,6 +107,7 @@ class TestMisbehavingAnalyser(TestCase):
     else:
       self.fail('No exception raised')
 
+
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):
     self.checkIsSubclass(Analyser.Result.CircularDependencyError,
@@ -121,23 +124,46 @@ class TestAnalyser(BaseTest):
 
 class TestAnalysis(TestGivenAnalyser):
   class AnalysisClass(Analysis):
+    def __init__(self):
+      self.callCounter = Counter()
+      super(TestAnalysis.AnalysisClass, self).__init__()
+
     @Analysis.report
     def max(self, data):
+      self.callCounter['max'] += 1
       return max(data)
 
     @Analysis.report
     def min(self, data):
+      self.callCounter['min'] += 1
       return min(data)
 
     @Analysis.report
     def span(self, results, data):
+      self.callCounter['span'] += 1
       return results.max - results.min
 
   def setUp(self):
     self.analyser = self.AnalysisClass()
+
+  def numberOfCallsTo(self, name):
+    return self.analyser.callCounter[name]
 
   def testIsAnalyser(self):
     self.assertIsInstance(self.analyser,
                           Analyser)
 
 
+class TestAnalysisWithPreprocessor(TestAnalysis):
+  RESULT = {'min': 1,
+            'max': 9,
+            'span': 8}
+
+  class AnalysisClass(TestAnalysis.AnalysisClass):
+    def preprocess(self, data):
+      self.callCounter['preprocess'] += 1
+      return [x ** 2 for x in data]
+
+  def testPreprocessorCalledOnce(self):
+    self.analyser(self.DATA)
+    self.checkCalledOnce('preprocess')
