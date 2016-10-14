@@ -114,3 +114,28 @@ class Aggregator(object):
                    groupBy(sequence,
                            getKey=self.__getKey,
                            requiredKeys=self.__requiredKeys))
+
+  def __get__(self, instance, owner):
+    return self.__class__(getKey=self.__getKeyForDescriptor(instance, owner),
+                          requiredKeys=self.__requiredKeys,
+                          aggregateFunction=self.__aggregateFunctionForDescriptor(instance, owner))
+
+  def __aggregateFunctionForDescriptor(self, instance, owner):
+    try:
+      return self.__aggregateFunctionMethod.__get__(instance, owner)
+
+    except AttributeError:
+      return self.__aggregateFunction
+
+  def __getKeyForDescriptor(self, instance, owner):
+    try:
+      return self.__getKeyMethod.__get__(instance, owner)
+
+    except AttributeError:
+      return self.__getKey
+
+  def getKey(self, f):
+    self.__getKeyMethod = f
+
+  def aggregateFunction(self, f):
+    self.__aggregateFunctionMethod = f

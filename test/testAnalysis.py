@@ -125,11 +125,9 @@ class TestAnalysis(TestGivenAnalyser):
                           Analyser)
 
 
-
-
-class TestAggregator(TestCase):
+class TestAggregatorBase(TestCase):
   def setUp(self):
-    self.aggregator = Aggregator(**self.getAttributeOrSkipTheTest('AGGREGATOR_PARAMETERS'))
+    self.getAttributeOrSkipTheTest('aggregator')
 
   def getAttributeOrSkipTheTest(self, name):
     try:
@@ -146,25 +144,68 @@ class TestAggregator(TestCase):
     self.assertEqual(self.getAttributeOrSkipTheTest('NUMBER_SEQUENCE_RESULT'),
                      self.aggregator([2, 1, 2]))
 
-class GivenAggregateWithNoArguments(TestAggregator):
+
+class TestGivenAggregator(TestAggregatorBase):
+  def setUp(self):
+    self.aggregator = Aggregator(**self.getAttributeOrSkipTheTest('AGGREGATOR_PARAMETERS'))
+
+
+class GivenAggregateWithNoArguments(TestGivenAggregator):
   AGGREGATOR_PARAMETERS = {}
   EMPTY_SEQUENCE_RESULT = Ens()
   NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2]})
 
-class GivenAggregateWithFunctionGetKey(GivenAggregateWithNoArguments):
+
+class GivenAggregateWithCallableGetKey(GivenAggregateWithNoArguments):
   AGGREGATOR_PARAMETERS = {'getKey': str}
   NUMBER_SEQUENCE_RESULT = Ens({'1': [1], '2': [2, 2]})
+
 
 class GivenAggregateWithStringGetKey(GivenAggregateWithNoArguments):
   AGGREGATOR_PARAMETERS = {'getKey': '__class__.__name__'}
   NUMBER_SEQUENCE_RESULT = Ens({'int': [2, 1, 2]})
 
-class GivenAggregateWithAggregateFunction(GivenAggregateWithNoArguments):
-  AGGREGATOR_PARAMETERS = {'aggregateFunction': len}
-  NUMBER_SEQUENCE_RESULT = Ens({1: 1, 2: 2})
 
-class GivenAggregateWithRequiredKeys(TestAggregator):
+class GivenAggregateWithAggregateFunction(GivenAggregateWithNoArguments):
+  AGGREGATOR_PARAMETERS = {'aggregateFunction': sum}
+  NUMBER_SEQUENCE_RESULT = Ens({1: 1, 2: 4})
+
+
+class GivenAggregateWithRequiredKeys(TestGivenAggregator):
   AGGREGATOR_PARAMETERS = {'requiredKeys': ['a', 'b']}
   EMPTY_SEQUENCE_RESULT = Ens(a=[], b=[])
   NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2], 'a': [], 'b': []})
 
+
+class GivenEmptyAggregatorAsClassAttribute(TestAggregatorBase):
+  aggregator = Aggregator()
+  EMPTY_SEQUENCE_RESULT = Ens()
+  NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2]})
+
+
+class GivenAggregatorExtendedWithDecoratorGetKey(GivenEmptyAggregatorAsClassAttribute):
+  aggregator = Aggregator()
+  NUMBER_SEQUENCE_RESULT = Ens({'1': [1], '2': [2, 2]})
+
+  toStr = str
+
+  @aggregator.getKey
+  def getKey(self, obj):
+    return self.toStr(obj)
+
+
+class GivenAggregatorExtendedWithDecoratorAggregateFunction(GivenEmptyAggregatorAsClassAttribute):
+  aggregator = Aggregator()
+  NUMBER_SEQUENCE_RESULT = Ens({1: 1, 2: 4})
+
+  process = sum
+
+  @aggregator.aggregateFunction
+  def aggregateFunction(self, obj):
+    return self.process(obj)
+
+
+class GivenAggregatorWithRequiredKeysAsClassAttribute(TestAggregatorBase):
+  aggregator = Aggregator(requiredKeys=['a', 'b'])
+  EMPTY_SEQUENCE_RESULT = Ens(a=[], b=[])
+  NUMBER_SEQUENCE_RESULT = Ens({1: [1], 2: [2, 2], 'a': [], 'b': []})
