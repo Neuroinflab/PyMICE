@@ -24,6 +24,7 @@
 
 from ._Ens import Ens
 from ._Tools import groupBy
+import sys
 
 class Analyser(object):
   class Result(object):
@@ -80,7 +81,13 @@ class Analyser(object):
         return analyser(self._data)
 
       except TypeError:
+        if self.__exceptionNotInScope():
+          raise
+
         return analyser(self, self._data)
+
+    def __exceptionNotInScope(self):
+      return sys.exc_info()[2].tb_next is not None
 
   def __init__(self, **analysers):
     self.__analysers = analysers

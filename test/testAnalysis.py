@@ -51,16 +51,19 @@ class TestGivenAnalyser(TestCase):
 class TestAnalyserLaziness(TestGivenAnalyser):
   def setUp(self):
     self.callCounter = Counter()
-    self.analyser = Analyser(**{name: self.getMock(getattr(self, name))
-                                for name in self.RESULTS})
+    super(TestAnalyserLaziness, self).setUp()
 
-  def getMock(self, analyser):
-    def increaseCallCounterAfterSuccessfulCall(*args):
-      result = analyser(*args)
-      self.callCounter[analyser.__name__] += 1
-      return result
+  def min(self, objects):
+    self.callCounter['min'] += 1
+    return min(objects)
 
-    return increaseCallCounterAfterSuccessfulCall
+  def max(self, objects):
+    self.callCounter['max'] += 1
+    return max(objects)
+
+  def span(self, result, objects):
+    self.callCounter['span'] += 1
+    return result.max - result.min
 
   def testEveryAnalyserCalledOnce(self):
     self.analyser([1])
@@ -88,6 +91,19 @@ class TestMisbehavingAnalyser(TestCase):
     with self.assertRaises(Analyser.Result.ReadOnlyError):
       analyser([])
 
+  def testAnalyserRaisingTypeError(self):
+    def misbehave(arg):
+      raise TypeError('misbehave')
+
+    analyser = Analyser(misbehave=misbehave)
+    try:
+      analyser([])
+
+    except TypeError as e:
+      self.assertEqual('misbehave', e.args[0])
+
+    else:
+      self.fail('No exception raised')
 
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):
