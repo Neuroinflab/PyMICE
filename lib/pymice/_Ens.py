@@ -108,11 +108,7 @@ class Ens(object):
     attributeDict[name] = value
 
   def __getattribute__(self, name):
-    try:
-      return Ens._dict(self)[name]
-
-    except KeyError:
-      raise Ens.UndefinedAttributeError
+    return Ens._tryAccessMember(self, name, Ens.UndefinedAttributeError)
 
   def __setattr__(self, name, value):
     raise Ens.ReadOnlyError
@@ -127,11 +123,14 @@ class Ens(object):
     return iter(Ens._dict(self))
 
   def __getitem__(self, key):
+    return Ens._tryAccessMember(self, key, Ens.UndefinedKeyError)
+
+  def _tryAccessMember(self, name, errorClass):
     try:
-      return Ens._dict(self)[key]
+      return Ens._dict(self)[name]
 
     except KeyError:
-      raise Ens.UndefinedKeyError
+      raise errorClass(name)
 
   def __setitem__(self, key, value):
     raise Ens.ReadOnlyError

@@ -119,9 +119,25 @@ class GivenEmptyEns(GivenEnsBase):
     with self.assertRaises(Ens.UndefinedAttributeError):
       self.ens.anyAttr
 
+  def testUndefinedAttributeErrorContainsNameOfAttribute(self):
+    try:
+      self.ens.anyAttr
+
+    except Ens.UndefinedAttributeError as e:
+      self.assertEqual('anyAttr',
+                       e.args[0])
+
   def testRaisesUndefinedKeyErrorWhenItemAccessed(self):
     with self.assertRaises(Ens.UndefinedKeyError):
       self.ens["anyAttr"]
+
+  def testUndefinedKeyErrorContainsNameOfKey(self):
+    try:
+      self.ens['anyAttr']
+
+    except Ens.UndefinedKeyError as e:
+      self.assertEqual('anyAttr',
+                       e.args[0])
 
   def testDoesNotContainAnyItem(self):
     self.assertNotIn('anyAttr', self.ens)
