@@ -167,3 +167,4 @@ class TestAnalysisWithPreprocessor(TestAnalysis):
   def testPreprocessorCalledOnce(self):
     self.analyser(self.DATA)
     self.checkCalledOnce('preprocess')
+

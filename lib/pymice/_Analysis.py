@@ -116,6 +116,7 @@ class Analysis(Analyser):
     else:
       super(Analysis, self).__init__(preprocessor, **analysers)
 
+
 class Aggregator(object):
   def __init__(self, getKey=lambda x: x, aggregateFunction=lambda x: x, requiredKeys=()):
     self.__getKey = getKey
@@ -152,3 +153,4 @@ class Aggregator(object):
 
   def aggregateFunction(self, f):
     self.__aggregateFunctionMethod = f
+
