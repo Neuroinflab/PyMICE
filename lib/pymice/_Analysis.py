@@ -89,12 +89,17 @@ class Analyser(object):
     def __exceptionNotInScope(self):
       return sys.exc_info()[2].tb_next is not None
 
-  def __init__(self, preprocessor=lambda x: x, **analysers):
-    self.__preprocessor = preprocessor
+  def __init__(self, preprocessor=None, **analysers):
+    if preprocessor is not None:
+      self.preprocess = preprocessor
+
     self.__analysers = analysers
 
+  def preprocess(self, data):
+    return data
+
   def __call__(self, objects):
-    results = self.Result(self.__preprocessor(objects),
+    results = self.Result(self.preprocess(objects),
                           self.__analysers)
     return Ens({name: getattr(results, name)
                 for name in self.__analysers})
@@ -109,12 +114,7 @@ class Analysis(Analyser):
   def __init__(self):
     members = {name: getattr(self, name) for name in dir(self)}
     analysers = {name: f for name, f in members.items() if getattr(f, '_report', False)}
-    try:
-      preprocessor = self.preprocess
-    except AttributeError:
-      super(Analysis, self).__init__(**analysers)
-    else:
-      super(Analysis, self).__init__(preprocessor, **analysers)
+    super(Analysis, self).__init__(None, **analysers)
 
 
 class Aggregator(object):
