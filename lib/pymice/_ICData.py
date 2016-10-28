@@ -125,52 +125,52 @@ class Loader(Data):
                              'GroupName': 'Group',
                              'AnimalNotes': 'Notes',
                             },
-                 'IntelliCage/Visits': {#'AnimalTag': 'AnimalTag',
-                                        'Animal': 'AnimalTag',
-                                        'ID': 'VisitID',
-                                        #'VisitID': '_vid',
-                                        #'ModuleName': 'Module',
-                                       },
-                 'IntelliCage/Nosepokes': {'LicksNumber': 'LickNumber',
-                                           'LicksDuration': 'LickDuration',
-                                           #'VisitID': '_vid',
-                                          },
-                 'IntelliCage/Log': {#'LogType': 'Type',
-                                     #'Log': 'Type',
-                                     #'LogCategory': 'Category',
-                                     #'LogNotes': 'Notes',
+                 'Visits': {#'AnimalTag': 'AnimalTag',
+                            'Animal': 'AnimalTag',
+                            'ID': 'VisitID',
+                            #'VisitID': '_vid',
+                            #'ModuleName': 'Module',
+                            },
+                 'Nosepokes': {'LicksNumber': 'LickNumber',
+                               'LicksDuration': 'LickDuration',
+                               #'VisitID': '_vid',
+                               },
+                 'Log': {#'LogType': 'Type',
+                         #'Log': 'Type',
+                         #'LogCategory': 'Category',
+                         #'LogNotes': 'Notes',
+                         },
+                 'HardwareEvents': {'HardwareType': 'Type',
                                     },
-                 'IntelliCage/HardwareEvents': {'HardwareType': 'Type',
-                                               },
                 }
   _convertZip = {'Animals': {#'Tag': int,
                             },
-                 'IntelliCage/Visits': {#'Tag': int,
-                                        #'_vid': int,
-                                        'Start': timeToList,
-                                        'End': timeToList,
-                                        'CornerCondition': convertFloat,
-                                        'PlaceError': convertFloat,
-                                        'AntennaDuration': convertFloat,
-                                        'PresenceDuration': convertFloat,
-                                       },
-                 'IntelliCage/Nosepokes': {#'_vid': int,
-                                           'Start': timeToList,
-                                           'End': timeToList,
-                                           'LickContactTime': convertFloat,
-                                           'LickDuration': convertFloat,
-                                           'SideCondition': convertFloat,
-                                           'SideError': convertFloat,
-                                           'TimeError': convertFloat,
-                                           'ConditionError': convertFloat,
-                                          },
-                 'IntelliCage/Log': {'DateTime': timeToList,
+                 'Visits': {#'Tag': int,
+                            #'_vid': int,
+                            'Start': timeToList,
+                            'End': timeToList,
+                            'CornerCondition': convertFloat,
+                            'PlaceError': convertFloat,
+                            'AntennaDuration': convertFloat,
+                            'PresenceDuration': convertFloat,
+                            },
+                 'Nosepokes': {#'_vid': int,
+                               'Start': timeToList,
+                               'End': timeToList,
+                               'LickContactTime': convertFloat,
+                               'LickDuration': convertFloat,
+                               'SideCondition': convertFloat,
+                               'SideError': convertFloat,
+                               'TimeError': convertFloat,
+                               'ConditionError': convertFloat,
+                               },
+                 'Log': {'DateTime': timeToList,
+                         },
+                 'Environment': {'DateTime': timeToList,
+                                 'Temperature': convertFloat,
+                                 },
+                 'HardwareEvents': {'DateTime': timeToList,
                                     },
-                 'IntelliCage/Environment': {'DateTime': timeToList,
-                                             'Temperature': convertFloat,
-                                            },
-                 'IntelliCage/HardwareEvents': {'DateTime': timeToList,
-                                               },
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
@@ -281,7 +281,7 @@ class Loader(Data):
 
     timeOrderer = LatticeOrderer()
 
-    visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
+    visits = self._fromZipCSV(zf, 'Visits', source=source)
     vids = visits['VisitID']
 
     if sessions is not None:
@@ -304,7 +304,7 @@ class Loader(Data):
 
     nosepokes = None
     if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
+      nosepokes = self._fromZipCSV(zf, 'Nosepokes', source=source)
 
       npVids = nosepokes['VisitID']
 
@@ -345,7 +345,7 @@ class Loader(Data):
 
     log = None
     if self._getLog:
-      log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
+      log = self._fromZipCSV(zf, 'Log', source=source)
       if sessions is not None:
         timeOrderer.addOrderedSequence(log['DateTime'])
 
@@ -354,7 +354,7 @@ class Loader(Data):
 
     environment = None
     if self._getEnv:
-      environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
+      environment = self._fromZipCSV(zf, 'Environment', source=source)
       if environment is not None:
         if sessions is not None:
           # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
@@ -368,7 +368,7 @@ class Loader(Data):
 
     hardware = None
     if self._getHw:
-      hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
+      hardware = self._fromZipCSV(zf, 'HardwareEvents', source=source)
       if hardware is not None:
         if sessions is not None:
           timeOrderer.addOrderedSequence(hardware['DateTime'])
@@ -418,19 +418,24 @@ class Loader(Data):
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     try:
       fh = zf.open(path + '.txt')
-      if sys.version_info >= (3, 0):
-        # if sys.version_info < (3, 2):
-        #   # XXX: Python3 monkey-path
-        #   fh.readable = lambda: True
-        #   fh.writable = lambda: False
-        #   fh.seekable = lambda: False
-        #   fh.read1 = items_file.read
-        #   #io.BytesIO(fh.read())
-
-        fh = io.TextIOWrapper(fh)
 
     except KeyError:
-      return
+      try:
+        fh = zf.open('IntelliCage/' + path + '.txt')
+
+      except KeyError:
+        return None
+
+    if sys.version_info >= (3, 0):
+      # if sys.version_info < (3, 2):
+      #   # XXX: Python3 monkey-path
+      #   fh.readable = lambda: True
+      #   fh.writable = lambda: False
+      #   fh.seekable = lambda: False
+      #   fh.read1 = items_file.read
+      #   #io.BytesIO(fh.read())
+
+      fh = io.TextIOWrapper(fh)
 
     return self._fromCSV(fh, source=source,
                          aliases=self._aliasesZip.get(path),
