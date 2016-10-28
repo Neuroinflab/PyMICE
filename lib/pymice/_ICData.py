@@ -235,7 +235,7 @@ class Loader(Data):
     tagToAnimal = dict(self._loadAnimals(zf))
 
     try:
-      fh = zf.open('Sessions.xml')
+      fh = self._openZipFile(zf, 'Sessions.xml')
       dom = minidom.parse(fh)
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
       ss = aos.getElementsByTagName('Session')
@@ -354,8 +354,13 @@ class Loader(Data):
 
     environment = None
     if self._getEnv:
-      environment = self._fromZipCSV(zf, 'Environment', source=source)
-      if environment is not None:
+      try:
+        environment = self._fromZipCSV(zf, 'Environment', source=source)
+
+      except KeyError:
+        pass
+
+      else:
         if sessions is not None:
           # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
           #   ee._type = 'e.DateTime'
@@ -368,8 +373,13 @@ class Loader(Data):
 
     hardware = None
     if self._getHw:
-      hardware = self._fromZipCSV(zf, 'HardwareEvents', source=source)
-      if hardware is not None:
+      try:
+        hardware = self._fromZipCSV(zf, 'HardwareEvents', source=source)
+
+      except KeyError:
+        pass
+
+      else:
         if sessions is not None:
           timeOrderer.addOrderedSequence(hardware['DateTime'])
 
@@ -416,15 +426,19 @@ class Loader(Data):
     table[field] = [datetime(*x) for x in table[field]]
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
+    return self._fromCSV(self._openZipFile(zf, path + '.txt'),
+                         source=source,
+                         aliases=self._aliasesZip.get(path),
+                         convert=self._convertZip.get(path),
+                         oldLabels=oldLabels)
+
+  @staticmethod
+  def _openZipFile(zf, path):
     try:
-      fh = zf.open(path + '.txt')
+      fh = zf.open(path)
 
     except KeyError:
-      try:
-        fh = zf.open('IntelliCage/' + path + '.txt')
-
-      except KeyError:
-        return None
+      fh = zf.open('IntelliCage/' + path)
 
     if sys.version_info >= (3, 0):
       # if sys.version_info < (3, 2):
@@ -434,13 +448,9 @@ class Loader(Data):
       #   fh.seekable = lambda: False
       #   fh.read1 = items_file.read
       #   #io.BytesIO(fh.read())
+      return io.TextIOWrapper(fh)
 
-      fh = io.TextIOWrapper(fh)
-
-    return self._fromCSV(fh, source=source,
-                         aliases=self._aliasesZip.get(path),
-                         convert=self._convertZip.get(path),
-                         oldLabels=oldLabels)
+    return fh
 
   @staticmethod
   def _fromCSV(fname, source=None, aliases=None, convert=None, oldLabels=None):
