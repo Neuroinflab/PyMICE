@@ -193,7 +193,11 @@ class PathZipFile(object):
 
   def open(self, name, mode='r'):
     fn = os.path.join(self.__path, name)
-    return open(fn, mode)
+    try:
+      return open(fn, mode)
+
+    except IOError:
+      raise KeyError(name)
 
 
 
