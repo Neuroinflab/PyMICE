@@ -816,6 +816,7 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Minnie')])
 
+
 class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
   def loadData(self, dataDir):
     return pm.Loader(os.path.join(dataDir, 'legacy_data_nosubdir.zip'))
