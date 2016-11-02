@@ -812,9 +812,14 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
                                                             order='Start')])
 
   def testGetOneMouseVisitsStartTimezones_fromDoctests(self):
-    starts = [datetime(2012, 12, 18, 12, 30, 2, 360000, utc),]
+    starts = [datetime(2012, 12, 18, 12, 30, 2, 360000, timezone('Etc/GMT-1')),]
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Minnie')])
+
+
+class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
+  def loadData(self, dataDir):
+    return pm.Loader(os.path.join(dataDir, 'legacy_data_nosubdir.zip'))
 
 
 class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
