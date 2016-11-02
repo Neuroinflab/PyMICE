@@ -124,10 +124,17 @@ class Aggregator(object):
     self.__aggregateFunction = aggregateFunction
 
   def __call__(self, sequence):
-    return Ens.map(self.__aggregateFunction,
+    aggregateFunction = self.__aggregateFunction
+    getKey = self.__getKey
+    requiredKeys = self.__requiredKeys
+    return self.aggregate(sequence, getKey, aggregateFunction, requiredKeys)
+
+  @staticmethod
+  def aggregate(sequence, getKey=lambda x: x, aggregateFunction=lambda x: x, requiredKeys=()):
+    return Ens.map(aggregateFunction,
                    groupBy(sequence,
-                           getKey=self.__getKey,
-                           requiredKeys=self.__requiredKeys))
+                           getKey=getKey,
+                           requiredKeys=requiredKeys))
 
   def __get__(self, instance, owner):
     return self.__class__(getKey=self.__getKeyForDescriptor(instance, owner),

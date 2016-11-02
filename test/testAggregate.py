@@ -16,12 +16,31 @@ class TestAggregatorBase(TestCase):
       self.skipTest('{} sttribute required for test missing'.format(name))
 
   def testEmptySequence(self):
-    self.assertEqual(self.getAttributeOrSkipTheTest('EMPTY_SEQUENCE_RESULT'),
-                     self.aggregator([]))
+    self.checkAggregationResult('EMPTY_SEQUENCE_RESULT', [])
 
   def testNumberSequence(self):
-    self.assertEqual(self.getAttributeOrSkipTheTest('NUMBER_SEQUENCE_RESULT'),
-                     self.aggregator([2, 1, 2]))
+    self.checkAggregationResult('NUMBER_SEQUENCE_RESULT', [2, 1, 2])
+
+  def checkAggregationResult(self, resultAttribute, sequence):
+    result = self.getAttributeOrSkipTheTest(resultAttribute)
+    self.checkAggregator(result, sequence)
+    self.checkAggregateStaticMethod(result, sequence)
+
+  def checkAggregateStaticMethod(self, result, sequence):
+    try:
+      params = self.AGGREGATOR_PARAMETERS
+
+    except AttributeError:
+      pass
+
+    else:
+      self.assertEqual(result,
+                       Aggregator.aggregate(sequence,
+                                            **params))
+
+  def checkAggregator(self, result, sequence):
+    self.assertEqual(result,
+                     self.aggregator(sequence))
 
 
 class TestGivenAggregator(TestAggregatorBase):
