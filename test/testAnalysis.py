@@ -7,7 +7,7 @@ except (ImportError, SystemError):
 
 from collections import Counter
 
-from pymice._Analysis import Analyser, Analysis
+from pymice._Analysis import Analyser, Analysis, histogram
 from pymice._Ens import Ens
 
 class TestGivenAnalyser(TestCase):
@@ -167,4 +167,51 @@ class TestAnalysisWithPreprocessor(TestAnalysis):
   def testPreprocessorCalledOnce(self):
     self.analyser(self.DATA)
     self.checkCalledOnce('preprocess')
+
+
+class TestHistogram(TestCase):
+  def testEmptyOneBinHistogram(self):
+    self.checkHistogram([0],
+                        [], [0, 1])
+
+  def testOneElementOneBinHistogram(self):
+    self.checkHistogram([1],
+                        [0.5], [0, 1])
+
+  def testOneElementAtLowerBoundaryOfOneBinHistogram(self):
+    self.checkHistogram([1],
+                        [0], [0, 1])
+
+  def testOneElementBelowLowerBoundaryOfOneBinHistogram(self):
+    self.checkHistogram([0],
+                        [-1], [0, 1])
+
+  def testOneElementAtUpperBoundaryOfOneBinHistogram(self):
+    self.checkHistogram([0],
+                        [1], [0, 1])
+
+  def testOneElementOverUpperBoundaryOfOneBinHistogram(self):
+    self.checkHistogram([0],
+                        [2], [0, 1])
+
+  def testOneElementTwoBinHistogram(self):
+    self.checkHistogram([0, 1],
+                        [1.5], [0, 1, 2])
+
+  def testTwoElementsTwoBinHistogram(self):
+    self.checkHistogram([1, 1],
+                        [0.5, 1], [0, 1, 2])
+
+  def testNonNumericElements(self):
+    self.checkHistogram([1, 2, 3, 0],
+                        ['auto', 'bus', 'b', 'car', 'dupa', 'ciasto', 'cent'],
+                        ['a', 'b', 'c', 'cz', 'd'])
+
+  def testUnorderedBinsRaiseValueError(self):
+    with self.assertRaises(ValueError):
+      histogram([], bins=[1, 3, 2])
+
+  def checkHistogram(self, result, values, bins):
+    self.assertEqual(result,
+                     histogram(values, bins=bins))
 

@@ -161,3 +161,31 @@ class Aggregator(object):
   def aggregateFunction(self, f):
     self.__aggregateFunctionMethod = f
 
+
+def histogram(values, bins):
+  for a, b in zip(bins[:-1], bins[1:]):
+    if a > b:
+      raise ValueError
+
+  result = [0] * (len(bins) - 1)
+  for v in values:
+    _insertElement(result, v, bins)
+  return result
+
+
+def _insertElement(result, element, bins):
+  bottom = 0
+  top = len(result)
+  if bins[bottom] <= element < bins[top]:
+    while top - bottom > 1:
+      middle = (bottom + top) // 2
+      if element < bins[middle]:
+        top = middle
+      else:
+        bottom = middle
+
+    result[bottom] += 1
+  # for i, (bottom, top) in enumerate(zip(bins[:-1], bins[1:])):
+  #   if bottom <= element < top:
+  #     result[i] += 1
+  #     break
