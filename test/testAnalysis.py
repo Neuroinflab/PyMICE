@@ -55,8 +55,8 @@ class TestGivenAnalyser(TestCase):
 
 class TestGivenPreprocessingAnalyser(TestGivenAnalyser):
   RESULT = {'min': 1,
-             'max': 9,
-             'span': 8}
+            'max': 9,
+            'span': 8}
 
   def preprocess(self, objects):
     self.callCounter['preprocess'] += 1
