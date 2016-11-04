@@ -107,6 +107,17 @@ class TestMisbehavingAnalyser(TestCase):
     else:
       self.fail('No exception raised')
 
+  def testUnknownDependencyErrorContainsDependencyName(self):
+    analyser = Analyser(res=lambda x, y: x.unknown)
+    try:
+      analyser([])
+
+    except Analyser.Result.UnknownDependencyError as e:
+      self.assertEqual('unknown', e.args[0])
+
+    else:
+      self.fail('No exception raised')
+
 
 class TestAnalyser(BaseTest):
   def testCircularDependencyErrorIsRuntimeError(self):

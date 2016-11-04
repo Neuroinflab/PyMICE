@@ -74,7 +74,7 @@ class Analyser(object):
         return self._analysers[item]
 
       except KeyError:
-        raise self.UnknownDependencyError
+        raise self.UnknownDependencyError(item)
 
     def __callAnalyser(self, analyser):
       try:
