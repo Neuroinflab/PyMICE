@@ -158,7 +158,8 @@ def timeToList(tStr):
   tokens = date.split('-') + time.split(':')
 
   if len(tokens) == 5:
-    return map(int, tokens) + [0, 0]
+    #return map(int, tokens) + [0, 0]
+    return LatticeOrderer.Node(map(int, tokens + [0, 0]))
 
   decimal, seconds = modf(float(tokens[5]))
   #return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])

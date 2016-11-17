@@ -759,9 +759,11 @@ class MergerOnLoadedHw(MergerTest):
 
 class LoaderIntegrationTest(BaseTest, MockNodesProvider):
   def setUp(self):
-    self.data = self.loadData(
-      os.path.abspath(os.path.join(os.path.dirname(__file__), 'data')))
+    self.data = self.loadData(self.dataDir())
     self.runSetUpChain()
+
+  def dataDir(self):
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
   def loadData(self, dataDir):
     pass
@@ -786,6 +788,7 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     self.assertEqual(reference, times)
     self.assertEqual([t.hour for t in reference],
                      [t.hour for t in times])
+
 
 class LoadLegacyDataTest(LoaderIntegrationTest):
   def loadData(self, dataDir):
@@ -815,6 +818,10 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
     starts = [datetime(2012, 12, 18, 12, 30, 2, 360000, timezone('Etc/GMT-1')),]
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Minnie')])
+
+  def testEnvDataCanBeLoaded(self):
+    pm.Loader(os.path.join(self.dataDir(), 'legacy_data.zip'),
+              getEnv=True)
 
 
 class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):

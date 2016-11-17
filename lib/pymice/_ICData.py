@@ -1103,7 +1103,7 @@ class ZipLoader(object):
     return EnvironmentalConditions(DateTime,
                                    float(Temperature),
                                    int(Illumination),
-                                   self.__cageManager[Cage],
+                                   self.__cageManager[Cage] if Cage is not None else None,
                                    self.__source, _line)
 
   def loadEnv(self, columns):
@@ -1148,5 +1148,5 @@ class ZipLoader(object):
                                    self.__makeHw)
 
   def _getColumnValues(self, columnNames, columns):
-    return [columns.get(c) for c in columnNames] + [count(1)]
+    return [columns.get(c, repeat(None)) for c in columnNames] + [count(1)]
 
