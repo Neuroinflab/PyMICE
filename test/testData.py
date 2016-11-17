@@ -758,20 +758,29 @@ class MergerOnLoadedHw(MergerTest):
 
 
 class LoaderIntegrationTest(BaseTest, MockNodesProvider):
+  LOADER_FLAGS = {}
+
   def setUp(self):
-    self.data = self.loadData(self.dataDir())
-    self.runSetUpChain()
+    try:
+      self.data = self.loadData()
+
+    except AttributeError:
+      self.skipTest("No data filename")
+
+    else:
+      self.runSetUpChain()
+
+  def loadData(self):
+    return pm.Loader(self.dataPath(),
+                     **self.LOADER_FLAGS)
+
+  def dataPath(self):
+    return os.path.join(self.dataDir(), self.DATA_FILE)
 
   def dataDir(self):
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
-  def loadData(self, dataDir):
-    pass
-
   def testDataAreFrozen(self):
-    if self.data is None:
-      return
-
     with self.assertRaises(Data.UnableToInsertIntoFrozen):
       self.data.insertVisits(self.getMockNodeList('Visit', 2))
 
@@ -791,8 +800,7 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
 
 
 class LoadLegacyDataTest(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'legacy_data.zip'))
+  DATA_FILE = 'legacy_data.zip'
 
   def testGetStartOrderedVisits_fromDoctests(self):
     self.assertEqual([4, 1, 2],
@@ -819,20 +827,19 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Minnie')])
 
-  def testEnvDataCanBeLoaded(self):
-    pm.Loader(os.path.join(self.dataDir(), 'legacy_data.zip'),
-              getEnv=True)
+
+class GivenLegacyDataLoadedWithEnvData(LoadLegacyDataTest):
+  LOADER_FLAGS = {'getEnv': True}
 
 
 class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'legacy_data_nosubdir.zip'))
+  DATA_FILE = 'legacy_data_nosubdir.zip'
 
 
 class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'icp3_data.zip'),
-                     getLog=True, getEnv=True)
+  DATA_FILE = 'icp3_data.zip'
+  LOADER_FLAGS = {'getLog': True,
+                  'getEnv': True}
 
   def testGetStartOrderedVisits_fromDoctests(self):
     self.assertEqual([1, 2, 3],
@@ -875,14 +882,13 @@ class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
 
 
 class LoadEmptyDataTest(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'empty_data.zip'))
+  DATA_FILE = 'empty_data.zip'
 
 
 class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'more_empty_data.zip'),
-                     getEnv=True, getHw=True)
+  DATA_FILE = 'more_empty_data.zip'
+  LOADER_FLAGS = {'getEnv': True,
+                  'getHw': True}
 
   def testGetEnvironmentReturnsEmptyList(self):
     self.assertEqual([],
@@ -894,15 +900,13 @@ class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegration
 
 
 class LoadRetaggedDataTest(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'retagged_data.zip'))
+  DATA_FILE = 'retagged_data.zip'
 
 
 @unittest.skip('Not implemented yet')
 class LoadAnalyserDataTest(LoaderIntegrationTest):
-  def loadData(self, dataDir):
-    return pm.Loader(os.path.join(dataDir, 'analyzer_data.txt'), getNpokes=True),
-
+  DATA_FILE = 'analyzer_data.txt'
+  LOADER_FLAGS = {'getNpokes': True}
 
 
 class DataTest(BaseTest, MockNodesProvider):
