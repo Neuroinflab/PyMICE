@@ -831,6 +831,10 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
 class GivenLegacyDataLoadedWithEnvData(LoadLegacyDataTest):
   LOADER_FLAGS = {'getEnv': True}
 
+  def testCanBeMerged(self):
+    pm.Merger(self.data,
+              **self.LOADER_FLAGS)
+
 
 class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
   DATA_FILE = 'legacy_data_nosubdir.zip'

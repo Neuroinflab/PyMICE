@@ -243,7 +243,7 @@ class EnvironmentalConditions(BaseNode):
     return self.__class__(self.__DateTime,
                           self.__Temperature,
                           self.__Illumination,
-                          cageManager[self.__Cage],
+                          cageManager[self.__Cage] if self.__Cage is not None else None,
                           sourceManager[self.___source],
                           self.___line)
 
