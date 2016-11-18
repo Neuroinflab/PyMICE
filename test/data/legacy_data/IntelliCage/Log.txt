@@ -1,3 +1,4 @@
 DateTime	Category	Type	Cage	Corner	Side	Notes
 2012-12-18 12:30:00.00	Info	Application				Session is started
+2012-12-18 12:30:15.00	Warning	Lickometer	0	0	0	Lickometer is active but nosepoke is inactive
 2012-12-18 12:42:28.51	Info	Application				Session is stopped

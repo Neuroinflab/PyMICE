@@ -138,6 +138,7 @@ class BaseTest(TestCase):
         self.checkAttribute(obj, *test)
 
   def checkAttributeSeq(self, seq, name, tests):
+    self.assertEqual(len(tests), len(seq))
     for obj, test in zip(seq, tests):
       if test is None:
         self.checkAttribute(obj, name)

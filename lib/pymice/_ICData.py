@@ -197,8 +197,8 @@ class Loader(Data):
     for key, value in kwargs.items():
       warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
 
-    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
-                  CageManager=ICCageManager)
+    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
+    self._setCageManager(ICCageManager())
     self.__verbose = verbose
 
     self._fnames = (fname,)
@@ -234,50 +234,7 @@ class Loader(Data):
   def _loadZip(self, zf, source=None):
     tagToAnimal = dict(self._loadAnimals(zf))
 
-    try:
-      fh = self._openZipFile(zf, 'Sessions.xml')
-      dom = minidom.parse(fh)
-      aos = dom.getElementsByTagName('ArrayOfSession')[0]
-      ss = aos.getElementsByTagName('Session')
-      sessions = []
-      for session in ss:
-        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
-        # offset = offset.childNodes[0]
-        # assert offset.nodeType == offset.TEXT_NODE
-        # offset = offset.nodeValue
-
-        interval = session.getElementsByTagName('Interval')[0]
-        start = interval.getElementsByTagName('Start')[0]
-        start = start.childNodes[0]
-        assert start.nodeType == start.TEXT_NODE
-        start = dateutil.parser.parse(start.nodeValue)
-
-        end = interval.getElementsByTagName('End')[0]
-        end = end.childNodes[0]
-        assert end.nodeType == end.TEXT_NODE
-        end = end.nodeValue
-        end = None if end.startswith('0001') else dateutil.parser.parse(end)
-
-        if end is not None and start.tzinfo != end.tzinfo:
-          warn.warn(UserWarning('Timezone changed!'))
-
-        for sessionStart, sessionEnd in sessions:
-          if sessionEnd is None:
-            continue
-
-          if sessionStart < start < sessionEnd or \
-                                  end is not None and sessionStart < end < sessionEnd or \
-                  (end is not None and start <= sessionStart and sessionEnd <= end) or \
-                  (end is not None and sessionStart <= start and end <= sessionEnd):
-            warn.warn(UserWarning('Temporal overlap of sessions!'))
-
-        sessions.append(Session(Start=start, End=end))
-
-      sessions = sorted(sessions, key=attrgetter('Start'))
-
-    except:
-      sessions = None
-      pass
+    sessions = self._extractSessions(zf)
 
     timeOrderer = LatticeOrderer()
 
@@ -397,7 +354,7 @@ class Loader(Data):
     self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
                                             log, environment, hardware)
 
-    loader = ZipLoader(source, self._cageManager, tagToAnimal)
+    loader = self._getZipLoader(zf, source, tagToAnimal)
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
     if log is not None:
@@ -408,6 +365,53 @@ class Loader(Data):
 
     if hardware is not None:
       self._insertNewHw(loader.loadHw(hardware))
+
+  def _extractSessions(self, zf):
+    try:
+      fh = self._openZipFile(zf, 'Sessions.xml')
+      dom = minidom.parse(fh)
+      aos = dom.getElementsByTagName('ArrayOfSession')[0]
+      ss = aos.getElementsByTagName('Session')
+      sessions = []
+      for session in ss:
+        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
+        # offset = offset.childNodes[0]
+        # assert offset.nodeType == offset.TEXT_NODE
+        # offset = offset.nodeValue
+
+        interval = session.getElementsByTagName('Interval')[0]
+        start = interval.getElementsByTagName('Start')[0]
+        start = start.childNodes[0]
+        assert start.nodeType == start.TEXT_NODE
+        start = dateutil.parser.parse(start.nodeValue)
+
+        end = interval.getElementsByTagName('End')[0]
+        end = end.childNodes[0]
+        assert end.nodeType == end.TEXT_NODE
+        end = end.nodeValue
+        end = None if end.startswith('0001') else dateutil.parser.parse(end)
+
+        if end is not None and start.tzinfo != end.tzinfo:
+          warn.warn(UserWarning('Timezone changed!'))
+
+        for sessionStart, sessionEnd in sessions:
+          if sessionEnd is None:
+            continue
+
+          if sessionStart < start < sessionEnd or \
+                                  end is not None and sessionStart < end < sessionEnd or \
+                  (end is not None and start <= sessionStart and sessionEnd <= end) or \
+                  (end is not None and sessionStart <= start and end <= sessionEnd):
+            warn.warn(UserWarning('Temporal overlap of sessions!'))
+
+        sessions.append(Session(Start=start, End=end))
+
+      sessions = sorted(sessions, key=attrgetter('Start'))
+
+    except:
+      sessions = None
+      pass
+    return sessions
 
   def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
                                          log, environment, hardware):
@@ -424,6 +428,21 @@ class Loader(Data):
 
   def __convertFieldToDatetime(self, field, table):
     table[field] = [datetime(*x) for x in table[field]]
+
+  def _getZipLoader(self, zf, source, tagToAnimal):
+    version = self._checkVersion(zf)
+    ZipLoader = ZipLoader_v_Version1 if version == 'version1' else ZipLoader_v_IntelliCage_Plus_3
+    loader = ZipLoader(source, self._cageManager, tagToAnimal)
+    return loader
+
+  def _checkVersion(self, zf):
+    fh = self._openZipFile(zf, 'DataDescriptor.xml')
+    dom = minidom.parse(fh)
+    dd = dom.getElementsByTagName('DataDescriptor')[0]
+    version = dd.getElementsByTagName('Version')[0]
+    versionStr = version.childNodes[0]
+    assert versionStr.nodeType == versionStr.TEXT_NODE
+    return versionStr.nodeValue.strip().lower()
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     return self._fromCSV(self._openZipFile(zf, path + '.txt'),
@@ -639,8 +658,8 @@ class Merger(Data):
       warn.warn("Unknown argument %s given for Merger constructor" % key,
                 stacklevel=2)
 
-    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
-                  CageManager=ICCageManager)
+    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
+    self._setCageManager(ICCageManager())
 
     self._dataSources = map(str, dataSources)
 
@@ -974,23 +993,23 @@ class ICCageManager(object):
       cage._del_()
 
 
-class ZipLoader(object):
+class ZipLoader_v_IntelliCage_Plus_3(object):
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
-    self.__cageManager = cageManager
-    self.__source = source
+    self._cageManager = cageManager
+    self._source = source
 
-  def __makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
-                CornerCondition, PlaceError,
-                AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-                VisitSolution, _line, nosepokeRows):
+  def _makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
+                 CornerCondition, PlaceError,
+                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
+                 VisitSolution, _line, nosepokeRows):
     animal = self.__animalManager[AnimalTag]
-    cage = self.__cageManager[Cage]
+    cage = self._cageManager[Cage]
     corner = cage[Corner]
 
     Nosepokes = None
     if nosepokeRows is not None:
-      Nosepokes = tuple(self.__makeNosepoke(corner, row)\
+      Nosepokes = tuple(self._makeNosepoke(corner, row)\
                         for row in sorted(nosepokeRows))
 
     return Visit(Start, corner, animal, End,
@@ -1001,12 +1020,12 @@ class ZipLoader(object):
                  int(AntennaNumber) if AntennaNumber is not None else None,
                  timedelta(seconds=float(AntennaDuration)) if AntennaDuration is not None else None,
                  int(PresenceNumber) if PresenceNumber is not None else None,
-                 timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None ,
+                 timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None,
                  int(VisitSolution) if VisitSolution is not None else None,
-                 self.__source, _line,
+                 self._source, _line,
                  Nosepokes)
 
-  def __makeNosepoke(self, sideManager, nosepokeTuple):
+  def _makeNosepoke(self, sideManager, nosepokeTuple):
     (Start, End, Side,
      SideCondition, SideError, TimeError, ConditionError,
      LickNumber, LickContactTime, LickDuration,
@@ -1026,12 +1045,12 @@ class ZipLoader(object):
                     int(LED1State) if LED1State is not None else None,
                     int(LED2State) if LED2State is not None else None,
                     int(LED3State) if LED3State is not None else None,
-                    self.__source, _line)
+                    self._source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
-      vNosepokes = self.__assignNosepokesToVisits(nosepokesCollumns,
-                                                  visitsCollumns['VisitID'])
+      vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
+                                                 visitsCollumns['VisitID'])
 
     else:
       vNosepokes = repeat(None)
@@ -1046,9 +1065,9 @@ class ZipLoader(object):
     vLines = count(1)
     vColValues.append(vLines)
     vColValues.append(vNosepokes)
-    return mapAsList(self.__makeVisit, *vColValues)
+    return mapAsList(self._makeVisit, *vColValues)
 
-  def __assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
+  def _assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
     vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
 
@@ -1071,82 +1090,132 @@ class ZipLoader(object):
 
     return vNosepokes
 
-  def __makeLog(self, DateTime, Category, Type,
-                Cage, Corner, Side, Notes, _line):
-    cage, corner, side = None, None, None
-    if Cage is not None:
-      cage = self.__cageManager[Cage]
-      if Corner is not None:
-        corner = cage[Corner]
-        if Side is not None:
-          side = corner[Side]
+  def _makeLog(self, DateTime, Category, Type,
+               Cage, Corner, Side, Notes, _line):
+    cage, corner, side = self._getLogCageCornerSide(Cage, Corner, Side)
 
     return LogEntry(DateTime, unicode(Category), unicode(Type),
                     cage, corner, side,
                     unicode(Notes) if Notes is not None else None,
-                    self.__source,
+                    self._source,
                     _line)
 
-  def loadLog(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime',
-                                    'LogCategory',
-                                    'LogType',
-                                    'Cage',
-                                    'Corner',
-                                    'Side',
-                                    'LogNotes'],
-                                   self.__makeLog)
+  def _getLogCageCornerSide(self, Cage, Corner, Side):
+    return self._getCageCornerSide(Cage, Corner, Side)
 
-  def __makeEnv(self, DateTime, Temperature, Illumination, Cage,
-                _line):
+  def loadLog(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'LogCategory',
+                                   'LogType',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'LogNotes'],
+                                  self._makeLog)
+
+  def _makeEnv(self, DateTime, Temperature, Illumination, Cage,
+               _line):
     return EnvironmentalConditions(DateTime,
                                    float(Temperature),
                                    int(Illumination),
-                                   self.__cageManager[Cage] if Cage is not None else None,
-                                   self.__source, _line)
+                                   self._cageManager[Cage] if Cage is not None else None,
+                                   self._source, _line)
 
   def loadEnv(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime', 'Temperature',
-                                    'Illumination', 'Cage'],
-                                   self.__makeEnv)
+    return self._columnsToObjects(columns,
+                                  ['DateTime', 'Temperature',
+                                   'Illumination', 'Cage'],
+                                  self._makeEnv)
 
-  def __columnsToObjects(self, columns, columnNames, objectFactory):
+  def _columnsToObjects(self, columns, columnNames, objectFactory):
     colValues = self._getColumnValues(columnNames, columns)
     return mapAsList(objectFactory, *colValues)
 
-  __hwClass = {'0': AirHardwareEvent,
-               '1': DoorHardwareEvent,
-               '2': LedHardwareEvent,
-               }
+  _hwClass = {'0': AirHardwareEvent,
+              '1': DoorHardwareEvent,
+              '2': LedHardwareEvent,
+              }
 
-  def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
-    corner, side = Corner, Side
-    cage = self.__cageManager[Cage]
-    if corner is not None:
-      corner = cage[corner]
-      if side is not None:
-        side = corner[Side]
+  def _makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
+    cage, corner, side = self._getHwCageCornerSide(Cage, Corner, Side)
 
     try:
-      return self.__hwClass[Type](DateTime, cage, corner, side,
-                                  int(State), self.__source, _line)
+      return self._hwClass[Type](DateTime, cage, corner, side,
+                                 int(State), self._source, _line)
 
     except KeyError:
       return UnknownHardwareEvent(DateTime, int(Type), cage, corner, side,
-                                  int(State), self.__source, _line)
+                                  int(State), self._source, _line)
+
+  def _getHwCageCornerSide(self, Cage, Corner, Side):
+    return self._getCageCornerSide(Cage, Corner, Side)
+
+  def _getCageCornerSide(self, Cage, Corner, Side):
+    if Cage is None:
+      return Cage, Corner, Side
+
+    cage = self._cageManager[Cage]
+    if Corner is None:
+      return cage, Corner, Side
+
+    corner = cage[Corner]
+    if Side is None:
+      return cage, corner, Side
+
+    return cage, corner, corner[Side]
 
   def loadHw(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime',
-                                    'Type',
-                                    'Cage',
-                                    'Corner',
-                                    'Side',
-                                    'State'],
-                                   self.__makeHw)
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'Type',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'State'],
+                                  self._makeHw)
 
   def _getColumnValues(self, columnNames, columns):
-    return [columns.get(c, repeat(None)) for c in columnNames] + [count(1)]
+    return [columns.get(c) for c in columnNames] + [count(1)]
 
+
+
+
+class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
+  def _getCageCornerSide(self, Cage, Corner, Side):
+    if Cage is None:
+      return Cage, Corner, Side
+
+    cage = self._cageManager[int(Cage) + 1]
+    if Corner is None:
+      return cage, Corner, Side
+
+    corner = cage[int(Corner) + 1]
+    if Side is None:
+      return cage, corner, Side
+
+    return cage, corner, (corner[int(Side) + 1])
+
+  def _makeEnv(self, DateTime, Temperature, Illumination,
+               _line):
+    return EnvironmentalConditions(DateTime,
+                                   float(Temperature),
+                                   int(Illumination),
+                                   None,
+                                   self._source, _line)
+
+  def loadEnv(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime', 'Temperature', 'Illumination'],
+                                  self._makeEnv)
+
+  def loadLog(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'Category',
+                                   'Type',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'Notes'],
+                                  self._makeLog)

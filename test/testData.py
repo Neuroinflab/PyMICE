@@ -31,10 +31,11 @@ from datetime import datetime, timedelta
 from pytz import utc, timezone
 
 import pymice as pm
-from pymice._ICData import (ZipLoader, Merger, LogEntry, EnvironmentalConditions,
+from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3, ZipLoader_v_Version1,
+                            Merger, LogEntry, EnvironmentalConditions,
                             AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
                             UnknownHardwareEvent, ICCage, ICCageManager)
-from pymice.Data import Data
+from pymice.Data import Data, IntIdentityManager
 
 import minimock
 
@@ -60,14 +61,16 @@ def floatToTimedelta(seq):
 
 
 
-class TestZipLoader(BaseTest):
+class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
+  loaderClass = ZipLoader_v_IntelliCage_Plus_3
+
   def setUp(self):
     self.cageManager = MockIntDictManager()
     self.animalManager = MockStrDictManager()
     self.source = Mock()
-    self.loader = ZipLoader(self.source,
-                            self.cageManager,
-                            self.animalManager)
+    self.loader = self.loaderClass(self.source,
+                                   self.cageManager,
+                                   self.animalManager)
 
   def testLoadEmptyVisits(self):
     visits = self.loader.loadVisits({'VisitID': [],
@@ -382,51 +385,52 @@ class TestZipLoader(BaseTest):
 
 
   def testLoadEmptyLog(self):
-    log = self.loader.loadLog({'DateTime': [],
-                               'LogCategory': [],
-                               'LogType': [],
-                               'Cage': [],
-                               'Corner': [],
-                               'Side': [],
-                               'LogNotes': [],
-                               })
-    self.assertEqual(log, [])
+    self.checkMethodWithEmptyData(self.loader.loadLog,
+                                  self.INPUT_LOAD_LOG)
+
+  INPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+                                 datetime(1970, 1, 1, 1, tzinfo=utc),
+                                 datetime(1970, 1, 1, 2, tzinfo=utc),
+                                 datetime(1970, 1, 1, 3, tzinfo=utc),
+                                 datetime(1970, 1, 1, 4, tzinfo=utc)],
+                    'LogCategory': ['Info', 'Warning', 'Warning', 'Fake', 'Fake'],
+                    'LogType': ['Application', 'Presence', 'Lickometer', 'Fake', 'Fake'],
+                    'Cage': [None, '2', '3', '1', '1'],
+                    'Corner': [None, '4', '1', None, '1'],
+                    'Side': [None, None, '2', None, '1'],
+                    'LogNotes': ['Session is started',
+                                 'Presence signal without antenna registration.',
+                                 'Lickometer is active but nosepoke is inactive',
+                                 'Fake note',
+                                 None],
+                     }
+  OUTPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+                                 datetime(1970, 1, 1, 1, tzinfo=utc),
+                                 datetime(1970, 1, 1, 2, tzinfo=utc),
+                                 datetime(1970, 1, 1, 3, tzinfo=utc),
+                                 datetime(1970, 1, 1, 4, tzinfo=utc)],
+                     'Category': [u'Info', u'Warning', u'Warning', u'Fake', u'Fake'],
+                     'Type': [u'Application', u'Presence', u'Lickometer', u'Fake', u'Fake'],
+                     'Cage': [None, 2, 3, 1, 1],
+                     'Corner': [None, 4, 1, None, 1],
+                     'Side': [None, None, 2, None, 1],
+                     'Notes': [u'Session is started',
+                               u'Presence signal without antenna registration.',
+                               u'Lickometer is active but nosepoke is inactive',
+                               u'Fake note',
+                               None],
+                     '_line': [1, 2, 3, 4, 5],
+                     }
 
   def testLoadLog(self):
-    nLog = 5
-    times = [datetime(1970, 1, 1, i, tzinfo=utc) for i in range(nLog)]
-    categories = ['Info', 'Warning', 'Warning', 'Fake', 'Fake']
-    types = ['Application', 'Presence', 'Lickometer', 'Fake', 'Fake']
-    cages = [None, 2, 3, 1, 1]
-    corners = [None, 4, 1, None, 1]
-    sides = [None, None, 2, None, 1]
-    notes = ['Session is started',
-             'Presence signal without antenna registration.',
-             'Lickometer is active but nosepoke is inactive',
-             'Fake note',
-             None]
-    log = self.loader.loadLog({'DateTime': times,
-                               'LogCategory': categories,
-                               'LogType': types,
-                               'Cage': toStrings(cages),
-                               'Corner': toStrings(corners),
-                               'Side': toStrings(sides),
-                               'LogNotes': notes,
-                               })
-    self.assertEqual(len(log), nLog)
-    for name, tests in [('DateTime', times),
-                        ('Category', toUnicodes(categories)),
-                        ('Type', toUnicodes(types)),
-                        ('Cage', cages),
-                        ('Corner', corners),
-                        ('Side', sides),
-                        ('Notes', toUnicodes(notes)),
-                        ('_source', [self.source] * nLog),
-                        ('_line', range(1, nLog + 1)),
-                        ]:
-      self.checkAttributeSeq(log, name, tests)
+    log = self.loader.loadLog(self.INPUT_LOAD_LOG)
 
-    for entry, cage, corner, side in zip(log, cages, corners, sides):
+    self.basicNodeCheck(self.OUTPUT_LOAD_LOG, log)
+
+    for entry, cage, corner, side in zip(log,
+                                         self.OUTPUT_LOAD_LOG['Cage'],
+                                         self.OUTPUT_LOAD_LOG['Corner'],
+                                         self.OUTPUT_LOAD_LOG['Side']):
       if cage is not None:
         self.assertIs(entry.Cage, self.cageManager.items[cage])
         if corner is not None:
@@ -435,77 +439,81 @@ class TestZipLoader(BaseTest):
             self.assertIs(entry.Side, entry.Corner.items[side])
 
   def testLoadEmptyEnv(self):
-    self.assertEqual(self.loader.loadEnv({
-                     'DateTime': [],
-                     'Temperature': [],
-                     'Illumination': [],
-                     'Cage': [],
-                     }),
-                     [])
+    self.checkMethodWithEmptyData(self.loader.loadEnv,
+                                  self.INPUT_LOAD_ENV)
+
+  def checkMethodWithEmptyData(self, method, keys):
+    self.assertEqual([],
+                     method({item: [] for item in keys}))
+
+  INPUT_LOAD_ENV = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Temperature': ['20.0', '20.5'],
+    'Illumination': ['255', '0'],
+    'Cage': ['1', '2'],
+    }
+
+  OUTPUT_LOAD_ENV = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Temperature': [20.0, 20.5],
+    'Illumination': [255, 0],
+    'Cage': [1, 2],
+    '_line': [1, 2],
+    }
 
   def testLoadEnv(self):
-    times = [datetime(1970, 1, 1, tzinfo=utc)] * 2
-    temperature = [20, 20.5]
-    illumination = [255, 0]
-    cages = [1, 2]
-    envs = self.loader.loadEnv({'DateTime': times,
-                                'Temperature': floatToStrings(temperature, '%.1f'),
-                                'Illumination': toStrings(illumination),
-                                'Cage': toStrings(cages)})
-    self.assertEqual(len(envs), 2)
-    for name, tests in [('DateTime', times),
-                        ('Temperature', temperature),
-                        ('Illumination', illumination),
-                        ('Cage', cages),
-                        ('_source', [self.source] * 2),
-                        ('_line', [1, 2])]:
-      self.checkAttributeSeq(envs, name, tests)
-
-    for e in envs:
+    for e in self._testLoadEnv():
       self.assertIs(e.Cage, self.cageManager.items[e.Cage])
 
+  def _testLoadEnv(self):
+    envs = self.loader.loadEnv(self.INPUT_LOAD_ENV)
+
+    self.basicNodeCheck(self.OUTPUT_LOAD_ENV, envs)
+
+    return envs
 
   def testLoadEmptyHw(self):
-    self.assertEqual(self.loader.loadHw({
-                     'DateTime': [],
-                     'Type': [],
-                     'Cage': [],
-                     'Corner': [],
-                     'Side': [],
-                     'State': [],
-                     }),
-                     [])
+    self.checkMethodWithEmptyData(self.loader.loadHw,
+                                  self.INPUT_LOAD_HW)
+
+  INPUT_LOAD_HW = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Type': ['0', '1', '2', '3'],
+    'Cage': ['1', '2', '3', '4'],
+    'Corner': ['1', '2', '3', '4'],
+    'Side': [None, '3', '6', '7'],
+    'State': ['0', '1', '0', '1'],
+    }
+  OUTPUT_LOAD_HW = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Type': [0, 1, 2, 3],
+    'Cage': [1, 2, 3, 4],
+    'Corner': [1, 2, 3, 4],
+    'Side': [None, 3, 6, 7],
+    'State': [0, 1, 0, 1],
+    '_line': [1, 2, 3, 4]
+    }
+  OUTPUT_LOAD_HW_TYPE = [AirHardwareEvent,
+                         DoorHardwareEvent,
+                         LedHardwareEvent,
+                         UnknownHardwareEvent]
 
   def testLoadHw(self):
-    n = 4
-    times = [datetime(1970, 1, 1, tzinfo=utc)] * n
-    types = range(n)
-    cages = range(1, n + 1)
-    corners = [1 + i % 4 for i in range(n)]
-    sides = [None] + [(1 + i % 4) * 2 - i % 2 for i in range(1, n)]
-    states = [i % 2 for i in range(n)]
-    hwTypes = [AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent] \
-              + [UnknownHardwareEvent] * (n - 3)
-    hws = self.loader.loadHw({'DateTime': times,
-                              'Type': toStrings(types),
-                              'Cage': toStrings(cages),
-                              'Corner': toStrings(corners),
-                              'Side': toStrings(sides),
-                              'State': toStrings(states),
-                              })
-    self.assertEqual(len(hws), n)
-    for name, tests in [('DateTime', times),
-                        ('Type', types),
-                        ('Cage', cages),
-                        ('Corner', corners),
-                        ('Side', sides),
-                        ('State', states),
-                        ('_source', [self.source] * n),
-                        ('_line', range(1, n + 1))]:
-      self.checkAttributeSeq(hws, name, tests)
+    hws = self.loader.loadHw(self.INPUT_LOAD_HW)
 
-    for hw, hwType in zip(hws, hwTypes):
-      self.assertIsInstance(hw, hwType)
+    expected = self.OUTPUT_LOAD_HW
+    self.basicNodeCheck(expected, hws)
+
+    for hw, hwType in zip(hws, self.OUTPUT_LOAD_HW_TYPE):
+        self.assertIsInstance(hw, hwType)
 
     for hw in hws:
       if hw.Cage is not None:
@@ -514,6 +522,64 @@ class TestZipLoader(BaseTest):
           self.assertIs(hw.Corner, hw.Cage.items[hw.Corner])
           if hw.Side is not None:
             self.assertIs(hw.Side, hw.Corner.items[hw.Side])
+
+  def basicNodeCheck(self, expected, nodes):
+    self.checkAttributeSeq(nodes, '_source', [self.source] * len(expected['_line']))
+    for name, tests in expected.items():
+      self.checkAttributeSeq(nodes, name, tests)
+
+
+class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
+  loaderClass = ZipLoader_v_Version1
+
+  INPUT_LOAD_HW = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Type': ['0', '1', '2', '3'],
+    'Cage': ['0', '1', '2', '3'],
+    'Corner': ['0', '1', '2', '3'],
+    'Side': [None, '2', '5', '6'],
+    'State': ['0', '1', '0', '1'],
+    }
+
+  INPUT_LOAD_ENV = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Temperature': ['20.0', '20.5'],
+    'Illumination': ['255', '0'],
+    }
+
+  OUTPUT_LOAD_ENV = {
+    'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
+                 datetime(1970, 1, 1, tzinfo=utc)],
+    'Temperature': [20.0, 20.5],
+    'Illumination': [255, 0],
+    'Cage': [None, None],
+    '_line': [1, 2],
+    }
+
+  def testLoadEnv(self):
+    for e in self._testLoadEnv():
+      self.assertIs(e.Cage, None)
+
+  INPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+                                 datetime(1970, 1, 1, 1, tzinfo=utc),
+                                 datetime(1970, 1, 1, 2, tzinfo=utc),
+                                 datetime(1970, 1, 1, 3, tzinfo=utc),
+                                 datetime(1970, 1, 1, 4, tzinfo=utc)],
+                    'Category': ['Info', 'Warning', 'Warning', 'Fake', 'Fake'],
+                    'Type': ['Application', 'Presence', 'Lickometer', 'Fake', 'Fake'],
+                    'Cage': [None, '1', '2', '0', '0'],
+                    'Corner': [None, '3', '0', None, '0'],
+                    'Side': [None, None, '1', None, '0'],
+                    'Notes': ['Session is started',
+                              'Presence signal without antenna registration.',
+                              'Lickometer is active but nosepoke is inactive',
+                              'Fake note',
+                              None],
+                     }
 
 
 class ICCageTest(unittest.TestCase):
@@ -650,7 +716,8 @@ class DataTest(unittest.TestCase):
     cagesDeleted = set()
     toDelete = []
     cagesToDelete = []
-    data = pm.Data.Data(CageManager=pm._ICData.ICCageManager) # XXX: ugly test -> split testing of ICCageManager and Data.__del__
+    data = pm.Data.Data() # XXX: ugly test -> split testing of ICCageManager and Data.__del__
+    data._setCageManager(pm._ICData.ICCageManager())
 
     def makeCloneInjector(cage, label):
       toDelete.append(label)
@@ -693,7 +760,9 @@ class MockNodesProvider:
 class MergerTest(BaseTest, MockNodesProvider):
   def setUp(self):
     self.d1 = pm.Data.Data()
+    self.d1._setCageManager(IntIdentityManager())
     self.d2 = pm.Data.Data()
+    self.d2._setCageManager(IntIdentityManager())
     self.time1 = datetime(1970, 1, 1, 0, tzinfo=utc)
     self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
     self.runSetUpChain()
@@ -835,6 +904,41 @@ class GivenLegacyDataLoadedWithEnvData(LoadLegacyDataTest):
     pm.Merger(self.data,
               **self.LOADER_FLAGS)
 
+  def testTemperature(self):
+    self.assertEqual([22] * 13,
+                     [e.Temperature for e in self.data.getEnvironment()])
+
+
+  def testIllumination(self):
+    self.assertEqual(list(range(100, 113)),
+                     [e.Illumination for e in self.data.getEnvironment(order='DateTime')])
+
+
+class GivenLegacyDataLoadedWithHwData(LoadLegacyDataTest):
+  LOADER_FLAGS = {'getHw': True}
+
+  def testHwCageCornerSide(self):
+    self.assertEqual([(2, 3, 6),
+                      (2, 2, 3),
+                      (4, 1, 2),
+                      (4, 1, 2),
+                      (2, 1, 2),
+                      (4, 3, 6),
+                      (4, 3, 6),
+                      (3, 1, 2),
+                      (4, 1, 1),
+                      (4, 3, 6),
+                      (3, 1, 1),
+                      (3, 3, 6),
+                      (4, 2, 3),
+                      (4, 2, 3),
+                      ],
+                     [(h.Cage, h.Corner, h.Side) for h in self.data.getHardwareEvents(order='DateTime')])
+
+
+class GivenLegacyDataLoadedWithLogData(LoadLegacyDataTest):
+  LOADER_FLAGS = {'getLog': True}
+
 
 class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
   DATA_FILE = 'legacy_data_nosubdir.zip'
@@ -916,6 +1020,7 @@ class LoadAnalyserDataTest(LoaderIntegrationTest):
 class DataTest(BaseTest, MockNodesProvider):
   def setUp(self):
     self.data = Data()
+    self.data._setCageManager(IntIdentityManager())
     self.runSetUpChain()
 
 

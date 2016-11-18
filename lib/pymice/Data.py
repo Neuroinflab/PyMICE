@@ -72,7 +72,7 @@ class Data(object):
   def __init__(self, getNp=True, getLog=False,
                getEnv=False, getHw=False,
                SourceManager=IdentityManager,
-               CageManager=IntIdentityManager,
+#               CageManager=IntIdentityManager,
                AnimalManager=dict):
     """
     :param getNp: whether to load nosepoke data.
@@ -108,8 +108,11 @@ class Data(object):
     self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
     self._initCache()
 
-    self._cageManager = CageManager()
+#    self._setCageManager(CageManager())
     self._sourceManager = SourceManager()
+
+  def _setCageManager(self, cageManager):
+    self._cageManager = cageManager
 
   def __del__(self):
     for cache in [self.__visits,
