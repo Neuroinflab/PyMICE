@@ -483,7 +483,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                  datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc)],
-    'Type': ['0', '1', '2', '3'],
+    'HardwareType': ['0', '1', '2', '3'],
     'Cage': ['1', '2', '3', '4'],
     'Corner': ['1', '2', '3', '4'],
     'Side': [None, '3', '6', '7'],
@@ -947,7 +947,8 @@ class LoadLegacyDataWithoutIntelliCageSubdirTest(LoadLegacyDataTest):
 class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
   DATA_FILE = 'icp3_data.zip'
   LOADER_FLAGS = {'getLog': True,
-                  'getEnv': True}
+                  'getEnv': True,
+                  'getHw': True}
 
   def testGetStartOrderedVisits_fromDoctests(self):
     self.assertEqual([1, 2, 3],
@@ -988,6 +989,9 @@ class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
     minnie = self.data.getAnimal('Minnie')
     self.assertEqual(1, self.data.getCage(minnie))
 
+  def testGetOrderedHwTypes(self):
+    self.assertEqual(['Air', 'Air', 'LED', 'Door', 'Door', 'LED'],
+                     [h.Type for h in self.data.getHardwareEvents(order='DateTime')])
 
 class LoadEmptyDataTest(LoaderIntegrationTest):
   DATA_FILE = 'empty_data.zip'

@@ -61,7 +61,7 @@ ${TEST_DIR}retagged_data.zip: ${RETAGGEDDATA_DIR}retagged_data.zip
 
 ${LDATA_DIR}legacy_data.zip ${LDATA_DIR}legacy_data_nosubdir.zip: ${LDATA_DIR}Animals.txt ${LDATA_IC_DIR}DataDescriptor.xml ${LDATA_IC_DIR}Environment.txt ${LDATA_IC_DIR}Groups.txt ${LDATA_IC_DIR}HardwareEvents.txt ${LDATA_IC_DIR}Log.txt ${LDATA_IC_DIR}Motions.txt ${LDATA_IC_DIR}Nosepokes.txt ${LDATA_IC_DIR}Sessions.xml ${LDATA_IC_DIR}Visits.txt
 
-${ICP3DATA_DIR}icp3_data.zip: ${ICP3DATA_DIR}Animals.txt ${ICP3DATA_DIR}DataDescriptor.xml ${ICP3DATA_DIR}Groups.txt ${ICP3DATA_DIR}Sessions.xml ${ICP3DATA_IC_DIR}Environment.txt ${ICP3DATA_IC_DIR}IntegerReporters.txt ${ICP3DATA_IC_DIR}Log.txt ${ICP3DATA_IC_DIR}Nosepokes.txt ${ICP3DATA_IC_DIR}Visits.txt
+${ICP3DATA_DIR}icp3_data.zip: ${ICP3DATA_DIR}Animals.txt ${ICP3DATA_DIR}DataDescriptor.xml ${ICP3DATA_DIR}Groups.txt ${ICP3DATA_DIR}Sessions.xml ${ICP3DATA_IC_DIR}Environment.txt ${ICP3DATA_IC_DIR}HardwareEvents.txt ${ICP3DATA_IC_DIR}IntegerReporters.txt ${ICP3DATA_IC_DIR}Log.txt ${ICP3DATA_IC_DIR}Nosepokes.txt ${ICP3DATA_IC_DIR}Visits.txt
 
 ${EDATA_DIR}empty_data.zip: ${EDATA_DIR}Animals.txt ${EDATA_DIR}DataDescriptor.xml ${EDATA_DIR}Groups.txt ${EDATA_DIR}Sessions.xml ${EDATA_IC_DIR}Environment.txt ${EDATA_IC_DIR}IntegerReporters.txt ${EDATA_IC_DIR}Log.txt ${EDATA_IC_DIR}Nosepokes.txt ${EDATA_IC_DIR}Visits.txt
 

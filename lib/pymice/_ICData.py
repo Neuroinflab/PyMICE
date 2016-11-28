@@ -140,7 +140,7 @@ class Loader(Data):
                          #'LogCategory': 'Category',
                          #'LogNotes': 'Notes',
                          },
-                 'HardwareEvents': {'HardwareType': 'Type',
+                 'HardwareEvents': {#'HardwareType': 'Type',
                                     },
                 }
   _convertZip = {'Animals': {#'Tag': int,
@@ -1168,7 +1168,7 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
   def loadHw(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
-                                   'Type',
+                                   'HardwareType',
                                    'Cage',
                                    'Corner',
                                    'Side',
@@ -1219,3 +1219,13 @@ class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
                                    'Side',
                                    'Notes'],
                                   self._makeLog)
+
+  def loadHw(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'Type',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'State'],
+                                  self._makeHw)

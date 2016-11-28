@@ -278,6 +278,19 @@ class NamedInt(int):
     else:
       raise AttributeError(key)
 
+  def __eq__(self, other):
+    if isString(other):
+      return str(self) == other
+
+    return int(self) == other
+
+
+  def __ne__(self, other):
+    if isString(other):
+      return str(self) != other
+
+    return super(NamedInt, self).__ne__(other)
+
 
 class KnownHardwareEvent(HardwareEvent):
   __slots__ = ('DateTime', 'Cage', 'Corner', 'Side', 'State',
