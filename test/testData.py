@@ -73,315 +73,337 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                    self.animalManager)
 
   def testLoadEmptyVisits(self):
-    visits = self.loader.loadVisits({'VisitID': [],
-                                    'AnimalTag': [],
-                                    'Start': [],
-                                    'End': [],
-                                    'ModuleName': [],
-                                    'Cage': [],
-                                    'Corner': [],
-                                    'CornerCondition': [],
-                                    'PlaceError': [],
-                                    'AntennaNumber': [],
-                                    'AntennaDuration': [],
-                                    'PresenceNumber': [],
-                                    'PresenceDuration': [],
-                                    'VisitSolution': [],
-                                    })
+    visits = self.loader.loadVisits({key: [] for key in self.INPUT_LOAD_ONE_VISIT})
     self.assertEqual(visits, [])
 
-  def testLoadOneVisit(self):
-    start = datetime(1970, 1, 1, tzinfo=utc)
-    end = start + timedelta(seconds=15)
+  INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
+                          'AnimalTag': ['10'],
+                          'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                          'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+                          'ModuleName': ['Default'],
+                          'Cage': ['1'],
+                          'Corner': ['2'],
+                          'CornerCondition': ['1'],
+                          'PlaceError': ['0'],
+                          'AntennaNumber': ['1'],
+                          'AntennaDuration': ['1.125'],
+                          'PresenceNumber': ['2'],
+                          'PresenceDuration': ['2.250'],
+                          'VisitSolution': ['0'],
+                          }
+  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+                           'Module': [u'Default'],
+                           'Cage': [1],
+                           'Corner': [2],
+                           'CornerCondition': [1],
+                           'PlaceError': [0],
+                           'AntennaNumber': [1],
+                           'AntennaDuration': [timedelta(seconds=1.125)],
+                           'PresenceNumber': [2],
+                           'PresenceDuration': [timedelta(seconds=2.25)],
+                           'VisitSolution': [0],
+                           '_line': [1],
+                           'Nosepokes': [None],
+                           }
 
-    visits = self.loader.loadVisits({'VisitID': ['1'],
-                                    'AnimalTag': ['10'],
-                                    'Start': [start],
-                                    'End': [end],
-                                    'ModuleName': ['Default'],
-                                    'Cage': ['1'],
-                                    'Corner': ['2'],
-                                    'CornerCondition': ['1'],
-                                    'PlaceError': ['0'],
-                                    'AntennaNumber': ['1'],
-                                    'AntennaDuration': ['1.125'],
-                                    'PresenceNumber': ['2'],
-                                    'PresenceDuration': ['2.250'],
-                                    'VisitSolution': ['0'],
-                                    })
-    for name, tests in [('Animal', [('10', self.animalManager.Cls),
-                                    ]),
-                        ('Start', [start]),
-                        ('End', [end]),
-                        ('Module', [('Default', unicode),
-                                   ]),
-                        ('Cage', [(1, self.cageManager.Cls),
-                                  ]),
-                        ('Corner', [(2, self.cageManager.items[1].Cls),
-                                    ]),
-                        ('CornerCondition', [(1, int)]),
-                        ('PlaceError',  [(0, int)]),
-                        ('AntennaNumber', [(1, int)]),
-                        ('AntennaDuration', [timedelta(seconds=1.125)]),
-                        ('PresenceNumber', [(2, int)]),
-                        ('PresenceDuration', [timedelta(seconds=2.25)]),
-                        ('VisitSolution', [(0, int)]),
-                        ('_source', [self.source]),
-                        ('_line', [1]),
-                        ('Nosepokes', [None]),
-                        ]:
-      self.checkAttributeSeq(visits, name, tests)
+  def testLoadOneVisit(self):
+    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT)
+
+    expected = self.OUTPUT_LOAD_ONE_VISIT
+    self.basicNodeCheck(expected, visits)
+
+    for visit in visits:
+      self.checkVisitAttributeTypes(visit)
 
     self.assertEqual(self.animalManager.sequence, [('__getitem__', '10')])
     self.assertTrue(('__getitem__', '1') in self.cageManager.sequence)
     self.assertTrue(('__getitem__', '2') in self.cageManager.items[1].sequence)
 
-  #@unittest.skip('botak')
-  def testLoadManyVisitsWithMissingValues(self):
-    nVisits = 10
-    vNumbers = range(1, nVisits + 1)
-    animals = [str(1 + i % 2) for i in vNumbers]
-    start = datetime(1970, 1, 1, tzinfo=utc)
-    starts = [start + timedelta(seconds=10 * i) for i in vNumbers]
-    ends = [None if i == 1 else start + timedelta(seconds=15 + 10 * i) for i in vNumbers]
-    modules = [None if i == 2 else str(i) for i in vNumbers]
-    cages = [1 + (i % 2) * 4 for i in vNumbers]
-    corners = [1 + (i // 2) % 4 for i in vNumbers]
-    conditions = [None if i == 3 else 1 - i % 3 for i in vNumbers]
-    errors = [None if i == 4 else 1 if c is None else int(c < 0) for i, c in zip(vNumbers, conditions)]
-    aNumbers = [None if i == 5 else i % 3 for i in vNumbers]
-    aDurations = [None if i == 6 else i % 3 * 0.125 for i in vNumbers]
-    pNumbers = [None if i == 7 else i % 4 for i in vNumbers]
-    pDurations = [None if i == 8 else i % 4 * 0.125 for i in vNumbers]
-    solutions = [None if i == 9 else i % 4 for i in vNumbers]
-    nones = [None] * nVisits
+  def checkVisitAttributeTypes(self, visit):
+    self.checkAttrsAreInt(visit,
+                          'CornerCondition', 'PlaceError',
+                          'AntennaNumber', 'PresenceNumber',
+                          'VisitSolution')
+    self.assertIsInstance(visit.Module, unicode, 'Attribute: Module')
+    self.assertIsInstance(visit.Animal, self.animalManager.Cls,
+                          'Attribute: Animal')
+    self.assertIsInstance(visit.Cage, self.cageManager.Cls,
+                          'Attribute: Cage')
+    self.assertIsInstance(visit.Corner, self.cageManager.items[visit.Cage].Cls,
+                          'Attribute: Corner')
 
-    inputCollumns = {'VisitID': toStrings(vNumbers),
-                     'AnimalTag': toStrings(animals),
-                     'Start': starts,
-                     'End': ends,
-                     'ModuleName': modules,
-                     'Cage': toStrings(cages),
-                     'Corner': toStrings(corners),
-                     'CornerCondition': toStrings(conditions),
-                     'PlaceError': toStrings(errors),
-                     'AntennaNumber': toStrings(aNumbers),
-                     'AntennaDuration': floatToStrings(aDurations),
-                     'PresenceNumber': toStrings(pNumbers),
-                     'PresenceDuration': floatToStrings(pDurations),
-                     'VisitSolution': toStrings(solutions),
-                     }
-    outputColumns = {'Animal': toStrings(animals),
-                     'Start': starts,
-                     'End': ends,
-                     'Module': toUnicodes(modules),
-                     'Cage': cages,
-                     'Corner': corners,
-                     'CornerCondition': conditions,
-                     'PlaceError': errors,
-                     'AntennaNumber': aNumbers,
-                     'AntennaDuration': floatToTimedelta(aDurations),
-                     'PresenceNumber': pNumbers,
-                     'PresenceDuration': floatToTimedelta(pDurations),
-                     'VisitSolution': solutions,
-                     '_source': [self.source] * nVisits,
-                     '_line': vNumbers,
-                     'Nosepokes': nones,
-                     }
-    for descCol in [None,
-                    'End',
-                    ('ModuleName', 'Module'),
-                    'CornerCondition',
-                    'PlaceError',
-                    'AntennaNumber',
-                    'AntennaDuration',
-                    'PresenceNumber',
-                    'PresenceDuration',
-                    'VisitSolution']:
-      inCols = dict(inputCollumns)
-      outCols = dict(outputColumns)
+    if visit.Nosepokes is not None:
+      for nosepoke in visit.Nosepokes:
+        self.checkNosepokeAttributeTypes(nosepoke, visit.Cage, visit.Corner)
+
+  def checkNosepokeAttributeTypes(self, nosepoke, cage, corner):
+    self.checkAttrsAreInt(nosepoke,
+                          'SideCondition', 'SideError', 'TimeError', 'ConditionError',
+                          'LickNumber',
+                          'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State')
+    self.assertIsInstance(nosepoke.Side, self.cageManager.items[cage].items[corner].Cls,
+                          'Attribute: Side')
+
+
+  def checkAttrsAreInt(self, obj, *attrs):
+    for attr in attrs:
+      self.assertIsInstance(getattr(obj, attr), int,
+                            'Attribute: {}'.format(attr))
+
+
+  INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+    'VisitID': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+    'AnimalTag': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
+    'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 30, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 40, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 50, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 0, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 10, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 20, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 30, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 40, tzinfo=utc)],
+    'End': [None,
+            datetime(1970, 1, 1, 0, 0, 35, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 0, 45, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 0, 55, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 5, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 15, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 25, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 35, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 45, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 55, tzinfo=utc)],
+    'ModuleName': ['1', None, '3', '4', '5', '6', '7', '8', '9', '10'],
+    'Cage': ['5', '1', '5', '1', '5', '1', '5', '1', '5', '1'],
+    'Corner': ['1', '2', '2', '3', '3', '4', '4', '1', '1', '2'],
+    'CornerCondition': ['0', '-1', None, '0', '-1', '1', '0', '-1', '1', '0'],
+    'PlaceError': ['0', '1', '1', None, '1', '0', '0', '1', '0', '0'],
+    'AntennaNumber': ['1', '2', '0', '1', None, '0', '1', '2', '0', '1'],
+    'AntennaDuration': ['0.125', '0.25', '0', '0.125', '0.250', None, '0.125', '0.25', '0.000', '0.125'],
+    'PresenceNumber': ['1', '2', '3', '0', '1', '2', None, '0', '1', '2'],
+    'PresenceDuration': ['0.125', '0.25', '0.375', '0', '0.125', '0.250', '0.375', None, '0.125', '0.250'],
+    'VisitSolution': ['1', '2', '3', '0', '1', '2', '3', '0', None, '2'],
+  }
+  OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+    'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
+    'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 30, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 40, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 0, 50, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 0, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 10, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 20, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 30, tzinfo=utc),
+              datetime(1970, 1, 1, 0, 1, 40, tzinfo=utc)],
+    'End': [None,
+            datetime(1970, 1, 1, 0, 0, 35, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 0, 45, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 0, 55, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 5, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 15, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 25, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 35, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 45, tzinfo=utc),
+            datetime(1970, 1, 1, 0, 1, 55, tzinfo=utc)],
+    'Module': [u'1', None, u'3', u'4', u'5', u'6', u'7', u'8', u'9', u'10'],
+    'Cage': [5, 1, 5, 1, 5, 1, 5, 1, 5, 1],
+    'Corner': [1, 2, 2, 3, 3, 4, 4, 1, 1, 2],
+    'CornerCondition': [0, -1, None, 0, -1, 1, 0, -1, 1, 0],
+    'PlaceError': [0, 1, 1, None, 1, 0, 0, 1, 0, 0],
+    'AntennaNumber': [1, 2, 0, 1, None, 0, 1, 2, 0, 1],
+    'AntennaDuration': floatToTimedelta([0.125, 0.25, 0.0, 0.125, 0.25, None, 0.125, 0.25, 0.0, 0.125]),
+    'PresenceNumber': [1, 2, 3, 0, 1, 2, None, 0, 1, 2],
+    'PresenceDuration': floatToTimedelta([0.125, 0.25, 0.375, 0.0, 0.125, 0.250, 0.375, None, 0.125, 0.250]),
+    'VisitSolution': [1, 2, 3, 0, 1, 2, 3, 0, None, 2],
+    '_line': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
+  }
+  MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
+                                                         'End',
+                                                         ('ModuleName', 'Module'),
+                                                         'CornerCondition',
+                                                         'PlaceError',
+                                                         'AntennaNumber',
+                                                         'AntennaDuration',
+                                                         'PresenceNumber',
+                                                         'PresenceDuration',
+                                                         'VisitSolution']
+  def testLoadManyVisitsWithMissingValues(self):
+    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES:
+      inCols = dict(self.INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES)
+      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES)
       if descCol is not None:
         inCol, outCol = (descCol, descCol) if isString(descCol) else descCol
         inCols.pop(inCol)
         outCols.pop(outCol)
 
       visits = self.loader.loadVisits(inCols)
-      for name, tests in outCols.items():
-        self.checkAttributeSeq(visits, name, tests)
+      self.basicNodeCheck(outCols, visits)
 
   def testLoadOneVisitNoNosepokes(self):
-    start = datetime(1970, 1, 1, tzinfo=utc)
-    visits = self.loader.loadVisits({'VisitID': ['1'],
-                                     'AnimalTag': ['10'],
-                                     'Start': [start],
-                                     'End': [start],
-                                     'ModuleName': ['Default'],
-                                     'Cage': ['1'],
-                                     'Corner': ['2']},
-                                    {'VisitID': [],
-                                     'Start': [],
-                                     'End': [],
-                                     'Side': [],
-                                     'SideCondition': [],
-                                     'SideError': [],
-                                     'TimeError': [],
-                                     'ConditionError': [],
-                                     'LickNumber': [],
-                                     'LickContactTime': [],
-                                     'LickDuration': [],
-                                     'AirState': [],
-                                     'DoorState': [],
-                                     'LED1State': [],
-                                     'LED2State': [],
-                                     'LED3State': []
-                                     })
+    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
+                                    {key: [] for key in self.INPUT_LOAD_ONE_NOSEPOKE})
     self.assertEqual(visits[0].Nosepokes, ())
 
+  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+                             'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                             'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+                             'Side': ['4'],
+                             'SideCondition': ['1'],
+                             'SideError': ['0'],
+                             'TimeError': ['1'],
+                             'ConditionError': ['1'],
+                             'LickNumber': ['0'],
+                             'LickContactTime': ['0.500'],
+                             'LickDuration': ['1.5'],
+                             'AirState': ['0'],
+                             'DoorState': ['1'],
+                             'LED1State': ['0'],
+                             'LED2State': ['1'],
+                             'LED3State': ['0']
+                             }
+  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+                              'Side': [4],
+                              'SideCondition': [1],
+                              'SideError': [0],
+                              'TimeError': [1],
+                              'ConditionError': [1],
+                              'LickNumber': [0],
+                              'LickContactTime': [timedelta(seconds=0.5)],
+                              'LickDuration': [timedelta(seconds=1.5)],
+                              'AirState': [0],
+                              'DoorState': [1],
+                              'LED1State': [0],
+                              'LED2State': [1],
+                              'LED3State': [0],
+                              '_line': [1],
+                              }
+
   def testLoadOneVisitOneNosepoke(self):
-    start = datetime(1970, 1, 1, tzinfo=utc)
-    end = start + timedelta(seconds=12)
-    visits = self.loader.loadVisits({'VisitID': ['1'],
-                                     'AnimalTag': ['10'],
-                                     'Start': [start],
-                                     'End': [end],
-                                     'Cage': ['4'],
-                                     'Corner': ['2']},
-                                    {'VisitID': ['1'],
-                                     'Start': [start],
-                                     'End': [end],
-                                     'Side': ['4'],
-                                     'SideCondition': ['1'],
-                                     'SideError': ['0'],
-                                     'TimeError': ['1'],
-                                     'ConditionError': ['1'],
-                                     'LickNumber': ['0'],
-                                     'LickContactTime': ['0.500'],
-                                     'LickDuration': ['1.5'],
-                                     'AirState': ['0'],
-                                     'DoorState': ['1'],
-                                     'LED1State': ['0'],
-                                     'LED2State': ['1'],
-                                     'LED3State': ['0']
-                                     })
-    nosepoke = visits[0].Nosepokes[0]
-    self.checkAttributes(nosepoke,
-                         [('Start', start),
-                          ('End', end),
-                          ('Side', 4, self.cageManager.items[4].items[2].Cls),
-                          ('SideCondition', 1, int),
-                          ('SideError', 0, int),
-                          ('TimeError', 1, int),
-                          ('ConditionError', 1, int),
-                          ('LickNumber', 0, int),
-                          ('LickContactTime', timedelta(seconds=0.5)),
-                          ('LickDuration', timedelta(seconds=1.5)),
-                          ('AirState', 0, int),
-                          ('DoorState', 1, int),
-                          ('LED1State', 0, int),
-                          ('LED2State', 1, int),
-                          ('LED3State', 0, int),
-                          ('_source', self.source),
-                          ('_line', 1)])
-    self.assertEqual(self.cageManager.items[4].items[2].sequence, [('__getitem__', '4')])
+    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
+                                    self.INPUT_LOAD_ONE_NOSEPOKE)
+    visit = visits[0]
+    self.basicNodeCheck(self.OUTPUT_LOAD_ONE_NOSEPOKE, visit.Nosepokes)
+    self.checkNosepokeAttributeTypes(visit.Nosepokes[0], 1, 2)
+    self.assertEqual(self.cageManager.items[1].items[2].sequence, [('__getitem__', '4')])
 
-  def testManyVisitsManyNosepokes(self):
-    nVisits = 4
-    vIds = range(1, nVisits + 1)
-    start = datetime(1970, 1, 1, tzinfo=utc)
-    end = start + timedelta(seconds=12)
-    corners = [1 + (i - 1) % 2 for i in vIds]
-    cages = [1 + 3 * ((i - 1) // 2) for i in vIds]
-    inputVColumns = {'VisitID': toStrings(vIds),
-                     'AnimalTag': toStrings(vIds),
-                     'Start': [start] * nVisits,
-                     'End': [end] * nVisits,
-                     'Cage': toStrings(cages),
-                     'Corner': toStrings(corners)}
 
-    nIds = [i for i in vIds for _ in range(1, i)]
-    nNps = len(nIds)
-    _lines = range(1, nNps + 1)
-    nStarts = [start + timedelta(seconds=2002 - 10 * i) for i in _lines]
-    nEnds = [start + timedelta(seconds=2007 - 10 * i) for i in _lines]
-    sides = [vId * 2 - i % 2 for i, vId in enumerate(nIds, 1)]
-    sideConditions = [i % 3 - 1 for i in _lines]
-    sideErrors = [1 if c < 0 else 0 for c in sideConditions]
-    timeErrors = [(i + 1) % 3 - 1 for i in _lines]
-    conditionErrors = [(i + 2) % 3 - 1 for i in _lines]
-    lickNumbers = [i * j for i, j in zip(nIds, _lines)]
-    lickContactTimes = [0.125 * i for i in lickNumbers]
-    lickDurations = [3. * i for i in lickContactTimes]
-    airState = [i % 2 for i in _lines]
-    doorState = [1 - i % 2 for i in _lines]
-    led1state = [i // 2 % 2 for i in _lines]
-    led2state = [1 - i // 2 % 2 for i in _lines]
-    led3state = [i // 3 % 2 for i in _lines]
-    inputNColumns = {'VisitID': toStrings(nIds),
-                     'Start': nStarts,
-                     'End': nEnds,
-                     'Side': toStrings(sides),
-                     'SideCondition': toStrings(sideConditions),
-                     'SideError': toStrings(sideErrors),
-                     'TimeError': toStrings(timeErrors),
-                     'ConditionError': toStrings(conditionErrors),
-                     'LickNumber': toStrings(lickNumbers),
-                     'LickContactTime': floatToStrings(lickContactTimes),
-                     'LickDuration': floatToStrings(lickDurations),
-                     'AirState': toStrings(airState),
-                     'DoorState': toStrings(doorState),
-                     'LED1State': toStrings(led1state),
-                     'LED2State': toStrings(led2state),
-                     'LED3State': toStrings(led3state),
+  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+    'Visits': {'VisitID': ['1', '2', '3', '4'],
+               'AnimalTag': ['1', '2', '3', '4'],
+               'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         ],
+               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       ],
+               'Cage': ['1', '1', '4', '4'],
+               'Corner': ['1', '2', '1', '2']},
+    'Nosepokes': {'VisitID': ['2', '3', '3', '4', '4', '4'],
+                  'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc)],
+                     'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc)],
+                     'Side': ['3', '6', '5', '8', '7', '8'],
+                     'SideCondition': ['0', '1', '-1', '0', '1', '-1'],
+                     'SideError': ['0', '0', '1', '0', '0', '1'],
+                     'TimeError': ['1', '-1', '0', '1', '-1', '0'],
+                     'ConditionError': ['-1', '0', '1', '-1', '0', '1'],
+                     'LickNumber': ['2', '6', '9', '16', '20', '24'],
+                     'LickContactTime': ['0.25', '0.75', '1.125', '2.0', '2.5', '3.0'],
+                     'LickDuration': ['0.75', '2.25', '3.375', '6.0', '7.5', '9.0'],
+                     'AirState': ['1', '0', '1', '0', '1', '0'],
+                     'DoorState': ['0', '1', '0', '1', '0', '1'],
+                     'LED1State': ['0', '1', '1', '0', '0', '1'],
+                     'LED2State': ['1', '0', '0', '1', '1', '0'],
+                     'LED3State': ['0', '0', '1', '1', '1', '0'],
                      }
-    outputNColumns = {'Start': nStarts,
-                      'End': nEnds,
-                      'Side': sides,
-                      'SideCondition': sideConditions,
-                      'SideError': sideErrors,
-                      'TimeError': timeErrors,
-                      'ConditionError': conditionErrors,
-                      'LickNumber': lickNumbers,
-                      'LickContactTime': floatToTimedelta(lickContactTimes),
-                      'LickDuration': floatToTimedelta(lickDurations),
-                      'AirState': airState,
-                      'DoorState': doorState,
-                      'LED1State': led1state,
-                      'LED2State': led2state,
-                      'LED3State': led3state,
-                      '_line': _lines
-                      }
+  }
+  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+    'Nosepokes':
+        {
+          'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc)],
+          'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc)],
+          'Side': [3, 5, 6, 8, 7, 8],
+          'SideCondition': [0, -1, 1, -1, 1, 0],
+          'SideError': [0, 1, 0, 1, 0, 0],
+          'TimeError': [1, 0, -1, 0, -1, 1],
+          'ConditionError': [-1, 1, 0, 1, 0, -1],
+          'LickNumber': [2, 9, 6, 24, 20, 16],
+          'LickContactTime': floatToTimedelta([0.25, 1.125, 0.75, 3.0, 2.5, 2.0])  ,
+          'LickDuration': floatToTimedelta([0.75, 3.375, 2.25, 9.0, 7.5, 6.0]),
+          'AirState': [1, 1, 0, 0, 1, 0],
+          'DoorState': [0, 0, 1, 1, 0, 1],
+          'LED1State': [0, 1, 1, 1, 0, 0],
+          'LED2State': [1, 0, 0, 0, 1, 1],
+          'LED3State': [0, 1, 0, 0, 1, 1],
+          '_line': [1, 3, 2, 6, 5, 4]
+        },
+    'NosepokeLen': [0, 1, 2, 3],
+  }
+  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+                                                    'End',
+                                                    'Side',
+                                                    'SideCondition',
+                                                    'SideError',
+                                                    'TimeError',
+                                                    'ConditionError',
+                                                    'LickNumber',
+                                                    'LickContactTime',
+                                                    'LickDuration',
+                                                    'AirState',
+                                                    'DoorState',
+                                                    'LED1State',
+                                                    'LED2State',
+                                                    'LED3State',]
+  def testManyVisitsManyNosepokes(self):
+    # order = [i - 1 for i in self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder']]
+    # print(repr(sorted((k, [vs[i] for i in order]) for k, vs in self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'].items())))
+    inputVColumns = self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Visits']
 
-    for descCol in [None,
-                    'End',
-                    'Side',
-                    'SideCondition',
-                    'SideError',
-                    'TimeError',
-                    'ConditionError',
-                    'LickNumber',
-                    'LickContactTime',
-                    'LickDuration',
-                    'AirState',
-                    'DoorState',
-                    'LED1State',
-                    'LED2State',
-                    'LED3State',]:
-        inCols = dict(inputNColumns)
-        outCols = dict(outputNColumns)
-        if descCol is not None:
-            inCols.pop(descCol)
-            outCols.pop(descCol)
+    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES:
+      inCols = dict(self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      if descCol is not None:
+        inCols.pop(descCol)
+        outCols.pop(descCol)
 
-        visits = self.loader.loadVisits(inputVColumns, inCols)
-        self.assertEqual([len(v.Nosepokes) for v in visits],
-                         [i - 1 for i in vIds])
+      visits = self.loader.loadVisits(inputVColumns, inCols)
+      self.assertEqual([len(v.Nosepokes) for v in visits],
+                       self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
 
-        nosepokes = [n for v in visits for n in sorted(v.Nosepokes, key=lambda x: x._line)]
-        for name, values in outCols.items():
-          self.checkAttributeSeq(nosepokes, name, values)
+      nosepokes = [n for v in visits for n in v.Nosepokes]
+      self.basicNodeCheck(outCols, nosepokes)
 
-        self.assertEqual([n._line for v in visits for n in v.Nosepokes],
-                         [x[2] for x in sorted(zip(nIds, nStarts, _lines))])
+      # self.assertEqual([n._line for v in visits for n in v.Nosepokes],
+      #                  self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
 
 
   def testLoadEmptyLog(self):
