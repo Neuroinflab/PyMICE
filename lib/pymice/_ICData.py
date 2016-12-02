@@ -121,29 +121,6 @@ class Loader(Data):
                                },
             }
 
-  _aliasesZip = {'Animals': {#'AnimalName': 'Name',
-                             #'AnimalTag': 'Tag',
-                             #'GroupName': 'Group',
-                             #'AnimalNotes': 'Notes',
-                            },
-                 'Visits': {#'AnimalTag': 'AnimalTag',
-                            'Animal': 'AnimalTag',
-                            'ID': 'VisitID',
-                            #'VisitID': '_vid',
-                            #'ModuleName': 'Module',
-                            },
-                 'Nosepokes': {'LicksNumber': 'LickNumber',
-                               'LicksDuration': 'LickDuration',
-                               #'VisitID': '_vid',
-                               },
-                 'Log': {#'LogType': 'Type',
-                         #'Log': 'Type',
-                         #'LogCategory': 'Category',
-                         #'LogNotes': 'Notes',
-                         },
-                 'HardwareEvents': {#'HardwareType': 'Type',
-                                    },
-                }
   _convertZip = {'Animals': {#'Tag': int,
                             },
                  'Visits': {#'Tag': int,
@@ -243,7 +220,8 @@ class Loader(Data):
     timeOrderer = LatticeOrderer()
 
     visits = self._fromZipCSV(zf, 'Visits', source=source)
-    vids = visits['VisitID']
+
+    vids = visits[loader.VISIT_ID_FIELD]
 
     if sessions is not None:
       # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
@@ -270,7 +248,7 @@ class Loader(Data):
       npVids = nosepokes['VisitID']
 
       if len(npVids) > 0: # disables annoying warning on comparison of empty array
-        vid2tag = dict(zip(vids, visits['AnimalTag']))
+        vid2tag = dict(zip(vids, visits[loader.VISIT_TAG_FIELD]))
 
         if sessions is not None:
           # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
@@ -449,7 +427,6 @@ class Loader(Data):
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
     return self._fromCSV(self._openZipFile(zf, path + '.txt'),
                          source=source,
-                         aliases=self._aliasesZip.get(path),
                          convert=self._convertZip.get(path),
                          oldLabels=oldLabels)
 
@@ -474,7 +451,7 @@ class Loader(Data):
     return fh
 
   @staticmethod
-  def _fromCSV(fname, source=None, aliases=None, convert=None, oldLabels=None):
+  def _fromCSV(fname, source=None, convert=None, oldLabels=None):
     if isString(fname):
       fname = open(fname, 'rb')
 
@@ -482,10 +459,10 @@ class Loader(Data):
     data = list(reader)
     fname.close()
 
-    return Loader.__fromCSV(data, source, aliases, convert, oldLabels)
+    return Loader.__fromCSV(data, source, convert, oldLabels)
 
   @staticmethod
-  def __fromCSV(data, source, aliases, convert, oldLabels):
+  def __fromCSV(data, source, convert, oldLabels):
     if len(data) == 0:
       return
 
@@ -493,9 +470,6 @@ class Loader(Data):
     if isinstance(oldLabels, set):
       oldLabels.clear()
       oldLabels.update(labels)
-
-    if aliases is not None:
-      labels = [aliases.get(l, l) for l in labels]
 
     n = len(data)
     if n == 0:
@@ -1037,6 +1011,7 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
                   'PresenceNumber', 'PresenceDuration',
                   'VisitSolution',]
   VISIT_ID_FIELD = 'VisitID'
+  VISIT_TAG_FIELD = 'AnimalTag'
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
@@ -1052,19 +1027,20 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
     vColValues.append(vNosepokes)
     return mapAsList(self._makeVisit, *vColValues)
 
+  NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
+                     'SideCondition', 'SideError',
+                     'TimeError', 'ConditionError',
+                     'LickNumber', 'LickContactTime',
+                     'LickDuration',
+                     'AirState', 'DoorState',
+                     'LED1State', 'LED2State',
+                     'LED3State']
   def _assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
     vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
 
     nColValues = [nosepokesCollumns.get(x, repeat(None)) \
-                  for x in  ['Start', 'End', 'Side',
-                             'SideCondition', 'SideError',
-                             'TimeError', 'ConditionError',
-                             'LickNumber', 'LickContactTime',
-                             'LickDuration',
-                             'AirState', 'DoorState',
-                             'LED1State', 'LED2State',
-                             'LED3State']]
+                  for x in self.NOSEPOKE_FIELDS]
     nIDs = nosepokesCollumns['VisitID']
     nRows = len(nIDs)
     nLines = range(1, 1 + nRows)
@@ -1237,13 +1213,23 @@ class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
                                    'State'],
                                   self._makeHw)
 
-  # VISIT_FIELDS = ['Cage', 'Corner',
-  #                 'Animal', 'Start', 'End', 'ModuleName',
-  #                 'CornerCondition', 'PlaceError',
-  #                 'AntennaNumber', 'AntennaDuration',
-  #                 'PresenceNumber', 'PresenceDuration',
-  #                 'VisitSolution',]
-  # VISIT_ID_FIELD = 'ID'
+  VISIT_FIELDS = ['Cage', 'Corner',
+                  'Animal', 'Start', 'End', 'ModuleName',
+                  'CornerCondition', 'PlaceError',
+                  'AntennaNumber', 'AntennaDuration',
+                  'PresenceNumber', 'PresenceDuration',
+                  'VisitSolution',]
+  VISIT_ID_FIELD = 'ID'
+  VISIT_TAG_FIELD = 'Animal'
+
+  NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
+                     'SideCondition', 'SideError',
+                     'TimeError', 'ConditionError',
+                     'LicksNumber', 'LickContactTime',
+                     'LicksDuration',
+                     'AirState', 'DoorState',
+                     'LED1State', 'LED2State',
+                     'LED3State']
 
   @classmethod
   def loadAnimals(cls, columns):
