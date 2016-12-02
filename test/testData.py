@@ -72,9 +72,42 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                    self.cageManager,
                                    self.animalManager)
 
+  INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
+                        'AnimalTag': ['1337', '42', '69'],
+                        'Sex': ['Female', 'Male', 'Male'],
+                        'GroupName': ['Disney', 'Disney', 'HannaBarbera'],
+                        'AnimalNotes': [None, None, 'Likes Tom']}
+  OUTPUT_LOAD_ANIMALS = {'Name': [u'Minie', u'Mickey', u'Jerry'],
+                         'Tag': [{'1337'}, {'42'}, {'69'}],
+                         'Sex': ['Female', 'Male', 'Male'],
+                         'Notes': [set(), set(), {'Likes Tom'}]}
+  OUTPUT_LOAD_GROUPS = {'Disney': {'Minie', 'Mickey'},
+                        'HannaBarbera': {'Jerry'}}
+
+  def testLoadEmptyAnimals(self):
+    self.checkMethodWithEmptyData(self.loaderClass.loadAnimals,
+                                  self.INPUT_LOAD_ANIMALS)
+
+  def testLoadAnimals(self):
+    animals = self.loaderClass.loadAnimals(self.INPUT_LOAD_ANIMALS)
+    for name, tests in self.OUTPUT_LOAD_ANIMALS.items():
+      self.checkAttributeSeq(animals, name, tests)
+
+  def testLoadEmptyGroups(self):
+      self.assertEqual({},
+                       self.loaderClass.loadGroups(
+                           self.makeEmptyColumns(self.INPUT_LOAD_ANIMALS)))
+
+  def makeEmptyColumns(self, keys):
+      return {key: [] for key in keys}
+
+  def testLoadGroups(self):
+    groups = self.loaderClass.loadGroups(self.INPUT_LOAD_ANIMALS)
+    self.assertEqual(self.OUTPUT_LOAD_GROUPS, groups)
+
   def testLoadEmptyVisits(self):
-    visits = self.loader.loadVisits({key: [] for key in self.INPUT_LOAD_ONE_VISIT})
-    self.assertEqual(visits, [])
+    self.checkMethodWithEmptyData(self.loader.loadVisits,
+                                  self.INPUT_LOAD_ONE_VISIT)
 
   INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
                           'AnimalTag': ['10'],
@@ -121,11 +154,12 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     self.assertTrue(('__getitem__', '1') in self.cageManager.sequence)
     self.assertTrue(('__getitem__', '2') in self.cageManager.items[1].sequence)
 
+  VISIT_INT_ATTRIBUTES = ['CornerCondition', 'PlaceError',
+                          'AntennaNumber', 'PresenceNumber',
+                          'VisitSolution']
   def checkVisitAttributeTypes(self, visit):
     self.checkAttrsAreInt(visit,
-                          'CornerCondition', 'PlaceError',
-                          'AntennaNumber', 'PresenceNumber',
-                          'VisitSolution')
+                          *self.VISIT_INT_ATTRIBUTES)
     self.assertIsInstance(visit.Module, unicode, 'Attribute: Module')
     self.assertIsInstance(visit.Animal, self.animalManager.Cls,
                           'Attribute: Animal')
@@ -384,8 +418,6 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                                     'LED2State',
                                                     'LED3State',]
   def testManyVisitsManyNosepokes(self):
-    # order = [i - 1 for i in self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder']]
-    # print(repr(sorted((k, [vs[i] for i in order]) for k, vs in self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'].items())))
     inputVColumns = self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Visits']
 
     for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES:
@@ -466,7 +498,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
 
   def checkMethodWithEmptyData(self, method, keys):
     self.assertEqual([],
-                     method({item: [] for item in keys}))
+                     method(self.makeEmptyColumns(keys)))
 
   INPUT_LOAD_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
@@ -554,6 +586,12 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
 class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
   loaderClass = ZipLoader_v_Version1
 
+  INPUT_LOAD_ANIMALS = {'Name': ['Minie', 'Mickey', 'Jerry'],
+                        'Tag': ['1337', '42', '69'],
+                        'Sex': ['Female', 'Male', 'Male'],
+                        'Group': ['Disney', 'Disney', 'HannaBarbera'],
+                        'Notes': [None, None, 'Likes Tom']}
+
   INPUT_LOAD_HW = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
@@ -602,6 +640,244 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                               'Fake note',
                               None],
                      }
+
+  # VISIT_INT_ATTRIBUTES = ['CornerCondition', 'PlaceError',
+  #                         'AntennaNumber', 'PresenceNumber',]
+  #
+  # INPUT_LOAD_ONE_VISIT = {'ID': ['1'],
+  #                         'Animal': ['10'],
+  #                         'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  #                         'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+  #                         'ModuleName': ['Default'],
+  #                         'Cage': ['1'],
+  #                         'Corner': ['2'],
+  #                         'CornerCondition': ['1'],
+  #                         'PlaceError': ['0'],
+  #                         'AntennaNumber': ['1'],
+  #                         'AntennaDuration': ['1.125'],
+  #                         'PresenceNumber': ['2'],
+  #                         'PresenceDuration': ['2.250']
+  #                         }
+  # OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+  #                          'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  #                          'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+  #                          'Module': [u'Default'],
+  #                          'Cage': [1],
+  #                          'Corner': [2],
+  #                          'CornerCondition': [1],
+  #                          'PlaceError': [0],
+  #                          'AntennaNumber': [1],
+  #                          'AntennaDuration': [timedelta(seconds=1.125)],
+  #                          'PresenceNumber': [2],
+  #                          'PresenceDuration': [timedelta(seconds=2.25)],
+  #                          'VisitSolution': [None],
+  #                          '_line': [1],
+  #                          'Nosepokes': [None],
+  #                          }
+  #
+  # INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  #   'ID': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+  #   'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
+  #   'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 30, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 40, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 50, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 0, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 10, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 20, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 30, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 40, tzinfo=utc)],
+  #   'End': [None,
+  #           datetime(1970, 1, 1, 0, 0, 35, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 0, 45, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 0, 55, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 5, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 15, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 25, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 35, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 45, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 55, tzinfo=utc)],
+  #   'ModuleName': ['1', None, '3', '4', '5', '6', '7', '8', '9', '10'],
+  #   'Cage': ['5', '1', '5', '1', '5', '1', '5', '1', '5', '1'],
+  #   'Corner': ['1', '2', '2', '3', '3', '4', '4', '1', '1', '2'],
+  #   'CornerCondition': ['0', '-1', None, '0', '-1', '1', '0', '-1', '1', '0'],
+  #   'PlaceError': ['0', '1', '1', None, '1', '0', '0', '1', '0', '0'],
+  #   'AntennaNumber': ['1', '2', '0', '1', None, '0', '1', '2', '0', '1'],
+  #   'AntennaDuration': ['0.125', '0.25', '0', '0.125', '0.250', None, '0.125', '0.25', '0.000', '0.125'],
+  #   'PresenceNumber': ['1', '2', '3', '0', '1', '2', None, '0', '1', '2'],
+  #   'PresenceDuration': ['0.125', '0.25', '0.375', '0', '0.125', '0.250', '0.375', None, '0.125', '0.250'],
+  # }
+  # OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  #   'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
+  #   'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 30, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 40, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 0, 50, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 0, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 10, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 20, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 30, tzinfo=utc),
+  #             datetime(1970, 1, 1, 0, 1, 40, tzinfo=utc)],
+  #   'End': [None,
+  #           datetime(1970, 1, 1, 0, 0, 35, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 0, 45, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 0, 55, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 5, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 15, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 25, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 35, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 45, tzinfo=utc),
+  #           datetime(1970, 1, 1, 0, 1, 55, tzinfo=utc)],
+  #   'Module': [u'1', None, u'3', u'4', u'5', u'6', u'7', u'8', u'9', u'10'],
+  #   'Cage': [5, 1, 5, 1, 5, 1, 5, 1, 5, 1],
+  #   'Corner': [1, 2, 2, 3, 3, 4, 4, 1, 1, 2],
+  #   'CornerCondition': [0, -1, None, 0, -1, 1, 0, -1, 1, 0],
+  #   'PlaceError': [0, 1, 1, None, 1, 0, 0, 1, 0, 0],
+  #   'AntennaNumber': [1, 2, 0, 1, None, 0, 1, 2, 0, 1],
+  #   'AntennaDuration': floatToTimedelta([0.125, 0.25, 0.0, 0.125, 0.25, None, 0.125, 0.25, 0.0, 0.125]),
+  #   'PresenceNumber': [1, 2, 3, 0, 1, 2, None, 0, 1, 2],
+  #   'PresenceDuration': floatToTimedelta([0.125, 0.25, 0.375, 0.0, 0.125, 0.250, 0.375, None, 0.125, 0.250]),
+  #   'VisitSolution': [None, None, None, None, None, None, None, None, None, None],
+  #   '_line': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  #   'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
+  # }
+  # MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
+  #                                                        'End',
+  #                                                        ('ModuleName', 'Module'),
+  #                                                        'CornerCondition',
+  #                                                        'PlaceError',
+  #                                                        'AntennaNumber',
+  #                                                        'AntennaDuration',
+  #                                                        'PresenceNumber',
+  #                                                        'PresenceDuration']
+  #
+  # INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+  #                            'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  #                            'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+  #                            'Side': ['4'],
+  #                            'SideCondition': ['1'],
+  #                            'SideError': ['0'],
+  #                            'TimeError': ['1'],
+  #                            'ConditionError': ['1'],
+  #                            'LickNumber': ['0'],
+  #                            'LickContactTime': ['0.500'],
+  #                            'LickDuration': ['1.5'],
+  #                            'AirState': ['0'],
+  #                            'DoorState': ['1'],
+  #                            'LED1State': ['0'],
+  #                            'LED2State': ['1'],
+  #                            'LED3State': ['0']
+  #                            }
+  # OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  #                             'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+  #                             'Side': [4],
+  #                             'SideCondition': [1],
+  #                             'SideError': [0],
+  #                             'TimeError': [1],
+  #                             'ConditionError': [1],
+  #                             'LickNumber': [0],
+  #                             'LickContactTime': [timedelta(seconds=0.5)],
+  #                             'LickDuration': [timedelta(seconds=1.5)],
+  #                             'AirState': [0],
+  #                             'DoorState': [1],
+  #                             'LED1State': [0],
+  #                             'LED2State': [1],
+  #                             'LED3State': [0],
+  #                             '_line': [1],
+  #                             }
+  #
+  # INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  #   'Visits': {'VisitID': ['1', '2', '3', '4'],
+  #              'AnimalTag': ['1', '2', '3', '4'],
+  #              'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+  #                        datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+  #                        datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+  #                        datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+  #                        ],
+  #              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+  #                      datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+  #                      datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+  #                      datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+  #                      ],
+  #              'Cage': ['1', '1', '4', '4'],
+  #              'Corner': ['1', '2', '1', '2']},
+  #   'Nosepokes': {'VisitID': ['2', '3', '3', '4', '4', '4'],
+  #                 'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc)],
+  #                    'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+  #                           datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc)],
+  #                    'Side': ['3', '6', '5', '8', '7', '8'],
+  #                    'SideCondition': ['0', '1', '-1', '0', '1', '-1'],
+  #                    'SideError': ['0', '0', '1', '0', '0', '1'],
+  #                    'TimeError': ['1', '-1', '0', '1', '-1', '0'],
+  #                    'ConditionError': ['-1', '0', '1', '-1', '0', '1'],
+  #                    'LickNumber': ['2', '6', '9', '16', '20', '24'],
+  #                    'LickContactTime': ['0.25', '0.75', '1.125', '2.0', '2.5', '3.0'],
+  #                    'LickDuration': ['0.75', '2.25', '3.375', '6.0', '7.5', '9.0'],
+  #                    'AirState': ['1', '0', '1', '0', '1', '0'],
+  #                    'DoorState': ['0', '1', '0', '1', '0', '1'],
+  #                    'LED1State': ['0', '1', '1', '0', '0', '1'],
+  #                    'LED2State': ['1', '0', '0', '1', '1', '0'],
+  #                    'LED3State': ['0', '0', '1', '1', '1', '0'],
+  #                    }
+  # }
+  # OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  #   'Nosepokes':
+  #       {
+  #         'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+  #                   datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+  #                   datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+  #                   datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc),
+  #                   datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+  #                   datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc)],
+  #         'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+  #                 datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+  #                 datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+  #                 datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc),
+  #                 datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+  #                 datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc)],
+  #         'Side': [3, 5, 6, 8, 7, 8],
+  #         'SideCondition': [0, -1, 1, -1, 1, 0],
+  #         'SideError': [0, 1, 0, 1, 0, 0],
+  #         'TimeError': [1, 0, -1, 0, -1, 1],
+  #         'ConditionError': [-1, 1, 0, 1, 0, -1],
+  #         'LickNumber': [2, 9, 6, 24, 20, 16],
+  #         'LickContactTime': floatToTimedelta([0.25, 1.125, 0.75, 3.0, 2.5, 2.0])  ,
+  #         'LickDuration': floatToTimedelta([0.75, 3.375, 2.25, 9.0, 7.5, 6.0]),
+  #         'AirState': [1, 1, 0, 0, 1, 0],
+  #         'DoorState': [0, 0, 1, 1, 0, 1],
+  #         'LED1State': [0, 1, 1, 1, 0, 0],
+  #         'LED2State': [1, 0, 0, 0, 1, 1],
+  #         'LED3State': [0, 1, 0, 0, 1, 1],
+  #         '_line': [1, 3, 2, 6, 5, 4]
+  #       },
+  #   'NosepokeLen': [0, 1, 2, 3],
+  # }
+  # MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+  #                                                   'End',
+  #                                                   'Side',
+  #                                                   'SideCondition',
+  #                                                   'SideError',
+  #                                                   'TimeError',
+  #                                                   'ConditionError',
+  #                                                   'LickNumber',
+  #                                                   'LickContactTime',
+  #                                                   'LickDuration',
+  #                                                   'AirState',
+  #                                                   'DoorState',
+  #                                                   'LED1State',
+  #                                                   'LED2State',
+  #                                                   'LED3State',]
 
 
 class ICCageTest(unittest.TestCase):
@@ -855,7 +1131,8 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     try:
       self.data = self.loadData()
 
-    except AttributeError:
+    except AttributeError as e:
+      #print(e)
       self.skipTest("No data filename")
 
     else:

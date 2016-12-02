@@ -66,6 +66,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
 from ._Tools import (timeToList, PathZipFile, warn, groupBy, isString,
                      mapAsList)
 from ._FixTimezones import inferTimezones, LatticeOrderer
+from ._Analysis import Aggregator
 
 class PmCImportWarning(ImportWarning):
   pass
@@ -120,10 +121,10 @@ class Loader(Data):
                                },
             }
 
-  _aliasesZip = {'Animals': {'AnimalName': 'Name',
-                             'AnimalTag': 'Tag',
-                             'GroupName': 'Group',
-                             'AnimalNotes': 'Notes',
+  _aliasesZip = {'Animals': {#'AnimalName': 'Name',
+                             #'AnimalTag': 'Tag',
+                             #'GroupName': 'Group',
+                             #'AnimalNotes': 'Notes',
                             },
                  'Visits': {#'AnimalTag': 'AnimalTag',
                             'Animal': 'AnimalTag',
@@ -232,7 +233,10 @@ class Loader(Data):
     self._buildCache()
 
   def _loadZip(self, zf, source=None):
-    tagToAnimal = dict(self._loadAnimals(zf))
+    ZipLoader = self._getZipLoader(zf)
+    self._loadAnimals(zf, ZipLoader)
+    tagToAnimal = self._makeTagToAnimalDict()
+    loader = ZipLoader(source, self._cageManager, tagToAnimal)
 
     sessions = self._extractSessions(zf)
 
@@ -354,7 +358,6 @@ class Loader(Data):
     self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
                                             log, environment, hardware)
 
-    loader = self._getZipLoader(zf, source, tagToAnimal)
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
     if log is not None:
@@ -429,11 +432,10 @@ class Loader(Data):
   def __convertFieldToDatetime(self, field, table):
     table[field] = [datetime(*x) for x in table[field]]
 
-  def _getZipLoader(self, zf, source, tagToAnimal):
+  def _getZipLoader(self, zf):
     version = self._checkVersion(zf)
-    ZipLoader = ZipLoader_v_Version1 if version == 'version1' else ZipLoader_v_IntelliCage_Plus_3
-    loader = ZipLoader(source, self._cageManager, tagToAnimal)
-    return loader
+    return ZipLoader_v_Version1 if version == 'version1' else ZipLoader_v_IntelliCage_Plus_3
+
 
   def _checkVersion(self, zf):
     fh = self._openZipFile(zf, 'DataDescriptor.xml')
@@ -548,44 +550,25 @@ class Loader(Data):
                self._fnames.__str__()
     return mystring
 
-  def _loadAnimals(self, zf):
-    animalsLabels = set()
-    animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
+  def _loadAnimals(self, zf, loader):
+    animalData = self._fromZipCSV(zf, 'Animals')
 
-    animalGroup = animals.pop('Group')
-    tags = animals['Tag']
-    animals = mapAsList(Animal.fromRow,
-                        animals['Name'],
-                        tags,
-                        animals.get('Sex', repeat(None)),
-                        animals.get('Notes', repeat(None)))
-
-    animalNames = set()
-    groups = {}
-    tag2Animal = {}
-    for group, animal, tag in zip(animalGroup, animals, tags):
-      assert tag not in tag2Animal
-      name = animal.Name
-      assert name not in animalNames
-      tag2Animal[tag] = name
-      animalNames.add(name)
-
-      if group is not None:
-        try:
-          groups[group]['Animals'].append(name)
-
-        except KeyError:
-          groups[group] = {'Animals': [name],
-                           'Name': group}
+    animals = loader.loadAnimals(animalData)
 
     for animal in animals:
       self._registerAnimal(animal)
 
-    for group in groups.values():
-      self._registerGroup(**group)
+    groups = loader.loadGroups(animalData)
+    for name in groups:
+      if name is not None:
+        self._registerGroup(name, groups[name])
 
-    return dict((t, self.getAnimal(n)) for t, n in tag2Animal.items())
-
+  def _makeTagToAnimalDict(self):
+    animals = [self.getAnimal(a) for a in self.getAnimal()]
+    tagToAnimal = {t: a for a in animals for t in a.Tag}
+    assert len(animals) == len(tagToAnimal)
+    assert len(set(tagToAnimal.values())) == len(tagToAnimal)
+    return tagToAnimal
 
 
 class Merger(Data):
@@ -1047,21 +1030,23 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
                     int(LED3State) if LED3State is not None else None,
                     self._source, _line)
 
+  VISIT_FIELDS = ['Cage', 'Corner',
+                  'AnimalTag', 'Start', 'End', 'ModuleName',
+                  'CornerCondition', 'PlaceError',
+                  'AntennaNumber', 'AntennaDuration',
+                  'PresenceNumber', 'PresenceDuration',
+                  'VisitSolution',]
+  VISIT_ID_FIELD = 'VisitID'
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
-                                                 visitsCollumns['VisitID'])
+                                                 visitsCollumns[self.VISIT_ID_FIELD])
 
     else:
       vNosepokes = repeat(None)
 
     vColValues = [visitsCollumns.get(x, repeat(None)) \
-                  for x in ['Cage', 'Corner',
-                            'AnimalTag', 'Start', 'End', 'ModuleName',
-                            'CornerCondition', 'PlaceError',
-                            'AntennaNumber', 'AntennaDuration',
-                            'PresenceNumber', 'PresenceDuration',
-                            'VisitSolution',]]
+                  for x in self.VISIT_FIELDS]
     vLines = count(1)
     vColValues.append(vLines)
     vColValues.append(vNosepokes)
@@ -1128,8 +1113,9 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
                                    'Illumination', 'Cage'],
                                   self._makeEnv)
 
-  def _columnsToObjects(self, columns, columnNames, objectFactory):
-    colValues = self._getColumnValues(columnNames, columns)
+  @classmethod
+  def _columnsToObjects(cls, columns, columnNames, objectFactory):
+    colValues = cls._getColumnValues(columnNames, columns)
     return mapAsList(objectFactory, *colValues)
 
   _hwClass = {'0': AirHardwareEvent,
@@ -1175,10 +1161,31 @@ class ZipLoader_v_IntelliCage_Plus_3(object):
                                    'State'],
                                   self._makeHw)
 
-  def _getColumnValues(self, columnNames, columns):
+  @staticmethod
+  def _getColumnValues(columnNames, columns):
     return [columns.get(c) for c in columnNames] + [count(1)]
 
+  @classmethod
+  def loadAnimals(cls, columns):
+    return cls._columnsToObjects(columns,
+                                 ['AnimalName', 'AnimalTag','Sex',
+                                  'AnimalNotes'],
+                                 cls._makeAnimal)
 
+  @staticmethod
+  def _makeAnimal(Name, Tag, Sex, Notes, _line):
+    return Animal.fromRow(Name, Tag, Sex, Notes)
+
+  @classmethod
+  def loadGroups(cls, columns):
+    return cls.group(columns['AnimalName'],
+                     columns['GroupName'])
+
+  @classmethod
+  def group(cls, objects, group):
+    return Aggregator.aggregate(zip(objects, group),
+                                getKey=lambda x: x[1],
+                                aggregateFunction=lambda xs: {x[0] for x in xs})
 
 
 class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
@@ -1229,3 +1236,22 @@ class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
                                    'Side',
                                    'State'],
                                   self._makeHw)
+
+  # VISIT_FIELDS = ['Cage', 'Corner',
+  #                 'Animal', 'Start', 'End', 'ModuleName',
+  #                 'CornerCondition', 'PlaceError',
+  #                 'AntennaNumber', 'AntennaDuration',
+  #                 'PresenceNumber', 'PresenceDuration',
+  #                 'VisitSolution',]
+  # VISIT_ID_FIELD = 'ID'
+
+  @classmethod
+  def loadAnimals(cls, columns):
+    return cls._columnsToObjects(columns,
+                                 ['Name', 'Tag','Sex', 'Notes'],
+                                 cls._makeAnimal)
+
+  @classmethod
+  def loadGroups(cls, columns):
+    return cls.group(columns['Name'],
+                     columns['Group'])
