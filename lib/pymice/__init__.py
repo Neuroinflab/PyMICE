@@ -37,7 +37,7 @@ from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           FailureInspector, DataValidator, TestMiceData)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 __ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
