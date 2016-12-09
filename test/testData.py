@@ -1200,6 +1200,23 @@ class LoadLegacyDataTest(LoaderIntegrationTest):
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Minnie')])
 
+  def testLickNumberNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickNumber',
+                              [0, 1, 2, 3])
+
+  def testLickDurationNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickDuration',
+                              floatToTimedelta([0, 0.075, 0.15, 0.225]))
+
+  def testLickContactTimeNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickContactTime',
+                              [None, None, None, None])
+
+
+  def checkAttrOfNosepokes(self, attr, expected):
+    self.assertEqual(expected,
+                     [getattr(n, attr) for v in self.data.getVisits(order='Start') for n in v.Nosepokes])
+
 
 class GivenLegacyDataLoadedWithEnvData(LoadLegacyDataTest):
   LOADER_FLAGS = {'getEnv': True}
