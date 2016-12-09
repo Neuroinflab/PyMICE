@@ -243,7 +243,7 @@ class EnvironmentalConditions(BaseNode):
     return self.__class__(self.__DateTime,
                           self.__Temperature,
                           self.__Illumination,
-                          cageManager[self.__Cage],
+                          cageManager[self.__Cage] if self.__Cage is not None else None,
                           sourceManager[self.___source],
                           self.___line)
 
@@ -277,6 +277,19 @@ class NamedInt(int):
 
     else:
       raise AttributeError(key)
+
+  def __eq__(self, other):
+    if isString(other):
+      return str(self) == other
+
+    return int(self) == other
+
+
+  def __ne__(self, other):
+    if isString(other):
+      return str(self) != other
+
+    return super(NamedInt, self).__ne__(other)
 
 
 class KnownHardwareEvent(HardwareEvent):

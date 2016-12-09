@@ -686,6 +686,12 @@ class NamedIntTest(unittest.TestCase):
     self.assertEqual(namedInt, namedInt2)
     self.assertEqual(str(namedInt), str(namedInt2))
 
+    self.assertEqual(name, namedInt)
+    self.assertNotEqual('other name', namedInt)
+    self.assertTrue(name == namedInt)
+    self.assertFalse('other name' == namedInt)
+    self.assertFalse(name != namedInt)
+    self.assertTrue('other name' != namedInt)
 
 
 if __name__ == '__main__':

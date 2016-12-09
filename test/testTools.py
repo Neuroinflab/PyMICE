@@ -44,7 +44,13 @@ class TestGroupBy(unittest.TestCase):
     self.assertEqual({2: [(0, 2), (1, 1), (1, 1)],
                       3: [(1, 2), (2, 1), (3, 0)]},
                      groupBy([(1, 2), (2, 1), (0, 2), (3, 0), (1, 1), (1, 1)],
-                             getKey=lambda x: x[0] + x[1]))
+                             lambda x: x[0] + x[1]))
+
+  def testGivenTypeAsKeyFunctionGroupsByItsResult(self):
+    self.assertEqual({'2': [2, 2],
+                      '3': [3]},
+                     groupBy([2, 3, 2],
+                             getKey=str))
 
   def testGivenNoObjectsReturnsEmptyDict(self):
     self.assertEqual({},
@@ -60,6 +66,20 @@ class TestGroupBy(unittest.TestCase):
                       (1, 2): [(1, 2)],
                       (2, 1): [(2, 1)]},
                      groupBy([Pair(1, 2), Pair(1, 1), Pair(2, 1)], ('a', 'b')))
+
+  def testKeyFunctionDefaultsToIdentity(self):
+    self.assertEqual({1: [1],
+                      2: [2]},
+                     groupBy([1, 2]))
+
+  def testOutputAlwaysContainsRequiredKeys(self):
+    self.assertEqual({1: [1],
+                      'a': []},
+                     groupBy([1], requiredKeys=['a']))
+
+  def testRequiredKeysDoNotConflictWithKeysDefinedByInput(self):
+    self.assertEqual({1: [1]},
+                     groupBy([1], requiredKeys=[1]))
 
 
 class TestConvertTime(unittest.TestCase):

@@ -66,6 +66,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
 from ._Tools import (timeToList, PathZipFile, warn, groupBy, isString,
                      mapAsList)
 from ._FixTimezones import inferTimezones, LatticeOrderer
+from ._Analysis import Aggregator
 
 class PmCImportWarning(ImportWarning):
   pass
@@ -120,57 +121,34 @@ class Loader(Data):
                                },
             }
 
-  _aliasesZip = {'Animals': {'AnimalName': 'Name',
-                             'AnimalTag': 'Tag',
-                             'GroupName': 'Group',
-                             'AnimalNotes': 'Notes',
-                            },
-                 'IntelliCage/Visits': {#'AnimalTag': 'AnimalTag',
-                                        'Animal': 'AnimalTag',
-                                        'ID': 'VisitID',
-                                        #'VisitID': '_vid',
-                                        #'ModuleName': 'Module',
-                                       },
-                 'IntelliCage/Nosepokes': {'LicksNumber': 'LickNumber',
-                                           'LicksDuration': 'LickDuration',
-                                           #'VisitID': '_vid',
-                                          },
-                 'IntelliCage/Log': {#'LogType': 'Type',
-                                     #'Log': 'Type',
-                                     #'LogCategory': 'Category',
-                                     #'LogNotes': 'Notes',
-                                    },
-                 'IntelliCage/HardwareEvents': {'HardwareType': 'Type',
-                                               },
-                }
   _convertZip = {'Animals': {#'Tag': int,
                             },
-                 'IntelliCage/Visits': {#'Tag': int,
-                                        #'_vid': int,
-                                        'Start': timeToList,
-                                        'End': timeToList,
-                                        'CornerCondition': convertFloat,
-                                        'PlaceError': convertFloat,
-                                        'AntennaDuration': convertFloat,
-                                        'PresenceDuration': convertFloat,
-                                       },
-                 'IntelliCage/Nosepokes': {#'_vid': int,
-                                           'Start': timeToList,
-                                           'End': timeToList,
-                                           'LickContactTime': convertFloat,
-                                           'LickDuration': convertFloat,
-                                           'SideCondition': convertFloat,
-                                           'SideError': convertFloat,
-                                           'TimeError': convertFloat,
-                                           'ConditionError': convertFloat,
-                                          },
-                 'IntelliCage/Log': {'DateTime': timeToList,
+                 'Visits': {#'Tag': int,
+                            #'_vid': int,
+                            'Start': timeToList,
+                            'End': timeToList,
+                            'CornerCondition': convertFloat,
+                            'PlaceError': convertFloat,
+                            'AntennaDuration': convertFloat,
+                            'PresenceDuration': convertFloat,
+                            },
+                 'Nosepokes': {#'_vid': int,
+                               'Start': timeToList,
+                               'End': timeToList,
+                               'LickContactTime': convertFloat,
+                               'LickDuration': convertFloat,
+                               'SideCondition': convertFloat,
+                               'SideError': convertFloat,
+                               'TimeError': convertFloat,
+                               'ConditionError': convertFloat,
+                               },
+                 'Log': {'DateTime': timeToList,
+                         },
+                 'Environment': {'DateTime': timeToList,
+                                 'Temperature': convertFloat,
+                                 },
+                 'HardwareEvents': {'DateTime': timeToList,
                                     },
-                 'IntelliCage/Environment': {'DateTime': timeToList,
-                                             'Temperature': convertFloat,
-                                            },
-                 'IntelliCage/HardwareEvents': {'DateTime': timeToList,
-                                               },
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
@@ -197,8 +175,8 @@ class Loader(Data):
     for key, value in kwargs.items():
       warn.warn("Unknown argument %s given for Loader constructor." % key, stacklevel=2)
 
-    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
-                  CageManager=ICCageManager)
+    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
+    self._setCageManager(ICCageManager())
     self.__verbose = verbose
 
     self._fnames = (fname,)
@@ -232,10 +210,146 @@ class Loader(Data):
     self._buildCache()
 
   def _loadZip(self, zf, source=None):
-    tagToAnimal = dict(self._loadAnimals(zf))
+    ZipLoader = self._getZipLoader(zf)
+    self._loadAnimals(zf, ZipLoader)
+    tagToAnimal = self._makeTagToAnimalDict()
+    loader = ZipLoader(source, self._cageManager, tagToAnimal)
 
+    sessions = self._extractSessions(zf)
+
+    timeOrderer = LatticeOrderer()
+
+    visits = self._fromZipCSV(zf, 'Visits', source=source)
+
+    vids = visits[loader.VISIT_ID_FIELD]
+
+    if sessions is not None:
+      # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
+      #   ee._type = 'v.End'
+      #   ee._source = ss
+      #   ee._line = ll
+      #   es._type = 'v.Start'
+      #   es._source = ss
+      #   es._line = ll
+      vEnds = visits['End']
+      vStarts = visits['Start']
+
+      timeOrderer.coupleTuples(vStarts, vEnds)
+      timeOrderer.makeOrderedSequence(vEnds)
+      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(mapAsList(int, vids))])
+
+    else: #XXX
+      timeToFix = visits['End'] + visits['Start']
+
+    nosepokes = None
+    if self._getNp:
+      nosepokes = self._fromZipCSV(zf, 'Nosepokes', source=source)
+
+      npVids = nosepokes['VisitID']
+
+      if len(npVids) > 0: # disables annoying warning on comparison of empty array
+        vid2tag = dict(zip(vids, visits[loader.VISIT_TAG_FIELD]))
+
+        if sessions is not None:
+          # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
+          #   ee._type = 'n.End'
+          #   ee._source = ss
+          #   ee._line = ll
+          #   es._type = 'n.Start'
+          #   es._source = ss
+          #   es._line = ll
+
+          npEnds = nosepokes['End']
+          npStarts = nosepokes['Start']
+          timeOrderer.coupleTuples(npStarts, npEnds)
+          timeOrderer.makeOrderedSequence(npEnds)
+
+          npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
+
+          npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
+          npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
+          # XXX                   ^ - ugly... possibly duplicated
+
+          for tag in tagToAnimal:
+            for side in (0, 1): # tailpokes correction
+              timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
+
+        else: #XXX
+          timeToFix.extend(nosepokes['End'])
+          timeToFix.extend(nosepokes['Start'])
+
+        for vid in npVids:
+          if vid not in vid2tag:
+            warn.warn('Unmatched nosepokes: %s' % vid)
+
+    log = None
+    if self._getLog:
+      log = self._fromZipCSV(zf, 'Log', source=source)
+      if sessions is not None:
+        timeOrderer.addOrderedSequence(log['DateTime'])
+
+      else: #XXX
+        timeToFix.extend(log['DateTime'])
+
+    environment = None
+    if self._getEnv:
+      try:
+        environment = self._fromZipCSV(zf, 'Environment', source=source)
+
+      except KeyError:
+        pass
+
+      else:
+        if sessions is not None:
+          # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
+          #   ee._type = 'e.DateTime'
+          #   ee._source = ss
+          #   ee._line = ll
+          timeOrderer.addOrderedSequence(environment['DateTime'])
+
+        else:
+          timeToFix.extend(environment['DateTime'])
+
+    hardware = None
+    if self._getHw:
+      try:
+        hardware = self._fromZipCSV(zf, 'HardwareEvents', source=source)
+
+      except KeyError:
+        pass
+
+      else:
+        if sessions is not None:
+          timeOrderer.addOrderedSequence(hardware['DateTime'])
+
+        else: #XXX
+          timeToFix.extend(hardware['DateTime'])
+
+    #XXX important only when timezone changes!
+    if sessions is not None:
+      fixSessions(timeOrderer.pullOrdered(), sessions)
+
+    else:
+      for t in timeToFix:
+        t.append(pytz.utc) # UTC assumed
+
+    self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
+                                            log, environment, hardware)
+
+
+    self._insertNewVisits(loader.loadVisits(visits, nosepokes))
+    if log is not None:
+      self._insertNewLog(loader.loadLog(log))
+
+    if environment is not None:
+      self._insertNewEnv(loader.loadEnv(environment))
+
+    if hardware is not None:
+      self._insertNewHw(loader.loadHw(hardware))
+
+  def _extractSessions(self, zf):
     try:
-      fh = zf.open('Sessions.xml')
+      fh = self._openZipFile(zf, 'Sessions.xml')
       dom = minidom.parse(fh)
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
       ss = aos.getElementsByTagName('Session')
@@ -278,126 +392,7 @@ class Loader(Data):
     except:
       sessions = None
       pass
-
-    timeOrderer = LatticeOrderer()
-
-    visits = self._fromZipCSV(zf, 'IntelliCage/Visits', source=source)
-    vids = visits['VisitID']
-
-    if sessions is not None:
-      # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
-      #   ee._type = 'v.End'
-      #   ee._source = ss
-      #   ee._line = ll
-      #   es._type = 'v.Start'
-      #   es._source = ss
-      #   es._line = ll
-      vEnds = visits['End']
-      vStarts = visits['Start']
-
-      timeOrderer.coupleTuples(vStarts, vEnds)
-      timeOrderer.makeOrderedSequence(vEnds)
-      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(mapAsList(int, vids))])
-
-    else: #XXX
-      timeToFix = visits['End'] + visits['Start']
-
-    nosepokes = None
-    if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'IntelliCage/Nosepokes', source=source)
-
-      npVids = nosepokes['VisitID']
-
-      if len(npVids) > 0: # disables annoying warning on comparison of empty array
-        vid2tag = dict(zip(vids, visits['AnimalTag']))
-
-        if sessions is not None:
-          # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
-          #   ee._type = 'n.End'
-          #   ee._source = ss
-          #   ee._line = ll
-          #   es._type = 'n.Start'
-          #   es._source = ss
-          #   es._line = ll
-
-          npEnds = nosepokes['End']
-          npStarts = nosepokes['Start']
-          timeOrderer.coupleTuples(npStarts, npEnds)
-          timeOrderer.makeOrderedSequence(npEnds)
-
-          npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
-
-          npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
-          npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
-          # XXX                   ^ - ugly... possibly duplicated
-
-          for tag in tagToAnimal:
-            for side in (0, 1): # tailpokes correction
-              timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
-
-        else: #XXX
-          timeToFix.extend(nosepokes['End'])
-          timeToFix.extend(nosepokes['Start'])
-
-        for vid in npVids:
-          if vid not in vid2tag:
-            warn.warn('Unmatched nosepokes: %s' % vid)
-
-    log = None
-    if self._getLog:
-      log = self._fromZipCSV(zf, 'IntelliCage/Log', source=source)
-      if sessions is not None:
-        timeOrderer.addOrderedSequence(log['DateTime'])
-
-      else: #XXX
-        timeToFix.extend(log['DateTime'])
-
-    environment = None
-    if self._getEnv:
-      environment = self._fromZipCSV(zf, 'IntelliCage/Environment', source=source)
-      if environment is not None:
-        if sessions is not None:
-          # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
-          #   ee._type = 'e.DateTime'
-          #   ee._source = ss
-          #   ee._line = ll
-          timeOrderer.addOrderedSequence(environment['DateTime'])
-
-        else:
-          timeToFix.extend(environment['DateTime'])
-
-    hardware = None
-    if self._getHw:
-      hardware = self._fromZipCSV(zf, 'IntelliCage/HardwareEvents', source=source)
-      if hardware is not None:
-        if sessions is not None:
-          timeOrderer.addOrderedSequence(hardware['DateTime'])
-
-        else: #XXX
-          timeToFix.extend(hardware['DateTime'])
-
-    #XXX important only when timezone changes!
-    if sessions is not None:
-      fixSessions(timeOrderer.pullOrdered(), sessions)
-
-    else:
-      for t in timeToFix:
-        t.append(pytz.utc) # UTC assumed
-
-    self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
-                                            log, environment, hardware)
-
-    loader = ZipLoader(source, self._cageManager, tagToAnimal)
-
-    self._insertNewVisits(loader.loadVisits(visits, nosepokes))
-    if log is not None:
-      self._insertNewLog(loader.loadLog(log))
-
-    if environment is not None:
-      self._insertNewEnv(loader.loadEnv(environment))
-
-    if hardware is not None:
-      self._insertNewHw(loader.loadHw(hardware))
+    return sessions
 
   def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
                                          log, environment, hardware):
@@ -415,30 +410,48 @@ class Loader(Data):
   def __convertFieldToDatetime(self, field, table):
     table[field] = [datetime(*x) for x in table[field]]
 
+  def _getZipLoader(self, zf):
+    version = self._checkVersion(zf)
+    return ZipLoader_v_Version1 if version == 'version1' else ZipLoader_v_IntelliCage_Plus_3
+
+
+  def _checkVersion(self, zf):
+    fh = self._openZipFile(zf, 'DataDescriptor.xml')
+    dom = minidom.parse(fh)
+    dd = dom.getElementsByTagName('DataDescriptor')[0]
+    version = dd.getElementsByTagName('Version')[0]
+    versionStr = version.childNodes[0]
+    assert versionStr.nodeType == versionStr.TEXT_NODE
+    return versionStr.nodeValue.strip().lower()
+
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
-    try:
-      fh = zf.open(path + '.txt')
-      if sys.version_info >= (3, 0):
-        # if sys.version_info < (3, 2):
-        #   # XXX: Python3 monkey-path
-        #   fh.readable = lambda: True
-        #   fh.writable = lambda: False
-        #   fh.seekable = lambda: False
-        #   fh.read1 = items_file.read
-        #   #io.BytesIO(fh.read())
-
-        fh = io.TextIOWrapper(fh)
-
-    except KeyError:
-      return
-
-    return self._fromCSV(fh, source=source,
-                         aliases=self._aliasesZip.get(path),
+    return self._fromCSV(self._openZipFile(zf, path + '.txt'),
+                         source=source,
                          convert=self._convertZip.get(path),
                          oldLabels=oldLabels)
 
   @staticmethod
-  def _fromCSV(fname, source=None, aliases=None, convert=None, oldLabels=None):
+  def _openZipFile(zf, path):
+    try:
+      fh = zf.open(path)
+
+    except KeyError:
+      fh = zf.open('IntelliCage/' + path)
+
+    if sys.version_info >= (3, 0):
+      # if sys.version_info < (3, 2):
+      #   # XXX: Python3 monkey-path
+      #   fh.readable = lambda: True
+      #   fh.writable = lambda: False
+      #   fh.seekable = lambda: False
+      #   fh.read1 = items_file.read
+      #   #io.BytesIO(fh.read())
+      return io.TextIOWrapper(fh)
+
+    return fh
+
+  @staticmethod
+  def _fromCSV(fname, source=None, convert=None, oldLabels=None):
     if isString(fname):
       fname = open(fname, 'rb')
 
@@ -446,10 +459,10 @@ class Loader(Data):
     data = list(reader)
     fname.close()
 
-    return Loader.__fromCSV(data, source, aliases, convert, oldLabels)
+    return Loader.__fromCSV(data, source, convert, oldLabels)
 
   @staticmethod
-  def __fromCSV(data, source, aliases, convert, oldLabels):
+  def __fromCSV(data, source, convert, oldLabels):
     if len(data) == 0:
       return
 
@@ -457,9 +470,6 @@ class Loader(Data):
     if isinstance(oldLabels, set):
       oldLabels.clear()
       oldLabels.update(labels)
-
-    if aliases is not None:
-      labels = [aliases.get(l, l) for l in labels]
 
     n = len(data)
     if n == 0:
@@ -514,44 +524,25 @@ class Loader(Data):
                self._fnames.__str__()
     return mystring
 
-  def _loadAnimals(self, zf):
-    animalsLabels = set()
-    animals = self._fromZipCSV(zf, 'Animals', oldLabels=animalsLabels)
+  def _loadAnimals(self, zf, loader):
+    animalData = self._fromZipCSV(zf, 'Animals')
 
-    animalGroup = animals.pop('Group')
-    tags = animals['Tag']
-    animals = mapAsList(Animal.fromRow,
-                        animals['Name'],
-                        tags,
-                        animals.get('Sex', repeat(None)),
-                        animals.get('Notes', repeat(None)))
-
-    animalNames = set()
-    groups = {}
-    tag2Animal = {}
-    for group, animal, tag in zip(animalGroup, animals, tags):
-      assert tag not in tag2Animal
-      name = animal.Name
-      assert name not in animalNames
-      tag2Animal[tag] = name
-      animalNames.add(name)
-
-      if group is not None:
-        try:
-          groups[group]['Animals'].append(name)
-
-        except KeyError:
-          groups[group] = {'Animals': [name],
-                           'Name': group}
+    animals = loader.loadAnimals(animalData)
 
     for animal in animals:
       self._registerAnimal(animal)
 
-    for group in groups.values():
-      self._registerGroup(**group)
+    groups = loader.loadGroups(animalData)
+    for name in groups:
+      if name is not None:
+        self._registerGroup(name, groups[name])
 
-    return dict((t, self.getAnimal(n)) for t, n in tag2Animal.items())
-
+  def _makeTagToAnimalDict(self):
+    animals = [self.getAnimal(a) for a in self.getAnimal()]
+    tagToAnimal = {t: a for a in animals for t in a.Tag}
+    assert len(animals) == len(tagToAnimal)
+    assert len(set(tagToAnimal.values())) == len(tagToAnimal)
+    return tagToAnimal
 
 
 class Merger(Data):
@@ -624,8 +615,8 @@ class Merger(Data):
       warn.warn("Unknown argument %s given for Merger constructor" % key,
                 stacklevel=2)
 
-    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw,
-                  CageManager=ICCageManager)
+    Data.__init__(self, getNp=getNp, getLog=getLog, getEnv=getEnv, getHw=getHw)
+    self._setCageManager(ICCageManager())
 
     self._dataSources = map(str, dataSources)
 
@@ -959,23 +950,23 @@ class ICCageManager(object):
       cage._del_()
 
 
-class ZipLoader(object):
+class ZipLoader_v_IntelliCage_Plus_3(object):
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
-    self.__cageManager = cageManager
-    self.__source = source
+    self._cageManager = cageManager
+    self._source = source
 
-  def __makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
-                CornerCondition, PlaceError,
-                AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-                VisitSolution, _line, nosepokeRows):
+  def _makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
+                 CornerCondition, PlaceError,
+                 AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
+                 VisitSolution, _line, nosepokeRows):
     animal = self.__animalManager[AnimalTag]
-    cage = self.__cageManager[Cage]
+    cage = self._cageManager[Cage]
     corner = cage[Corner]
 
     Nosepokes = None
     if nosepokeRows is not None:
-      Nosepokes = tuple(self.__makeNosepoke(corner, row)\
+      Nosepokes = tuple(self._makeNosepoke(corner, row)\
                         for row in sorted(nosepokeRows))
 
     return Visit(Start, corner, animal, End,
@@ -986,12 +977,12 @@ class ZipLoader(object):
                  int(AntennaNumber) if AntennaNumber is not None else None,
                  timedelta(seconds=float(AntennaDuration)) if AntennaDuration is not None else None,
                  int(PresenceNumber) if PresenceNumber is not None else None,
-                 timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None ,
+                 timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None,
                  int(VisitSolution) if VisitSolution is not None else None,
-                 self.__source, _line,
+                 self._source, _line,
                  Nosepokes)
 
-  def __makeNosepoke(self, sideManager, nosepokeTuple):
+  def _makeNosepoke(self, sideManager, nosepokeTuple):
     (Start, End, Side,
      SideCondition, SideError, TimeError, ConditionError,
      LickNumber, LickContactTime, LickDuration,
@@ -1011,41 +1002,45 @@ class ZipLoader(object):
                     int(LED1State) if LED1State is not None else None,
                     int(LED2State) if LED2State is not None else None,
                     int(LED3State) if LED3State is not None else None,
-                    self.__source, _line)
+                    self._source, _line)
 
+  VISIT_FIELDS = ['Cage', 'Corner',
+                  'AnimalTag', 'Start', 'End', 'ModuleName',
+                  'CornerCondition', 'PlaceError',
+                  'AntennaNumber', 'AntennaDuration',
+                  'PresenceNumber', 'PresenceDuration',
+                  'VisitSolution',]
+  VISIT_ID_FIELD = 'VisitID'
+  VISIT_TAG_FIELD = 'AnimalTag'
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
-      vNosepokes = self.__assignNosepokesToVisits(nosepokesCollumns,
-                                                  visitsCollumns['VisitID'])
+      vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
+                                                 visitsCollumns[self.VISIT_ID_FIELD])
 
     else:
       vNosepokes = repeat(None)
 
     vColValues = [visitsCollumns.get(x, repeat(None)) \
-                  for x in ['Cage', 'Corner',
-                            'AnimalTag', 'Start', 'End', 'ModuleName',
-                            'CornerCondition', 'PlaceError',
-                            'AntennaNumber', 'AntennaDuration',
-                            'PresenceNumber', 'PresenceDuration',
-                            'VisitSolution',]]
+                  for x in self.VISIT_FIELDS]
     vLines = count(1)
     vColValues.append(vLines)
     vColValues.append(vNosepokes)
-    return mapAsList(self.__makeVisit, *vColValues)
+    return mapAsList(self._makeVisit, *vColValues)
 
-  def __assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
+  NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
+                     'SideCondition', 'SideError',
+                     'TimeError', 'ConditionError',
+                     'LickNumber', 'LickContactTime',
+                     'LickDuration',
+                     'AirState', 'DoorState',
+                     'LED1State', 'LED2State',
+                     'LED3State']
+  def _assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
     vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
 
     nColValues = [nosepokesCollumns.get(x, repeat(None)) \
-                  for x in  ['Start', 'End', 'Side',
-                             'SideCondition', 'SideError',
-                             'TimeError', 'ConditionError',
-                             'LickNumber', 'LickContactTime',
-                             'LickDuration',
-                             'AirState', 'DoorState',
-                             'LED1State', 'LED2State',
-                             'LED3State']]
+                  for x in self.NOSEPOKE_FIELDS]
     nIDs = nosepokesCollumns['VisitID']
     nRows = len(nIDs)
     nLines = range(1, 1 + nRows)
@@ -1056,82 +1051,193 @@ class ZipLoader(object):
 
     return vNosepokes
 
-  def __makeLog(self, DateTime, Category, Type,
-                Cage, Corner, Side, Notes, _line):
-    cage, corner, side = None, None, None
-    if Cage is not None:
-      cage = self.__cageManager[Cage]
-      if Corner is not None:
-        corner = cage[Corner]
-        if Side is not None:
-          side = corner[Side]
+  def _makeLog(self, DateTime, Category, Type,
+               Cage, Corner, Side, Notes, _line):
+    cage, corner, side = self._getLogCageCornerSide(Cage, Corner, Side)
 
     return LogEntry(DateTime, unicode(Category), unicode(Type),
                     cage, corner, side,
                     unicode(Notes) if Notes is not None else None,
-                    self.__source,
+                    self._source,
                     _line)
 
-  def loadLog(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime',
-                                    'LogCategory',
-                                    'LogType',
-                                    'Cage',
-                                    'Corner',
-                                    'Side',
-                                    'LogNotes'],
-                                   self.__makeLog)
+  def _getLogCageCornerSide(self, Cage, Corner, Side):
+    return self._getCageCornerSide(Cage, Corner, Side)
 
-  def __makeEnv(self, DateTime, Temperature, Illumination, Cage,
-                _line):
+  def loadLog(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'LogCategory',
+                                   'LogType',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'LogNotes'],
+                                  self._makeLog)
+
+  def _makeEnv(self, DateTime, Temperature, Illumination, Cage,
+               _line):
     return EnvironmentalConditions(DateTime,
                                    float(Temperature),
                                    int(Illumination),
-                                   self.__cageManager[Cage],
-                                   self.__source, _line)
+                                   self._cageManager[Cage] if Cage is not None else None,
+                                   self._source, _line)
 
   def loadEnv(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime', 'Temperature',
-                                    'Illumination', 'Cage'],
-                                   self.__makeEnv)
+    return self._columnsToObjects(columns,
+                                  ['DateTime', 'Temperature',
+                                   'Illumination', 'Cage'],
+                                  self._makeEnv)
 
-  def __columnsToObjects(self, columns, columnNames, objectFactory):
-    colValues = self._getColumnValues(columnNames, columns)
+  @classmethod
+  def _columnsToObjects(cls, columns, columnNames, objectFactory):
+    colValues = cls._getColumnValues(columnNames, columns)
     return mapAsList(objectFactory, *colValues)
 
-  __hwClass = {'0': AirHardwareEvent,
-               '1': DoorHardwareEvent,
-               '2': LedHardwareEvent,
-               }
+  _hwClass = {'0': AirHardwareEvent,
+              '1': DoorHardwareEvent,
+              '2': LedHardwareEvent,
+              }
 
-  def __makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
-    corner, side = Corner, Side
-    cage = self.__cageManager[Cage]
-    if corner is not None:
-      corner = cage[corner]
-      if side is not None:
-        side = corner[Side]
+  def _makeHw(self, DateTime, Type, Cage, Corner, Side, State, _line):
+    cage, corner, side = self._getHwCageCornerSide(Cage, Corner, Side)
 
     try:
-      return self.__hwClass[Type](DateTime, cage, corner, side,
-                                  int(State), self.__source, _line)
+      return self._hwClass[Type](DateTime, cage, corner, side,
+                                 int(State), self._source, _line)
 
     except KeyError:
       return UnknownHardwareEvent(DateTime, int(Type), cage, corner, side,
-                                  int(State), self.__source, _line)
+                                  int(State), self._source, _line)
+
+  def _getHwCageCornerSide(self, Cage, Corner, Side):
+    return self._getCageCornerSide(Cage, Corner, Side)
+
+  def _getCageCornerSide(self, Cage, Corner, Side):
+    if Cage is None:
+      return Cage, Corner, Side
+
+    cage = self._cageManager[Cage]
+    if Corner is None:
+      return cage, Corner, Side
+
+    corner = cage[Corner]
+    if Side is None:
+      return cage, corner, Side
+
+    return cage, corner, corner[Side]
 
   def loadHw(self, columns):
-    return self.__columnsToObjects(columns,
-                                   ['DateTime',
-                                    'Type',
-                                    'Cage',
-                                    'Corner',
-                                    'Side',
-                                    'State'],
-                                   self.__makeHw)
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'HardwareType',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'State'],
+                                  self._makeHw)
 
-  def _getColumnValues(self, columnNames, columns):
+  @staticmethod
+  def _getColumnValues(columnNames, columns):
     return [columns.get(c) for c in columnNames] + [count(1)]
 
+  @classmethod
+  def loadAnimals(cls, columns):
+    return cls._columnsToObjects(columns,
+                                 ['AnimalName', 'AnimalTag','Sex',
+                                  'AnimalNotes'],
+                                 cls._makeAnimal)
+
+  @staticmethod
+  def _makeAnimal(Name, Tag, Sex, Notes, _line):
+    return Animal.fromRow(Name, Tag, Sex, Notes)
+
+  @classmethod
+  def loadGroups(cls, columns):
+    return cls.group(columns['AnimalName'],
+                     columns['GroupName'])
+
+  @classmethod
+  def group(cls, objects, group):
+    return Aggregator.aggregate(zip(objects, group),
+                                getKey=lambda x: x[1],
+                                aggregateFunction=lambda xs: {x[0] for x in xs})
+
+
+class ZipLoader_v_Version1(ZipLoader_v_IntelliCage_Plus_3):
+  def _getCageCornerSide(self, Cage, Corner, Side):
+    if Cage is None:
+      return Cage, Corner, Side
+
+    cage = self._cageManager[int(Cage) + 1]
+    if Corner is None:
+      return cage, Corner, Side
+
+    corner = cage[int(Corner) + 1]
+    if Side is None:
+      return cage, corner, Side
+
+    return cage, corner, (corner[int(Side) + 1])
+
+  def _makeEnv(self, DateTime, Temperature, Illumination,
+               _line):
+    return EnvironmentalConditions(DateTime,
+                                   float(Temperature),
+                                   int(Illumination),
+                                   None,
+                                   self._source, _line)
+
+  def loadEnv(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime', 'Temperature', 'Illumination'],
+                                  self._makeEnv)
+
+  def loadLog(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'Category',
+                                   'Type',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'Notes'],
+                                  self._makeLog)
+
+  def loadHw(self, columns):
+    return self._columnsToObjects(columns,
+                                  ['DateTime',
+                                   'Type',
+                                   'Cage',
+                                   'Corner',
+                                   'Side',
+                                   'State'],
+                                  self._makeHw)
+
+  VISIT_FIELDS = ['Cage', 'Corner',
+                  'Animal', 'Start', 'End', 'ModuleName',
+                  'CornerCondition', 'PlaceError',
+                  'AntennaNumber', 'AntennaDuration',
+                  'PresenceNumber', 'PresenceDuration',
+                  'VisitSolution',]
+  VISIT_ID_FIELD = 'ID'
+  VISIT_TAG_FIELD = 'Animal'
+
+  NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
+                     'SideCondition', 'SideError',
+                     'TimeError', 'ConditionError',
+                     'LicksNumber', 'LickContactTime',
+                     'LicksDuration',
+                     'AirState', 'DoorState',
+                     'LED1State', 'LED2State',
+                     'LED3State']
+
+  @classmethod
+  def loadAnimals(cls, columns):
+    return cls._columnsToObjects(columns,
+                                 ['Name', 'Tag','Sex', 'Notes'],
+                                 cls._makeAnimal)
+
+  @classmethod
+  def loadGroups(cls, columns):
+    return cls.group(columns['Name'],
+                     columns['Group'])

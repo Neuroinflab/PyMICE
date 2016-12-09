@@ -23,6 +23,8 @@
 #                                                                             #
 ###############################################################################
 
+import collections
+
 class Ens(object):
   """
   A class of read-only data structures emulating the initializer notation
@@ -37,13 +39,6 @@ class Ens(object):
   42
   >>> print(deepThought['answer'])
   42
-
-  Not initialized attributes and items of Ens objects defaults to None.
-
-  >>> print(deepThought.question)
-  None
-  >>> print(deepThought['question'])
-  None
 
   It is possible to iterate for every attribute/key of the object.
 
@@ -87,28 +82,33 @@ class Ens(object):
        also by its keyword argument.
     """
 
+  class UndefinedAttributeError(AttributeError):
+    """
+    An error raised in case of access to undefined attribute.
+    """
+
+  class UndefinedKeyError(KeyError):
+    """
+    An error raised in case of access to undefined item.
+    """
+
   def __init__(self, *dicts, **kwargs):
     for dict in (kwargs,) + dicts:
       for key in dict:
-        Ens.__tryToSetAttribute(Ens.__dict(self), key, dict[key])
+        Ens.__tryToSetAttribute(Ens._dict(self), key, dict[key])
 
-  def __dict(self):
+  def _dict(self):
     return super(Ens, self).__getattribute__('__dict__')
-
-  @classmethod
-  def __get(cls, ens, name):
-    return cls.__dict(ens).get(name)
 
   @classmethod
   def __tryToSetAttribute(cls, attributeDict, name, value):
     if name in attributeDict:
       raise cls.AmbiguousInitializationError
 
-    if value is not None:
-      attributeDict[name] = value
+    attributeDict[name] = value
 
   def __getattribute__(self, name):
-    return Ens.__get(self, name)
+    return Ens._tryAccessMember(self, name, Ens.UndefinedAttributeError)
 
   def __setattr__(self, name, value):
     raise Ens.ReadOnlyError
@@ -120,10 +120,17 @@ class Ens(object):
     return list(self)
   
   def __iter__(self):
-    return iter(Ens.__dict(self))
+    return iter(Ens._dict(self))
 
   def __getitem__(self, key):
-    return Ens.__get(self, key)
+    return Ens._tryAccessMember(self, key, Ens.UndefinedKeyError)
+
+  def _tryAccessMember(self, name, errorClass):
+    try:
+      return Ens._dict(self)[name]
+
+    except KeyError:
+      raise errorClass(name)
 
   def __setitem__(self, key, value):
     raise Ens.ReadOnlyError
@@ -131,15 +138,28 @@ class Ens(object):
   def __delitem__(self, key):
     raise Ens.ReadOnlyError
 
+  def __eq__(self, other):
+    return Ens._dict(self) == other
+
+  def __ne__(self, other):
+    return not Ens.__eq__(self, other)
+
+  def __repr__(self):
+    return 'Ens({{{}}})'.format(', '.join(Ens.__reprAttrs(self)))
+
+  def __reprAttrs(self):
+    for attr in sorted(self, key=repr):
+      yield '{!r}: {!r}'.format(attr, self[attr])
+
   @classmethod
   def map(cls, function, source, *otherSources):
     """
-    Apply a function to every non None attribute (or item) of a source object.
+    Apply a function to every defined attribute (or item) of a source object.
     Construct an Ens object with attributes of same names, which values are
     results of the applied function.
 
     If multiple source objects are given, the function must accept that many
-    positional arguments and is applied for every attribute which is non None
+    positional arguments and is applied for every attribute which is defined
     for at least one source object. Subsequent arguments of the function are
     values of the attribute of corresponding source objects.
 
@@ -167,9 +187,44 @@ class Ens(object):
 
   @classmethod
   def __mapForKeys(cls, function, keys, sources):
-    return cls.__fromPairs((k, function(*[s[k] for s in sources]))
+    return cls.__fromPairs((k, function(*[cls.__tryToGetItemRetunNoneOnFailure(s, k) for s in sources]))
                            for k in keys)
+
+  @staticmethod
+  def __tryToGetItemRetunNoneOnFailure(mapping, item):
+    try:
+      return mapping[item]
+
+    except KeyError:
+      return None
 
   @classmethod
   def __fromPairs(cls, pairs):
     return cls(dict(pairs))
+
+  class Mapping(collections.Mapping):
+    def __init__(self, ens):
+      self.__ens = ens
+
+    def __getitem__(self, item):
+      return self.__ens[item]
+
+    def __len__(self):
+      return len(Ens._dict(self.__ens))
+
+    def __iter__(self):
+      return iter(self.__ens)
+
+
+  @classmethod
+  def asMapping(cls, source):
+    """
+    Create a mapping-API wrapper for the source Ens object.
+
+    :param source: the source object
+    :type source: Ens
+
+    :return: the mapping object
+    :rtype: Mapping
+    """
+    return cls.Mapping(source)

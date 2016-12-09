@@ -28,7 +28,7 @@ import unittest
 from datetime import datetime, timedelta
 import pytz
 
-from _FixTimezones import inferTimezones, TimezonesInferrer, LatticeOrderer
+from pymice._FixTimezones import inferTimezones, TimezonesInferrer, LatticeOrderer
 
 
 utc = pytz.utc

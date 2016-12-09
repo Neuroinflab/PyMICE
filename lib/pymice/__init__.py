@@ -37,16 +37,14 @@ from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           FailureInspector, DataValidator, TestMiceData)
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __ID__ = __RRID__ + ' ' + __version__
 __all__ = []
 
 __welcomeMessage = """PyMICE library v. {version}
-(Resource identifier: {rrid})
 
-This is a bleeding edge version of the library. It might meet your
-expectations, however it might also go to your fridge, drink all the
-beer it can find there and then eat your cat. Be warned.
+The library is available under GPL3 license; we ask that the resource identifier
+({rrid}) is provided in any published research making use of PyMICE.
 
 """.format(version=__version__, rrid=__RRID__)
 #sys.stderr.write(__welcomeMessage)

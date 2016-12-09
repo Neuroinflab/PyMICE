@@ -158,7 +158,8 @@ def timeToList(tStr):
   tokens = date.split('-') + time.split(':')
 
   if len(tokens) == 5:
-    return map(int, tokens) + [0, 0]
+    #return map(int, tokens) + [0, 0]
+    return LatticeOrderer.Node(map(int, tokens + [0, 0]))
 
   decimal, seconds = modf(float(tokens[5]))
   #return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
@@ -193,7 +194,11 @@ class PathZipFile(object):
 
   def open(self, name, mode='r'):
     fn = os.path.join(self.__path, name)
-    return open(fn, mode)
+    try:
+      return open(fn, mode)
+
+    except IOError:
+      raise KeyError(name)
 
 
 
@@ -204,7 +209,7 @@ class PathZipFile(object):
 
 
 
-def groupBy(objects, getKey):
+def groupBy(objects, getKey=lambda x: x, requiredKeys=()):
   """
   >>> import operator
   >>> output = groupBy([(1, 2), (3, 4), (3, 2), (1, 1), (2, 1, 8)],
@@ -237,11 +242,25 @@ def groupBy(objects, getKey):
   (1, 1) [Pair(a=1, b=1)]
   (1, 2) [Pair(a=1, b=2)]
   (2, 1) [Pair(a=2, b=1)]
-  """
-  if not hasattr(getKey, '__call__'):
-    getKey = attrgetter(getKey) if isString(getKey) else attrgetter(*getKey)
 
-  result = {}
+  >>> output = groupBy([1, 2])
+  >>> for k in sorted(output):
+  ...   print("{} {}".format(k, output[k]))
+  1 [1]
+  2 [2]
+
+  >>> groupBy([], requiredKeys=['a'])
+  {'a': []}
+  """
+  return __groupByKey(objects,
+                      getKey if hasattr(getKey, '__call__') else __attrGetter(getKey),
+                      requiredKeys)
+
+def __attrGetter(attrs):
+  return attrgetter(attrs) if isString(attrs) else attrgetter(*attrs)
+
+def __groupByKey(objects, getKey, requiredKeys):
+  result = {key: [] for key in requiredKeys}
   for o in objects:
     key = getKey(o)
     try:
