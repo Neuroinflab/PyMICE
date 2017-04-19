@@ -146,7 +146,9 @@ class LickometerLogAnalyzer(object):
               # print('%s\t%s" % (tstart, tstop))
               results.append(ExcludeMiceData(startTime=datetime.fromtimestamp(tstart, UTC),
                       endTime=datetime.fromtimestamp(tstop, UTC), logType='Lickometer',
-                      cage=cage, side=side,
+                      cage=cage,
+                      corner=(side + 1) // 2,
+                      side=side,
                       notes=str(sum(medHist[tstartidx:tstopidx]))
                       + ' cases. ' + self.notes))
 
