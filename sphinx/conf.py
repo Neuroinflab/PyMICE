@@ -51,8 +51,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PyMICE'
-copyright = u'2015-2016, Jakub M. Kowalski and Szymon Łęski'
-author = u'Jakub M. Kowalski and Szymon Łęski'
+copyright = u'2015-2017, Jakub M. Dzik a.k.a. Kowalski and Szymon Łęski'
+author = u'Jakub M. Dzik a.k.a. Kowalski and Szymon Łęski'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -228,7 +228,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'PyMICE.tex', u'PyMICE Documentation',
-   u'Jakub M. Kowalski and Szymon Łęski', 'manual'),
+   u'Jakub M. Dzik a.k.a. Kowalski and Szymon Łęski', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

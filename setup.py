@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2014-2016 Jakub M. Kowalski (Laboratory of                 #
+#    Copyright (C) 2014-2017 Jakub M. Dzik aka Kowalski (Laboratory of      #
 #    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
@@ -57,8 +57,8 @@ setup(name = 'PyMICE',
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
       description = 'PyMICE - a Python® library for mice behavioural data analysis',
       long_description = loadTextFrom('README.rst'),
-      author="Jakub M. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
-      author_email="j.kowalski@nencki.gov.pl, s.leski@nencki.gov.pl",
+      author="Jakub M. Dzik a.k.a. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
+      author_email="jakub.m.dzik+pymice@gmail.com, sz.leski+pymice@gmail.com",
       license='GPL3',
       classifiers = ['Development Status :: 4 - Beta',
                      'Intended Audience :: Developers',

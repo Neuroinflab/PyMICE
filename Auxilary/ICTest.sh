@@ -3,8 +3,8 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2015 Jakub M. Kowalski (Laboratory of Neuroinformatics;    #
-#    Nencki Institute of Experimental Biology)                                #
+#    Copyright (C) 2015 Jakub M. Dzik a.k.a. Kowalski (Laboratory of          #
+#    Neuroinformatics; Nencki Institute of Experimental Biology)              #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU General Public License as published by     #
@@ -20,6 +20,7 @@
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
 ###############################################################################
+
 if [ $# -eq 0 ] || [ $# -gt 2 ]
 then
   echo "Usage: $0 <session directory> [<archive directory>]"

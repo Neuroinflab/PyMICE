@@ -4,8 +4,9 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2016 Jakub M. Kowalski (Laboratory of Neuroinformatics;    #
-#    Nencki Institute of Experimental Biology of Polish Academy of Sciences)  #
+#    Copyright (C) 2016-2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of     #
+#    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
+#    Academy of Sciences)                                                     #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU General Public License as published by     #

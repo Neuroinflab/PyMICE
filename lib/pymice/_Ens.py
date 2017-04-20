@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2012-2016 Jakub M. Kowalski (Laboratory of                 #
+#    Copyright (C) 2016-2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of     #
 #    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
