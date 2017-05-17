@@ -2,3 +2,5 @@
 *.pyc
 *.zip
 /build
+.coverage
+coverage.xml

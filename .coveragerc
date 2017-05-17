@@ -1,0 +1,19 @@
+[run]
+branch = True
+source = lib
+
+[report]
+exclude_lines =
+    if self.debug:
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+ignore_errors = True
+omit =
+    tests/*
+    test/*
+    lib/pymice/ICFixer.py
+    lib/pymice/_Debug.py
+    lib/pymice/_Python3/*
+    lib/pymice/_Results.py
+    lib/pymice/debug.py
