@@ -46,11 +46,18 @@ class TestReference(unittest.TestCase):
               'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
               }
 
+    LATEX = {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
+             }
+
     def testSoftwareBibTeX(self):
-        self.maxDiff = None
         for version, expected in self.BIBTEX.items():
             self.checkUnicodeEqual(expected,
                                    reference.software(version, 'bibtex'))
+
+    def testSoftwareLaTeX(self):
+        for version, expected in self.LATEX.items():
+            self.checkUnicodeEqual(expected,
+                                   reference.software(version, 'latex'))
 
     def testSoftwareAPA6(self):
         for version, expected in self.APA_6_PLAIN.items():

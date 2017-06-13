@@ -64,6 +64,9 @@ class _Reference(object):
                             ('extended', ", Year = {{{year}}}, Month = {{{month}}}, Doi = {{{doi}}}"),
                             ('extended', ""),
                             ]),
+                'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
+                          [
+                          ]),
                 }
 
     def software(self, version=__version__, style='apa6'):
