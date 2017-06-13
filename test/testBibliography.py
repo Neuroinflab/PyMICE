@@ -46,9 +46,11 @@ class TestReference(unittest.TestCase):
                    '0.2.3': u"pymice0.2.3{Title = {{PyMICE (v.~0.2.3)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47259}}",
                    'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
                    },
+        }
+    CITE_SOFTWARE = {
         'latex': {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
                   },
-    }
+        }
 
     def testSoftware(self):
         for style, tests in self.SOFTWARE.items():
@@ -63,6 +65,13 @@ class TestReference(unittest.TestCase):
     def testSoftwareDefaultStyleIsAPA6(self):
         self.checkUnicodeEqual(self.SOFTWARE['apa6'][pm.__version__],
                                reference.software())
+
+    def testCiteSoftware(self):
+        for style, tests in self.CITE_SOFTWARE.items():
+            for version, expected in tests.items():
+                self.checkUnicodeEqual(expected,
+                                       reference.citeSoftware(version, style))
+
 
     def checkUnicodeEqual(self, expected, output):
         self.assertEqual(expected, output)

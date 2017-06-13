@@ -53,24 +53,29 @@ class _Reference(object):
             }
 
 
-    PATTERNS = {'apa6': (u"Dzik, J. M., Łęski, S., & Puścian, A. ({date}). PyMICE (v. {version}) [computer software; RRID:nlx_158570]{doi}",
-                         [('date', '{year}, {month}'),
-                          ('date', 'n.d.'),
-                          ('doi', '. doi: {doi}'),
-                          ('doi', ''),
-                          ]),
-                'bibtex': (u"pymice{version}{{Title = {{{{PyMICE (v.~{version})}}}}, Note = {{computer software; RRID:nlx\\_158570}}, {basic}{extended}}}",
-                           [('basic', u"Author = {{Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}"),
-                            ('extended', ", Year = {{{year}}}, Month = {{{month}}}, Doi = {{{doi}}}"),
-                            ('extended', ""),
-                            ]),
-                'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
-                          [
-                          ]),
-                }
+    SOFTWARE_PATTERNS = {'apa6': (u"Dzik, J. M., Łęski, S., & Puścian, A. ({date}). PyMICE (v. {version}) [computer software; RRID:nlx_158570]{doi}",
+                                  [('date', '{year}, {month}'),
+                                   ('date', 'n.d.'),
+                                   ('doi', '. doi: {doi}'),
+                                   ('doi', ''),
+                                   ]),
+                         'bibtex': (u"pymice{version}{{Title = {{{{PyMICE (v.~{version})}}}}, Note = {{computer software; RRID:nlx\\_158570}}, {basic}{extended}}}",
+                                    [('basic', u"Author = {{Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}"),
+                                     ('extended', ", Year = {{{year}}}, Month = {{{month}}}, Doi = {{{doi}}}"),
+                                     ('extended', ""),
+                                     ]),
+                         }
+    CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
+                                        [
+                                        ]),
+                         }
 
     def software(self, version=__version__, style='apa6'):
-        pattern, sections = self.PATTERNS[style]
+        pattern, sections = self.SOFTWARE_PATTERNS[style]
+        return pattern.format(**self._getSections(version, sections))
+
+    def citeSoftware(self, version, style):
+        pattern, sections = self.CITE_SOFTWARE_PATTERNS[style]
         return pattern.format(**self._getSections(version, sections))
 
     def _getSections(self, version, sectionsPattern):
