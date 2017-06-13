@@ -37,15 +37,34 @@ class TestReference(unittest.TestCase):
                    '0.2.3': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
                    'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
                    }
+    BIBTEX = {'1.1.1': u"pymice1.1.1{Title = {{PyMICE (v.~1.1.1)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2017}, Month = {April}, Doi = {10.5281/zenodo.557087}}",
+              '1.1.0': u"pymice1.1.0{Title = {{PyMICE (v.~1.1.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {December}, Doi = {10.5281/zenodo.200648}}",
+              '1.0.0': u"pymice1.0.0{Title = {{PyMICE (v.~1.0.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {May}, Doi = {10.5281/zenodo.51092}}",
+              '0.2.5': u"pymice0.2.5{Title = {{PyMICE (v.~0.2.5)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {April}, Doi = {10.5281/zenodo.49550}}",
+              '0.2.4': u"pymice0.2.4{Title = {{PyMICE (v.~0.2.4)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47305}}",
+              '0.2.3': u"pymice0.2.3{Title = {{PyMICE (v.~0.2.3)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47259}}",
+              'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
+              }
 
-    def testSoftwareTxtAPA6(self):
+    def testSoftwareBibTeX(self):
+        self.maxDiff = None
+        for version, expected in self.BIBTEX.items():
+            self.checkUnicodeEqual(expected,
+                                   reference.software(version, 'bibtex'))
+
+    def testSoftwareAPA6(self):
         for version, expected in self.APA_6_PLAIN.items():
             self.checkUnicodeEqual(expected,
                                    reference.software(version, 'apa6'))
 
+
     def testSoftwareCurrentVersionIsDefaultTxtAPA6(self):
         self.checkUnicodeEqual(self.APA_6_PLAIN[pm.__version__],
                                reference.software(style='apa6'))
+
+    def testSoftwareDefaultStyleIsAPA6(self):
+        self.checkUnicodeEqual(self.APA_6_PLAIN[pm.__version__],
+                               reference.software())
 
     def checkUnicodeEqual(self, expected, output):
         self.assertEqual(expected, output)
