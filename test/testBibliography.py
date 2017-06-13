@@ -29,48 +29,39 @@ import pymice as pm
 from pymice._Bibliography import reference
 
 class TestReference(unittest.TestCase):
-    APA_6_PLAIN = {'1.1.1': u"Dzik, J. M., Łęski, S., & Puścian, A. (2017, April). PyMICE (v. 1.1.1) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.557087",
-                   '1.1.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, December). PyMICE (v. 1.1.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.200648",
-                   '1.0.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, May). PyMICE (v. 1.0.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.51092",
-                   '0.2.5': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, April). PyMICE (v. 0.2.5) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.49550",
-                   '0.2.4': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.4) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47305",
-                   '0.2.3': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
-                   'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
-                   }
-    BIBTEX = {'1.1.1': u"pymice1.1.1{Title = {{PyMICE (v.~1.1.1)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2017}, Month = {April}, Doi = {10.5281/zenodo.557087}}",
-              '1.1.0': u"pymice1.1.0{Title = {{PyMICE (v.~1.1.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {December}, Doi = {10.5281/zenodo.200648}}",
-              '1.0.0': u"pymice1.0.0{Title = {{PyMICE (v.~1.0.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {May}, Doi = {10.5281/zenodo.51092}}",
-              '0.2.5': u"pymice0.2.5{Title = {{PyMICE (v.~0.2.5)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {April}, Doi = {10.5281/zenodo.49550}}",
-              '0.2.4': u"pymice0.2.4{Title = {{PyMICE (v.~0.2.4)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47305}}",
-              '0.2.3': u"pymice0.2.3{Title = {{PyMICE (v.~0.2.3)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47259}}",
-              'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
-              }
+    SOFTWARE = {
+        'apa6': {'1.1.1': u"Dzik, J. M., Łęski, S., & Puścian, A. (2017, April). PyMICE (v. 1.1.1) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.557087",
+                 '1.1.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, December). PyMICE (v. 1.1.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.200648",
+                 '1.0.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, May). PyMICE (v. 1.0.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.51092",
+                 '0.2.5': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, April). PyMICE (v. 0.2.5) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.49550",
+                 '0.2.4': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.4) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47305",
+                 '0.2.3': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
+                 'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
+                 },
+        'bibtex': {'1.1.1': u"pymice1.1.1{Title = {{PyMICE (v.~1.1.1)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2017}, Month = {April}, Doi = {10.5281/zenodo.557087}}",
+                   '1.1.0': u"pymice1.1.0{Title = {{PyMICE (v.~1.1.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {December}, Doi = {10.5281/zenodo.200648}}",
+                   '1.0.0': u"pymice1.0.0{Title = {{PyMICE (v.~1.0.0)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {May}, Doi = {10.5281/zenodo.51092}}",
+                   '0.2.5': u"pymice0.2.5{Title = {{PyMICE (v.~0.2.5)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {April}, Doi = {10.5281/zenodo.49550}}",
+                   '0.2.4': u"pymice0.2.4{Title = {{PyMICE (v.~0.2.4)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47305}}",
+                   '0.2.3': u"pymice0.2.3{Title = {{PyMICE (v.~0.2.3)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47259}}",
+                   'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
+                   },
+        'latex': {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
+                  },
+    }
 
-    LATEX = {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
-             }
+    def testSoftware(self):
+        for style, tests in self.SOFTWARE.items():
+            for version, expected in tests.items():
+                self.checkUnicodeEqual(expected,
+                                       reference.software(version, style))
 
-    def testSoftwareBibTeX(self):
-        for version, expected in self.BIBTEX.items():
-            self.checkUnicodeEqual(expected,
-                                   reference.software(version, 'bibtex'))
-
-    def testSoftwareLaTeX(self):
-        for version, expected in self.LATEX.items():
-            self.checkUnicodeEqual(expected,
-                                   reference.software(version, 'latex'))
-
-    def testSoftwareAPA6(self):
-        for version, expected in self.APA_6_PLAIN.items():
-            self.checkUnicodeEqual(expected,
-                                   reference.software(version, 'apa6'))
-
-
-    def testSoftwareCurrentVersionIsDefaultTxtAPA6(self):
-        self.checkUnicodeEqual(self.APA_6_PLAIN[pm.__version__],
+    def testSoftwareCurrentVersionIsDefaultAPA6(self):
+        self.checkUnicodeEqual(self.SOFTWARE['apa6'][pm.__version__],
                                reference.software(style='apa6'))
 
     def testSoftwareDefaultStyleIsAPA6(self):
-        self.checkUnicodeEqual(self.APA_6_PLAIN[pm.__version__],
+        self.checkUnicodeEqual(self.SOFTWARE['apa6'][pm.__version__],
                                reference.software())
 
     def checkUnicodeEqual(self, expected, output):
