@@ -38,4 +38,4 @@ class TestReference(unittest.TestCase):
     def testTxtAPA6(self):
         for version, expected in self.APA_6_PLAIN.items():
             self.assertEqual(expected,
-                             reference(version, 'apa6', 'txt'))
+                             reference.software(version, 'apa6', 'txt'))
