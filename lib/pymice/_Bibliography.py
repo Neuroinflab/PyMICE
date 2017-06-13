@@ -60,7 +60,7 @@ class _Reference(object):
                           ('doi', ''),
                           ]),
                 'bibtex': (u"pymice{version}{{Title = {{{{PyMICE (v.~{version})}}}}, Note = {{computer software; RRID:nlx\\_158570}}, {basic}{extended}}}",
-                           [('basic', "Author = {{Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}"),
+                           [('basic', u"Author = {{Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}"),
                             ('extended', ", Year = {{{year}}}, Month = {{{month}}}, Doi = {{{doi}}}"),
                             ('extended', ""),
                             ]),
