@@ -25,6 +25,7 @@
 import unittest
 import sys
 
+import pymice as pm
 from pymice._Bibliography import reference
 
 class TestReference(unittest.TestCase):
@@ -36,10 +37,15 @@ class TestReference(unittest.TestCase):
                    '0.2.3': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
                    'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
                    }
-    def testTxtAPA6(self):
+    def testSoftwareTxtAPA6(self):
         for version, expected in self.APA_6_PLAIN.items():
             self.checkUnicodeEqual(expected,
                                    reference.software(version, 'apa6', 'txt'))
+
+    def testSoftwareCurrentVersionIsDefaultTxtAPA6(self):
+        self.checkUnicodeEqual(self.APA_6_PLAIN[pm.__version__],
+                               reference.software(style='apa6',
+                                                  markdown='apa6'))
 
     def checkUnicodeEqual(self, expected, output):
         self.assertEqual(expected, output)

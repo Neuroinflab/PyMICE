@@ -23,6 +23,8 @@
 #                                                                             #
 ###############################################################################
 
+from . import __version__ # WARNING: circular import possible!!!
+
 class _Reference(object):
     META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
                      'year': 2017,
@@ -56,7 +58,7 @@ class _Reference(object):
                      ('doi', '. doi: {doi}'),
                      ('doi', '')]
 
-    def software(self, version, style, markdown):
+    def software(self, version=__version__, style=None, markdown=None):
         return self.APA6_PATTERN.format(**self._apa6_meta(version))
 
     def _apa6_meta(self, version):
