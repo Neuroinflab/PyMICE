@@ -58,7 +58,7 @@ class _Reference(object):
                      ('doi', '. doi: {doi}'),
                      ('doi', '')]
 
-    def software(self, version=__version__, style=None, markdown=None):
+    def software(self, version=__version__, style=None):
         return self.APA6_PATTERN.format(**self._apa6_meta(version))
 
     def _apa6_meta(self, version):
