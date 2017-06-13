@@ -23,19 +23,28 @@
 #                                                                             #
 ###############################################################################
 import unittest
+import sys
 
 from pymice._Bibliography import reference
 
 class TestReference(unittest.TestCase):
-    APA_6_PLAIN = {'1.1.1': "Dzik, J. M., Łęski, S., & Puścian, A. (2017, April). PyMICE (v. 1.1.1) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.557087",
-                   '1.1.0': "Dzik, J. M., Łęski, S., & Puścian, A. (2016, December). PyMICE (v. 1.1.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.200648",
-                   '1.0.0': "Dzik, J. M., Łęski, S., & Puścian, A. (2016, May). PyMICE (v. 1.0.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.51092",
-                   '0.2.5': "Dzik, J. M., Łęski, S., & Puścian, A. (2016, April). PyMICE (v. 0.2.5) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.49550",
-                   '0.2.4': "Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.4) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47305",
-                   '0.2.3': "Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
-                   'unknown': "Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
+    APA_6_PLAIN = {'1.1.1': u"Dzik, J. M., Łęski, S., & Puścian, A. (2017, April). PyMICE (v. 1.1.1) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.557087",
+                   '1.1.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, December). PyMICE (v. 1.1.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.200648",
+                   '1.0.0': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, May). PyMICE (v. 1.0.0) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.51092",
+                   '0.2.5': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, April). PyMICE (v. 0.2.5) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.49550",
+                   '0.2.4': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.4) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47305",
+                   '0.2.3': u"Dzik, J. M., Łęski, S., & Puścian, A. (2016, January). PyMICE (v. 0.2.3) [computer software; RRID:nlx_158570]. doi: 10.5281/zenodo.47259",
+                   'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
                    }
     def testTxtAPA6(self):
         for version, expected in self.APA_6_PLAIN.items():
-            self.assertEqual(expected,
-                             reference.software(version, 'apa6', 'txt'))
+            self.checkUnicodeEqual(expected,
+                                   reference.software(version, 'apa6', 'txt'))
+
+    def checkUnicodeEqual(self, expected, output):
+        self.assertEqual(expected, output)
+        self.assertIsInstance(output,
+                              unicode if sys.version_info.major < 3 else str)
+
+if __name__ == '__main__':
+    unittest.main()

@@ -50,18 +50,21 @@ class _Reference(object):
                       },
             }
 
-    APA6_PATTERN = "Dzik, J. M., Łęski, S., & Puścian, A. ({date}). PyMICE (v. {version}) [computer software; RRID:nlx_158570]{doi}"
+    APA6_PATTERN = u"Dzik, J. M., Łęski, S., & Puścian, A. ({date}). PyMICE (v. {version}) [computer software; RRID:nlx_158570]{doi}"
+    APA6_SECTIONS = [('date', '{year}, {month}'),
+                     ('date', 'n.d.'),
+                     ('doi', '. doi: {doi}'),
+                     ('doi', '')]
 
     def software(self, version, style, markdown):
         return self.APA6_PATTERN.format(**self._apa6_meta(version))
 
     def _apa6_meta(self, version):
+        meta = self.META.get(version, {})
+        sectionsPattern = self.APA6_SECTIONS
         sections = {'version': version}
-        sections.update(self._sections(self.META.get(version, {}),
-                                       reversed([('date', '{year}, {month}'),
-                                                 ('doi', '. doi: {doi}'),
-                                                 ('date', 'n.d.'),
-                                                 ('doi', '')])))
+        sections.update(self._sections(meta,
+                                       reversed(sectionsPattern)))
         return sections
 
     def _sections(self, meta, patterns):
