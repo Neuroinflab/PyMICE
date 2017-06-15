@@ -24,7 +24,7 @@
 ###############################################################################
 
 from ._Version import __version__, __RRID__
-
+import sys
 
 class Citation(object):
     META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
@@ -87,6 +87,9 @@ class Citation(object):
     CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
                                         [
                                         ]),
+                              'bibtex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
+                                        [
+                                        ]),
                               'apa6':  (u"PyMICE v.\u00A0{version} (Dzik, Łęski, & Puścian, {date})",
                                         [('date', '{year}'),
                                          ('date', 'n.d.'),
@@ -97,16 +100,21 @@ class Citation(object):
               'latex': lambda x: x.replace('_', '\\_').replace(u'\u00A0', '~'),
               }
 
-    def __init__(self, style='apa6'):
+    def __init__(self, style='apa6', version=__version__):
         self._style = style
+        self._version = version
 
-    def software(self, version=__version__, style=None):
+    def softwareReference(self, version=None, style=None):
         if style is None:
             style = self._style
+
+        if version is None:
+            version = self._version
+
         pattern, sections = self.SOFTWARE_PATTERNS[style]
         return pattern.format(**self._getSections(version, sections, style))
 
-    def citeSoftware(self, version, style):
+    def cite(self, version, style):
         pattern, sections = self.CITE_SOFTWARE_PATTERNS[style]
         return pattern.format(**self._getSections(version, sections, style))
 
@@ -133,5 +141,18 @@ class Citation(object):
         except:
             return text
 
+    def _str(self):
+        return self.cite(self._version, self._style)
+
+    if sys.version_info.major < 3:
+        def __unicode__(self):
+            return self._str()
+
+        def __str__(self):
+            return self._str().encode('utf-8')
+
+    else:
+        def __str__(self):
+            return self._str()
 
 reference = Citation()
