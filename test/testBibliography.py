@@ -42,7 +42,7 @@ class TestCitationBase(TestCase):
         except AttributeError:
             self.skipTest('generic test called')
         else:
-            self.reference = Citation(style)
+            self.reference = Citation(style=style)
 
 
     def testSoftware(self):
@@ -92,7 +92,9 @@ class TestCitationAPA6(TestCitationBase):
                 'unknown': u"Dzik, J. M., Łęski, S., & Puścian, A. (n.d.). PyMICE (v. unknown) [computer software; RRID:nlx_158570]",
                 }
     CITE_SOFTWARE = {
-        'latex': {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
+        'apa6': {'1.1.1': u"PyMICE v. 1.1.1 (Dzik, Łęski, & Puścian, 2017)",
+                 '1.1.0': u"PyMICE v. 1.1.0 (Dzik, Łęski, & Puścian, 2016)",
+                 'unknown': u"PyMICE v. unknown (Dzik, Łęski, & Puścian, n.d.)",
                   },
         }
 

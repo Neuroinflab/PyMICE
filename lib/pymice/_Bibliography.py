@@ -79,7 +79,11 @@ class Citation(object):
     CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
                                         [
                                         ]),
-                         }
+                              'apa6':  (u"PyMICE v. {version} (Dzik, Łęski, & Puścian, {date})",
+                                        [('date', '{year}'),
+                                         ('date', 'n.d.'),
+                                         ]),
+                              }
 
     ESCAPE = {'bibtex': lambda x: x.replace('_', '\\_')}
 
