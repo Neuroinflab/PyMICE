@@ -26,19 +26,16 @@
 """
 A collection of tools to access IntelliCage data.
 """
-import sys
+from ._Version import __version__, __RRID__, __ID__, __NeuroLexID__
 
-from ._ICData import Loader, Merger
-from ._Tools import hTime, convertTime, warn
-from ._GetTutorialData import getTutorialData
-from ._Metadata import Phase, ExperimentTimeline, Timeline
-from ._Results import ResultsCSV
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
                           FailureInspector, DataValidator, TestMiceData)
-__NeuroLexID__ = 'nlx_158570'
-__RRID__ = 'RRID:' + __NeuroLexID__
-__version__ = '1.1.1'
-__ID__ = __RRID__ + ' ' + __version__
+from ._GetTutorialData import getTutorialData
+from ._ICData import Loader, Merger
+from ._Metadata import Phase, ExperimentTimeline, Timeline
+from ._Results import ResultsCSV
+from ._Tools import hTime, convertTime, warn
+
 __all__ = []
 
 __welcomeMessage = """PyMICE library v. {version}

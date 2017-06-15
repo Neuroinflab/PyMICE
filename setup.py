@@ -24,6 +24,7 @@
 ###############################################################################
 
 import os, sys
+from lib.pymice import __version__
 
 try:
   from setuptools import setup, Extension
@@ -53,7 +54,7 @@ def loadTextFrom(path):
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 #install_requires = ['numpy']?
 setup(name = 'PyMICE',
-      version = '1.1.1',
+      version = __version__,
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
       description = 'PyMICE - a Python® library for mice behavioural data analysis',
       long_description = loadTextFrom('README.rst'),

@@ -23,7 +23,8 @@
 #                                                                             #
 ###############################################################################
 
-from . import __version__ # WARNING: circular import possible!!!
+from ._Version import __version__
+
 
 class _Reference(object):
     META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
