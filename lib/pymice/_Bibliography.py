@@ -60,10 +60,10 @@ class Citation(object):
             }
 
 
-    SOFTWARE_PATTERNS = {'apa6': (u"Dzik, J. M., Łęski, S., & Puścian, A. ({date}). PyMICE (v. {version}) [{note}]{doi}",
-                                  [('date', '{year}, {month}'),
+    SOFTWARE_PATTERNS = {'apa6': (u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. ({date}). PyMICE (v.\u00A0{version}) [{note}]{doi}",
+                                  [('date', u'{year},\u00A0{month}'),
                                    ('date', 'n.d.'),
-                                   ('doi', '. doi: {doi}'),
+                                   ('doi', u'. doi:\u00A0{doi}'),
                                    ('doi', ''),
                                    ('note', 'computer software; {rrid}'),
                                    ('note', 'computer software; {}'.format(__RRID__)),
@@ -75,17 +75,27 @@ class Citation(object):
                                      ('note', 'computer software; {rrid}'),
                                      ('note', 'computer software; {}'.format(__RRID__)),
                                      ]),
+                         'latex': (u"\\bibitem{{pymice{version}}} Dzik,~J.~M., Łęski,~S., & Puścian,~A. ({date}). PyMICE (v.~{version}) [{note}]{doi}",
+                                   [('date', u'{year},\u00A0{month}'),
+                                    ('date', 'n.d.'),
+                                    ('doi', u'. doi:\u00A0{doi}'),
+                                    ('doi', ''),
+                                    ('note', 'computer software; {rrid}'),
+                                    ('note', 'computer software; {}'.format(__RRID__)),
+                                    ]),
                          }
     CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
                                         [
                                         ]),
-                              'apa6':  (u"PyMICE v. {version} (Dzik, Łęski, & Puścian, {date})",
+                              'apa6':  (u"PyMICE v.\u00A0{version} (Dzik, Łęski, & Puścian, {date})",
                                         [('date', '{year}'),
                                          ('date', 'n.d.'),
                                          ]),
                               }
 
-    ESCAPE = {'bibtex': lambda x: x.replace('_', '\\_')}
+    ESCAPE = {'bibtex': lambda x: x.replace('_', '\\_'),
+              'latex': lambda x: x.replace('_', '\\_').replace(u'\u00A0', '~'),
+              }
 
     def __init__(self, style='apa6'):
         self._style = style
