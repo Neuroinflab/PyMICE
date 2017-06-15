@@ -26,7 +26,7 @@
 from ._Version import __version__, __RRID__
 
 
-class _Reference(object):
+class Citation(object):
     META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
                       'year': 2017,
                       'month': 'April',
@@ -83,7 +83,12 @@ class _Reference(object):
 
     ESCAPE = {'bibtex': lambda x: x.replace('_', '\\_')}
 
-    def software(self, version=__version__, style='apa6'):
+    def __init__(self, style='apa6'):
+        self._style = style
+
+    def software(self, version=__version__, style=None):
+        if style is None:
+            style = self._style
         pattern, sections = self.SOFTWARE_PATTERNS[style]
         return pattern.format(**self._getSections(version, sections, style))
 
@@ -115,4 +120,4 @@ class _Reference(object):
             return text
 
 
-reference = _Reference()
+reference = Citation()
