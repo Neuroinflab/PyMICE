@@ -66,10 +66,26 @@ class Citation(object):
                       },
             }
 
+    PAPER_META = {'authors': [('Dzik', 'Jakub', 'Mateusz'),
+                              (u'Puścian', 'Alicja'),
+                              ('Mijakowska', 'Zofia'),
+                              ('Radwanska', 'Kasia'),
+                              (u'Łęski', 'Szymon'),
+                              ],
+                  'title': '{PyMICE}: A {Python} library for analysis of {IntelliCage} data',
+                  'year': '2017',
+                  'day': '22',
+                  'month': 'June',
+                  'journal': 'Behavior Research Methods',
+                  'doi': '10.3758/s13428-017-0907-5',
+                  'issn': '1554-3528',
+                  'abstract': 'IntelliCage is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present PyMICE, a free and open-source library for analysis of IntelliCage data in the Python programming language. We describe the design and demonstrate the use of the library through a series of examples. PyMICE provides easy and intuitive access to IntelliCage data, and thus facilitates the possibility of using numerous other Python scientific libraries to form a complete data analysis workflow.'
+                  }
+
 
     SOFTWARE_PATTERNS = {'apa6': (u"{authors} ({date}). {title} [{note}]{doi}",
                                   [('authors', _authorsBibliographyAPA6),
-                                   ('title', u"PyMICE (v.\u00A0{version})".format),
+                                   ('title', u"PyMICE (v.\u00A0{__version__})".format),
                                    ('date', u'{year},\u00A0{month}'.format),
                                    ('date', 'n.d.'.format),
                                    ('doi', u'. doi:\u00A0{doi}'.format),
@@ -78,68 +94,121 @@ class Citation(object):
                                    ]),
                          'bibtex': (u"pymice{version}{{Title = {{{{{title}}}}}, Note = {{{note}}}, Author = {{{authors}}}{date}{doi}}}",
                                     [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
-                                     ('title', u"PyMICE (v.\u00A0{version})".format),
+                                     ('title', u"PyMICE (v.\u00A0{__version__})".format),
+                                     ('title', u"PyMICE".format),
                                      ('date', ", Year = {{{year}}}, Month = {{{month}}}".format),
                                      ('date', "".format),
                                      ('doi', ", Doi = {{{doi}}}".format),
                                      ('doi', "".format),
                                      ('note', 'computer software; {rrid}'.format),
+                                     ('version', '{__version__}'.format),
+                                     ('version', ''.format),
                                      ]),
                          'latex': (u"\\bibitem{{pymice{version}}} {authors} ({date}). {title} [{note}]{doi}",
                                    [('authors', _authorsBibliographyAPA6),
-                                    ('title', u"PyMICE (v.\u00A0{version})".format),
+                                    ('title', u"PyMICE (v.\u00A0{__version__})".format),
+                                    ('title', u"PyMICE".format),
                                     ('date', u'{year},\u00A0{month}'.format),
                                     ('date', 'n.d.'.format),
                                     ('doi', u'. doi:\u00A0{doi}'.format),
                                     ('doi', ''.format),
                                     ('note', 'computer software; {rrid}'.format),
+                                    ('version', '{__version__}'.format),
+                                    ('version', ''.format),
                                     ]),
                          }
-    CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
-                                        [
+    CITE_SOFTWARE_PATTERNS = {'latex': (u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version}}}",
+                                        [('version', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
+                                         ('version', ',pymice'.format)
                                         ]),
-                              'bibtex': (u"\\emph{{PyMICE}} v.~{version}~\\cite{{pymice{version}}}",
-                                        [
-                                        ]),
-                              'apa6':  (u"PyMICE v.\u00A0{version} ({authors}, {date})",
+                              'bibtex': (u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version}}}",
+                                         [('version', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
+                                          ('version', ',pymice'.format)
+                                         ]),
+                              'apa6':  (u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017{version}{authors}, {date})",
                                         [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + ['& ' + x['authors'][-1][0]])),
                                          ('date', '{year}'.format),
                                          ('date', 'n.d.'.format),
+                                         ('version', u') v.\u00A0{__version__} ('.format),
+                                         ('version', '; '.format)
                                          ]),
                               }
 
     ESCAPE = {'bibtex': lambda x: x.replace('_', '\\_').replace(u'\u00A0', '~'),
               'latex': lambda x: x.replace('_', '\\_').replace(u'\u00A0', '~'),
+              'apa6': lambda x: x.replace('{', '').replace('}', ''),
               }
+
+    PAPER_PATTERNS = {'apa6': (u"{authors} ({date}). {title}. {journal}{doi}",
+                               [('authors', _authorsBibliographyAPA6),
+                                ('date', u'{year}'.format),
+                                ('title', u"{title}".format),
+                                ('journal', '{journal}'.format),
+                                ('doi', u'. doi:\u00A0{doi}'.format),
+                                ]),
+                      'bibtex': (u"dzik2017pm{{Title = {{{title}}}, Author = {{{authors}}}{date}{journal}{doi}{issn}{url}{abstract}}}",
+                                 [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
+                                  ('title', u"{title}".format),
+                                  ('date', ", Year = {{{year}}}, Month = {{{month}}}, Day = {{{day}}}".format),
+                                  ('journal', ", Journal = {{{journal}}}".format),
+                                  ('doi', ", Doi = {{{doi}}}".format),
+                                  ('issn', ", Issn = {{{issn}}}".format),
+                                  ('url', ", Url = {{http://dx.doi.org/{doi}}}".format),
+                                  ('abstract', ", Abstract = {{{abstract}}}".format),
+                                  ]),
+                      'latex': (u"\\bibitem{{dzik2017pm}} {authors} ({date}). {title}. {journal}{doi}",
+                                [('authors', _authorsBibliographyAPA6),
+                                 ('date', u"{year}".format),
+                                 ('title', u"{title}".format),
+                                 ('journal', "\\emph{{{journal}}}".format),
+                                 ('doi', u". doi:\u00A0{doi}".format),
+                                 ]),
+                      }
 
     def __init__(self, style='apa6', version=__version__):
         self._style = style
         self._version = version
 
-    def softwareReference(self, version=None, style=None):
+    def paperReference(self, style=None):
         if style is None:
             style = self._style
 
-        if version is None:
-            version = self._version
+        pattern, sections = self.PAPER_PATTERNS[style]
+        return self._formatMeta(pattern, sections,
+                                self.PAPER_META,
+                                style)
+
+    def _formatMeta(self, template, sections, meta, style):
+        return self._format(template,
+                            self._sections(meta,
+                                           reversed(sections),
+                                           style))
+
+    def _format(self, pattern, sections):
+        return pattern.format(**dict(sections))
+
+    def softwareReference(self, style=None, **kwargs):
+        if style is None:
+            style = self._style
+
+        version = kwargs.get('version',
+                             self._version)
 
         pattern, sections = self.SOFTWARE_PATTERNS[style]
-        return pattern.format(**self._getSections(version, sections, style))
+        return self._formatMeta(pattern, sections,
+                                self._getMeta(version),
+                                style)
 
     def cite(self, version, style):
         pattern, sections = self.CITE_SOFTWARE_PATTERNS[style]
-        return pattern.format(**self._getSections(version, sections, style))
-
-    def _getSections(self, version, sectionsPattern, style):
-        sections = {'version': version}
-        sections.update(self._sections(self._getMeta(version),
-                                       reversed(sectionsPattern),
-                                       style))
-        return sections
+        return self._formatMeta(pattern, sections,
+                                self._getMeta(version),
+                                style)
 
     def _getMeta(self, version):
         meta = self.DEFAULT_META.copy()
-        meta['version'] = version
+        if version is not None:
+            meta['__version__'] = version
 
         try:
             meta.update(self.META[version])

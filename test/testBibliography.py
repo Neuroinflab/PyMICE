@@ -33,6 +33,7 @@ from pymice._Bibliography import Citation
 class TestCitationBase(TestCase):
     if sys.version_info.major < 3:
         def checkUnicodeEqual(self, expected, observed):
+            self.maxDiff = None
             self.assertEqual(expected, observed)
             self.assertIsInstance(observed, unicode)
 
@@ -53,6 +54,7 @@ class TestCitationBase(TestCase):
             self.checkUnicodeEqual(expected, str(observed))
 
     def setUp(self):
+        self.maxDiff = None
         try:
             style = self.STYLE
         except AttributeError:
@@ -64,7 +66,8 @@ class TestCitationBase(TestCase):
     def testSoftwareReference(self):
         for version, expected in self.SOFTWARE.items():
             self.checkUnicodeEqual(expected,
-                                   self.reference.softwareReference(version, self.STYLE))
+                                   self.reference.softwareReference(version=version,
+                                                                    style=self.STYLE))
 
     def testSoftwareReferenceDefaultStyleIsGivenInConstructor(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
@@ -90,6 +93,9 @@ class TestCitationBase(TestCase):
             self.checkUnicodeEqual(expected,
                                    self.reference.cite(version, self.STYLE))
 
+    def testPaperReference(self):
+        self.checkUnicodeEqual(self.PAPER,
+                               self.reference.paperReference())
 
 class TestCitationGivenStyleLaTeX(TestCitationBase):
     STYLE = 'latex'
@@ -100,14 +106,17 @@ class TestCitationGivenStyleLaTeX(TestCitationBase):
                 '0.2.4': u"\\bibitem{pymice0.2.4} Dzik,~J.~M., Łęski,~S., & Puścian,~A. (2016,~January). PyMICE (v.~0.2.4) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.47305",
                 '0.2.3': u"\\bibitem{pymice0.2.3} Dzik,~J.~M., Łęski,~S., & Puścian,~A. (2016,~January). PyMICE (v.~0.2.3) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.47259",
                 'unknown': u"\\bibitem{pymiceunknown} Dzik,~J.~M., Łęski,~S., & Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
+                None: u"\\bibitem{pymice} Dzik,~J.~M., Łęski,~S., & Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE} v.~1.1.1~\\cite{pymice1.1.1}",
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                     'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                     None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                      }
+    PAPER = u"\\bibitem{dzik2017pm} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., & Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
     def testSoftwareCurrentVersionIsDefault(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
                                self.reference.softwareReference(style=self.STYLE))
-
 
 class TestCitationGivenStyleBibTeX(TestCitationGivenStyleLaTeX):
     STYLE = 'bibtex'
@@ -118,7 +127,9 @@ class TestCitationGivenStyleBibTeX(TestCitationGivenStyleLaTeX):
                 '0.2.4': u"pymice0.2.4{Title = {{PyMICE (v.~0.2.4)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47305}}",
                 '0.2.3': u"pymice0.2.3{Title = {{PyMICE (v.~0.2.3)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2016}, Month = {January}, Doi = {10.5281/zenodo.47259}}",
                 'unknown': u"pymiceunknown{Title = {{PyMICE (v.~unknown)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
+                None: u"pymice{Title = {{PyMICE}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}}",
                 }
+    PAPER = u"dzik2017pm{Title = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data}, Author = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon}, Year = {2017}, Month = {June}, Day = {22}, Journal = {Behavior Research Methods}, Doi = {10.3758/s13428-017-0907-5}, Issn = {1554-3528}, Url = {http://dx.doi.org/10.3758/s13428-017-0907-5}, Abstract = {IntelliCage is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present PyMICE, a free and open-source library for analysis of IntelliCage data in the Python programming language. We describe the design and demonstrate the use of the library through a series of examples. PyMICE provides easy and intuitive access to IntelliCage data, and thus facilitates the possibility of using numerous other Python scientific libraries to form a complete data analysis workflow.}}"
 
 
 class TestCitationGivenStyleAPA6(TestCitationBase):
@@ -131,10 +142,13 @@ class TestCitationGivenStyleAPA6(TestCitationBase):
                 '0.2.3': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0January). PyMICE (v.\u00A00.2.3) [computer software; RRID:nlx_158570]. doi:\u00A010.5281/zenodo.47259",
                 'unknown': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (n.d.). PyMICE (v.\u00A0unknown) [computer software; RRID:nlx_158570]",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE v.\u00A01.1.1 (Dzik, Łęski, & Puścian, 2017)",
-                     '1.1.0': u"PyMICE v.\u00A01.1.0 (Dzik, Łęski, & Puścian, 2016)",
-                     'unknown': u"PyMICE v.\u00A0unknown (Dzik, Łęski, & Puścian, n.d.)",
+    CITE_SOFTWARE = {'1.1.1': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A01.1.1 (Dzik, Łęski, & Puścian, 2017)",
+                     '1.1.0': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A01.1.0 (Dzik, Łęski, & Puścian, 2016)",
+                     'unknown': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A0unknown (Dzik, Łęski, & Puścian, n.d.)",
+                     None: u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017; Dzik, Łęski, & Puścian, n.d.)",
                      }
+    PAPER = u"Dzik,\u00A0J.\u00A0M., Puścian,\u00A0A., Mijakowska,\u00A0Z., Radwanska,\u00A0K., & Łęski,\u00A0S. (2017). PyMICE: A Python library for analysis of IntelliCage data. Behavior Research Methods. doi:\u00A010.3758/s13428-017-0907-5"
+
 
 class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStyleAPA6):
     def setUp(self):
