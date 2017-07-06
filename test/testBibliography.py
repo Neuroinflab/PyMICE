@@ -153,6 +153,24 @@ class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
     PAPER = u"\\bibitem{dzik2017pm} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., & Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
 
+class TestCitationGivenStyleAPA6markdownMD(TestCitationGivenStyleAPA6):
+    MARKDOWN = 'md'
+    SOFTWARE = {'1.1.1': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2017,\u00A0April). PyMICE (v.\u00A01.1.1) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.557087",
+                '1.1.0': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0December). PyMICE (v.\u00A01.1.0) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.200648",
+                '1.0.0': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0May). PyMICE (v.\u00A01.0.0) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.51092",
+                '0.2.5': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0April). PyMICE (v.\u00A00.2.5) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.49550",
+                '0.2.4': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0January). PyMICE (v.\u00A00.2.4) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.47305",
+                '0.2.3': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (2016,\u00A0January). PyMICE (v.\u00A00.2.3) [computer software; RRID:nlx\\_158570]. doi:\u00A010.5281/zenodo.47259",
+                'unknown': u"Dzik,\u00A0J.\u00A0M., Łęski,\u00A0S., & Puścian,\u00A0A. (n.d.). PyMICE (v.\u00A0unknown) [computer software; RRID:nlx\\_158570]",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A01.1.1 (Dzik, Łęski, & Puścian, 2017)",
+                     '1.1.0': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A01.1.0 (Dzik, Łęski, & Puścian, 2016)",
+                     'unknown': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\u00A0unknown (Dzik, Łęski, & Puścian, n.d.)",
+                     None: u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017; Dzik, Łęski, & Puścian, n.d.)",
+                     }
+    PAPER = u"Dzik,\u00A0J.\u00A0M., Puścian,\u00A0A., Mijakowska,\u00A0Z., Radwanska,\u00A0K., & Łęski,\u00A0S. (2017). PyMICE: A Python library for analysis of IntelliCage data. _Behavior Research Methods_. doi:\u00A010.3758/s13428-017-0907-5"
+
+
 class TestCitationGivenStyleBibTeX(TestCitationBase):
     STYLE = 'bibtex'
     SOFTWARE = {'1.1.1': u"pymice1.1.1{Title = {{PyMICE (v.~1.1.1)}}, Note = {computer software; RRID:nlx\\_158570}, Author = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}, Year = {2017}, Month = {April}, Doi = {10.5281/zenodo.557087}}",

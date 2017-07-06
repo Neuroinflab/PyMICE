@@ -26,6 +26,9 @@
 from ._Version import __version__, __RRID__
 import sys
 
+if sys.version_info.major == 3:
+    from functools import reduce
+
 def _authorsBibliographyAPA6(authors, **kwargs):
     formatted = [_authorBibliographyAPA6(*a) for a in authors]
     return u', '.join(formatted[:-1] + ['& ' + formatted[-1]])
@@ -86,57 +89,73 @@ class Citation(object):
     DEFAULT_MARKDOWN = {'apa6': 'txt',
                         'bibtex': 'latex',
                         }
-    SOFTWARE_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title} [{note}]{doi}",
-                                   'latex': u"\\bibitem{{pymice{version}}} {authors} ({date}). {title} [{note}]{doi}",
-                                   },
-                                  [('authors', _authorsBibliographyAPA6),
-                                   ('title', u"PyMICE (v.\u00A0{__version__})".format),
-                                   ('title', u"PyMICE".format),
-                                   ('date', u'{year},\u00A0{month}'.format),
-                                   ('date', 'n.d.'.format),
-                                   ('doi', u'. doi:\u00A0{doi}'.format),
-                                   ('doi', ''.format),
-                                   ('note', 'computer software; {rrid}'.format),
-                                   ('version', '{__version__}'.format),
-                                   ('version', ''.format),
-                                   ]),
-                         'bibtex': (u"pymice{version}{{Title = {{{{{title}}}}}, Note = {{{note}}}, Author = {{{authors}}}{date}{doi}}}",
-                                    [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
-                                     ('title', u"PyMICE (v.\u00A0{__version__})".format),
-                                     ('title', u"PyMICE".format),
-                                     ('date', ", Year = {{{year}}}, Month = {{{month}}}".format),
-                                     ('date', "".format),
-                                     ('doi', ", Doi = {{{doi}}}".format),
-                                     ('doi', "".format),
-                                     ('note', 'computer software; {rrid}'.format),
-                                     ('version', '{__version__}'.format),
-                                     ('version', ''.format),
-                                     ]),
-                         }
+    SOFTWARE_PATTERNS = {
+        'apa6': ({'txt': u"{authors} ({date}). {title} [{note}]{doi}",
+                  'latex': u"\\bibitem{{pymice{version}}} {authors} ({date}). {title} [{note}]{doi}",
+                  },
+                 [('authors', _authorsBibliographyAPA6),
+                  ('title', u"PyMICE (v.\u00A0{__version__})".format),
+                  ('title', u"PyMICE".format),
+                  ('date', u'{year},\u00A0{month}'.format),
+                  ('date', 'n.d.'.format),
+                  ('doi', u'. doi:\u00A0{doi}'.format),
+                  ('doi', ''.format),
+                  ('note', 'computer software; {rrid}'.format),
+                  ('version', '{__version__}'.format),
+                  ('version', ''.format),
+                  ]),
+        'bibtex': (u"pymice{version}{{Title = {{{{{title}}}}}, Note = {{{note}}}, Author = {{{authors}}}{date}{doi}}}",
+                   [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
+                    ('title', u"PyMICE (v.\u00A0{__version__})".format),
+                    ('title', u"PyMICE".format),
+                    ('date', ", Year = {{{year}}}, Month = {{{month}}}".format),
+                    ('date', "".format),
+                    ('doi', ", Doi = {{{doi}}}".format),
+                    ('doi', "".format),
+                    ('note', 'computer software; {rrid}'.format),
+                    ('version', '{__version__}'.format),
+                    ('version', ''.format),
+                    ]),
+        }
     CITE_SOFTWARE_PATTERNS = {
-                              'bibtex': (u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version}}}",
-                                         [('version', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
-                                          ('version', ',pymice'.format),
-                                         ]),
-                              'apa6':  ({'txt': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017{version}{authors}, {date})",
-                                         'latex': u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version_latex}}}",
-                                         },
-                                        [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + ['& ' + x['authors'][-1][0]])),
-                                         ('date', '{year}'.format),
-                                         ('date', 'n.d.'.format),
-                                         ('version', u') v.\u00A0{__version__} ('.format),
-                                         ('version', '; '.format),
-                                         ('version_latex', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
-                                         ('version_latex', ',pymice'.format),
-                                         ]),
-                              }
+        'apa6': ({'txt': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017{version}{authors}, {date})",
+                  'latex': u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version_latex}}}",
+                  },
+                 [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + ['& ' + x['authors'][-1][0]])),
+                  ('date', '{year}'.format),
+                  ('date', 'n.d.'.format),
+                  ('version', u') v.\u00A0{__version__} ('.format),
+                  ('version', '; '.format),
+                  ('version_latex', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
+                  ('version_latex', ',pymice'.format),
+                  ]),
+        'bibtex': (u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version}}}",
+                   [('version', '}} v.~{__version__}~\\cite{{pymice{__version__}'.format),
+                    ('version', ',pymice'.format),
+                   ]),
+        }
 
     STYLE_ESCAPE = {} # XXX may be unnecessary
-    MARKDOWN_ESCAPE = {'txt': lambda x: x.replace('{', '').replace('}', ''),
-                       'latex': lambda x: x.replace('_', '\\_').replace(u'\u00A0', '~'),
+    MARKDOWN_ESCAPE = {
+                       'latex': [('_', '\\_'),
+                                 (u'\u00A0', '~'),
+                                 ('<i>', ''),
+                                 ('</i>', ''),
+                                 ],
+                       'md': [('{', ''),
+                              ('}', ''),
+                              ('_', '\\_'),
+                              ('<i>', '_'),
+                              ('</i>', '_'),
+                              ],
+                       'txt': [('{', ''),
+                               ('}', ''),
+                               ('<i>', ''),
+                               ('</i>', ''),
+                               ]
                        }
 
-    PAPER_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title}. {journal}{doi}",
+    PAPER_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title}. <i>{journal}</i>{doi}",
                                 'latex': u"\\bibitem{{dzik2017pm}} {authors} ({date}). {title}. {journal_latex}{doi}",
                                 },
                                [('authors', _authorsBibliographyAPA6),
@@ -172,10 +191,9 @@ class Citation(object):
 
         pattern, sections = self._getFormatters(self.PAPER_PATTERNS,
                                                 style)
-        return self.MARKDOWN_ESCAPE[self._markdown](
-                   self._formatMeta(pattern, sections,
-                                    self.PAPER_META,
-                                    style))
+        return self._applyMarkdown(self._formatMeta(pattern, sections,
+                                                    self.PAPER_META,
+                                                    style))
 
     def _formatMeta(self, template, sections, meta, style):
         return self._format(template,
@@ -195,17 +213,20 @@ class Citation(object):
 
         pattern, sections = self._getFormatters(self.SOFTWARE_PATTERNS,
                                                 style)
-        return self.MARKDOWN_ESCAPE[self._markdown](
-                   self._formatMeta(pattern, sections,
-                                    self._getMeta(version),
-                                    style))
+        return self._applyMarkdown(self._formatMeta(pattern, sections,
+                                                    self._getMeta(version),
+                                                    style))
 
     def cite(self, version, style):
         pattern, sections = self._getFormatters(self.CITE_SOFTWARE_PATTERNS,
                                                 style)
         formatted = self._formatMeta(pattern, sections, self._getMeta(version), style)
-        return self.MARKDOWN_ESCAPE[self._markdown](
-            formatted)
+        return self._applyMarkdown(formatted)
+
+    def _applyMarkdown(self, string):
+        return reduce(lambda s, substitution: s.replace(*substitution),
+                      self.MARKDOWN_ESCAPE[self._markdown],
+                      string)
 
     def _getFormatters(self, formatters, style):
         pattern, sections = formatters[style]
@@ -213,6 +234,8 @@ class Citation(object):
             pattern = pattern[self._markdown]
         except TypeError:
             pass
+        except KeyError:
+            pattern = pattern[self.DEFAULT_MARKDOWN[style]]
 
         return pattern, sections
 
