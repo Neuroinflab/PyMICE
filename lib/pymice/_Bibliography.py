@@ -135,7 +135,6 @@ class Citation(object):
                    ]),
         }
 
-    STYLE_ESCAPE = {} # XXX may be unnecessary
     MARKDOWN_ESCAPE = {
                        'latex': [('_', '\\_'),
                                  (u'\u00A0', '~'),
@@ -201,15 +200,12 @@ class Citation(object):
 
         pattern, sections = self._getFormatters(self.PAPER_PATTERNS,
                                                 style)
-        return self._applyMarkdown(self._formatMeta(pattern, sections,
-                                                    self.PAPER_META,
-                                                    style))
+        return self._applyMarkdown(self._formatMeta(pattern, sections, self.PAPER_META))
 
-    def _formatMeta(self, template, sections, meta, style):
+    def _formatMeta(self, template, sections, meta):
         return self._format(template,
                             self._sections(meta,
-                                           reversed(sections),
-                                           style))
+                                           reversed(sections)))
 
     def _format(self, pattern, sections):
         return pattern.format(**dict(sections))
@@ -223,14 +219,12 @@ class Citation(object):
 
         pattern, sections = self._getFormatters(self.SOFTWARE_PATTERNS,
                                                 style)
-        return self._applyMarkdown(self._formatMeta(pattern, sections,
-                                                    self._getMeta(version),
-                                                    style))
+        return self._applyMarkdown(self._formatMeta(pattern, sections, self._getMeta(version)))
 
     def cite(self, version, style):
         pattern, sections = self._getFormatters(self.CITE_SOFTWARE_PATTERNS,
                                                 style)
-        formatted = self._formatMeta(pattern, sections, self._getMeta(version), style)
+        formatted = self._formatMeta(pattern, sections, self._getMeta(version))
         return self._applyMarkdown(formatted)
 
     def _applyMarkdown(self, string):
@@ -261,21 +255,12 @@ class Citation(object):
 
         return meta
 
-    def _sections(self, meta, formatters, style):
+    def _sections(self, meta, formatters):
         for key, formatter in formatters:
             try:
-                text = formatter(**meta)
+                yield key, formatter(**meta)
             except KeyError:
                 pass
-            else:
-                yield key, self._style_escape(text, style)
-
-    # XXX May be unnecessary
-    def _style_escape(self, text, style):
-        try:
-            return self.STYLE_ESCAPE[style](text)
-        except:
-            return text
 
     def _str(self):
         return self.cite(self._version, self._style)
