@@ -75,21 +75,33 @@ class Citation(object):
                       },
             }
 
-    PAPER_META = {'authors': [('Dzik', 'Jakub', 'Mateusz'),
-                              (u'Puścian', 'Alicja'),
-                              ('Mijakowska', 'Zofia'),
-                              ('Radwanska', 'Kasia'),
-                              (u'Łęski', 'Szymon'),
-                              ],
-                  'title': '{PyMICE}: A {Python} library for analysis of {IntelliCage} data',
-                  'year': 2017,
-                  'day': 22,
-                  'month': 'June',
-                  'journal': 'Behavior Research Methods',
-                  'doi': '10.3758/s13428-017-0907-5',
-                  'issn': '1554-3528',
-                  'abstract': 'IntelliCage is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present PyMICE, a free and open-source library for analysis of IntelliCage data in the Python programming language. We describe the design and demonstrate the use of the library through a series of examples. PyMICE provides easy and intuitive access to IntelliCage data, and thus facilitates the possibility of using numerous other Python scientific libraries to form a complete data analysis workflow.'
-                  }
+    PAPER_META = {
+        'authors': [('Dzik', 'Jakub', 'Mateusz'),
+                    (u'Puścian', 'Alicja'),
+                    ('Mijakowska', 'Zofia'),
+                    ('Radwanska', 'Kasia'),
+                    (u'Łęski', 'Szymon'),
+                    ],
+        'title': '{PyMICE}: A {Python} library for analysis of {IntelliCage} data',
+        'year': 2017,
+        'day': 22,
+        'month': 'June',
+        'journal': 'Behavior Research Methods',
+        'doi': '10.3758/s13428-017-0907-5',
+        'issn': '1554-3528',
+        'abstract': '{IntelliCage} is an automated system for recording the '
+                    'behavior of a group of mice housed together. It produces '
+                    'rich, detailed behavioral data calling for new methods '
+                    'and software for their analysis. Here we present {PyMICE},'
+                    ' a free and open-source library for analysis of '
+                    '{IntelliCage} data in the {Python} programming language. '
+                    'We describe the design and demonstrate the use of the '
+                    'library through a series of examples. {PyMICE} provides '
+                    'easy and intuitive access to {IntelliCage} data, and thus '
+                    'facilitates the possibility of using numerous other '
+                    '{Python} scientific libraries to form a complete data '
+                    'analysis workflow.'
+        }
 
 
     DEFAULT_MARKDOWN = {'apa6': 'txt',
@@ -111,15 +123,15 @@ class Citation(object):
                   ('version', '{__version__}'.format),
                   ('version', ''.format),
                   ]),
-        'bibtex': (u"pymice{version}{{Title = {{{{{title}}}}}, Note = {{{note}}}, Author = {{{authors}}}{date}{doi}}}",
+        'bibtex': (u"@Misc{{pymice{version},\nTitle = {{{{{title}}}}}{note},\nAuthor = {{{authors}}}{date}{doi}\n}}\n",
                    [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
                     ('title', u"PyMICE (v.\xa0{__version__})".format),
                     ('title', u"PyMICE".format),
-                    ('date', ", Year = {{{year}}}, Month = {{{month}}}".format),
+                    ('date', ",\nYear = {{{year}}},\nMonth = {{{month}}},\nDay = {{{day}}}".format),
                     ('date', "".format),
-                    ('doi', ", Doi = {{{doi}}}".format),
+                    ('doi', ",\nDoi = {{{doi}}}".format),
                     ('doi', "".format),
-                    ('note', 'computer software; {rrid}'.format),
+                    ('note', ',\nNote = {{computer software; {rrid}}}'.format),
                     ('version', '{__version__}'.format),
                     ('version', ''.format),
                     ]),
@@ -195,15 +207,15 @@ class Citation(object):
                                 ('journal', '<em>{journal}</em>'.format),
                                 ('doi', u'. doi:\xa0{doi}'.format),
                                 ]),
-                      'bibtex': (u"dzik2017pm{{Title = {{{title}}}, Author = {{{authors}}}{date}{journal}{doi}{issn}{url}{abstract}}}",
+                      'bibtex': (u"@Article{{dzik2017pm{title},\nAuthor = {{{authors}}}{date}{journal}{doi}{issn}{url}{abstract}\n}}\n",
                                  [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
-                                  ('title', u"{title}".format),
-                                  ('date', ", Year = {{{year}}}, Month = {{{month}}}, Day = {{{day}}}".format),
-                                  ('journal', ", Journal = {{{journal}}}".format),
-                                  ('doi', ", Doi = {{{doi}}}".format),
-                                  ('issn', ", Issn = {{{issn}}}".format),
-                                  ('url', ", Url = {{http://dx.doi.org/{doi}}}".format),
-                                  ('abstract', ", Abstract = {{{abstract}}}".format),
+                                  ('title', u",\nTitle = {{{title}}}".format),
+                                  ('date', ",\nYear = {{{year}}},\nMonth = {{{month}}},\nDay = {{{day}}}".format),
+                                  ('journal', ",\nJournal = {{{journal}}}".format),
+                                  ('doi', ",\nDoi = {{{doi}}}".format),
+                                  ('issn', ",\nIssn = {{{issn}}}".format),
+                                  ('url', ",\nUrl = {{http://dx.doi.org/{doi}}}".format),
+                                  ('abstract', ",\nAbstract = {{{abstract}}}".format),
                                   ]),
                       'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:10.3758/s13428-017-0907-5",
                                  [])
