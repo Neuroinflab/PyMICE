@@ -26,6 +26,8 @@
 """
 A collection of tools to access IntelliCage data.
 """
+import sys
+
 from ._Version import __version__, __RRID__, __ID__, __NeuroLexID__
 
 from .LogAnalyser import (LickometerLogAnalyzer, PresenceLogAnalyzer,
@@ -36,15 +38,48 @@ from ._Metadata import Phase, ExperimentTimeline, Timeline
 from ._Results import ResultsCSV
 from ._Tools import hTime, convertTime, warn
 
+from ._Bibliography import Citation
+
+_citation = Citation(style='pymice')
+
 __all__ = []
 
-__welcomeMessage = """PyMICE library v. {version}
+def _fold(string):
+    LINE_WIDTH = 80
+    INDENT_WIDTH = 4
+    words = [w for w in string.split(' ') if w != '']
+    lines = [words[0]]
 
-The library is available under GPL3 license; we ask that the resource identifier
-({rrid}) is provided in any published research making use of PyMICE.
+    for w in words[1:]:
+        if len(w) + len(lines[-1]) < LINE_WIDTH:
+            lines[-1] += ' ' + w
+        else:
+            lines.append(' ' * INDENT_WIDTH + w)
 
-""".format(version=__version__, rrid=__RRID__)
-#sys.stderr.write(__welcomeMessage)
+    return '\n'.join(lines)
+
+
+
+
+__welcomeMessage = u"""PyMICE library v. {version}
+
+The library is available under GPL3 license; we ask that reference to our paper
+as well as to the library itself is provided in any published research making
+use of PyMICE.
+
+The recommended in-text citation format is:
+{citeInText}
+
+and the recommended bibliography entry format:
+{softwareReference}
+
+{paperReference}
+""".format(version=__version__,
+           #rrid=__RRID__,
+           citeInText=_citation,
+           softwareReference=_fold(_citation.softwareReference()),
+           paperReference=_fold(_citation.paperReference()))
+sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
