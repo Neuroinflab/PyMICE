@@ -231,7 +231,7 @@ class TestCitationGivenStylePymice(TestCitationBase):
                      'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
                      None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
                      }
-    PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:10.3758/s13428-017-0907-5"
+    PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5"
 
 
 

@@ -217,7 +217,7 @@ class Citation(object):
                                   ('url', ",\nUrl = {{http://dx.doi.org/{doi}}}".format),
                                   ('abstract', ",\nAbstract = {{{abstract}}}".format),
                                   ]),
-                      'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:10.3758/s13428-017-0907-5",
+                      'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5",
                                  [])
                       }
 
