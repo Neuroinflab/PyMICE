@@ -31,6 +31,8 @@ from pymice._Bibliography import Citation
 
 
 class TestCitationBase(TestCase):
+    MAX_LINE_WIDTH = None
+
     if sys.version_info.major < 3:
         def checkUnicodeEqual(self, expected, observed):
             self.maxDiff = None
@@ -67,27 +69,41 @@ class TestCitationBase(TestCase):
             markdown = self.MARKDOWN
 
         except AttributeError:
-            return Citation(style, **kwargs)
+            return Citation(style,
+                            maxLineWidth=self.MAX_LINE_WIDTH,
+                            **kwargs)
 
         return Citation(style,
                         markdown=markdown,
+                        maxLineWidth=self.MAX_LINE_WIDTH,
                         **kwargs)
-
-    def testSoftwareReference(self):
-        for version, expected in self.SOFTWARE.items():
-            self.checkUnicodeEqual(expected,
-                                   self.reference.softwareReference(version=version,
-                                                                    style=self.STYLE))
 
     def testSoftwareReferenceDefaultStyleIsGivenInConstructor(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
-                               self.reference.softwareReference())
+                               self.reference.referenceSoftware())
+
+    def testSoftwareReferenceAttributeOverridesConstructorVersion(self):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.reference.referenceSoftware(version=version))
+
+    def testSoftwareReferenceAttributesOverridesConstructorVersionAndStyle(self):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation('__unknown__').referenceSoftware(version=version,
+                                                                                  style=self.STYLE))
 
     def testSoftwareReferenceDefaultVersionIsGivenInConstructor(self):
         for version, expected in self.SOFTWARE.items():
             self.checkUnicodeEqual(expected,
                                    self.Citation(self.STYLE,
-                                                 version=version).softwareReference())
+                                                 version=version).referenceSoftware())
+
+    def testSoftwareReferenceProperty(self):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(self.STYLE,
+                                                 version=version).SOFTWARE)
 
     def testDefaultToString(self):
         self.checkToString(self.CITE_SOFTWARE[pm.__version__],
@@ -106,11 +122,15 @@ class TestCitationBase(TestCase):
 
     def testPaperReference(self):
         self.checkUnicodeEqual(self.PAPER,
-                               self.reference.paperReference())
+                               self.reference.referencePaper())
+
+    def testPaperReferenceProperty(self):
+        self.checkUnicodeEqual(self.PAPER,
+                               self.reference.PAPER)
 
     def testSoftwareCurrentVersionIsDefault(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
-                               self.reference.softwareReference(style=self.STYLE))
+                               self.reference.referenceSoftware(style=self.STYLE))
 
 
 class TestCitationGivenStyleAPA6(TestCitationBase):
@@ -234,6 +254,37 @@ class TestCitationGivenStylePymice(TestCitationBase):
     PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5"
 
 
+class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
+    def Citation(self, style, **kwargs):
+        try:
+            markdown = self.MARKDOWN
+
+        except AttributeError:
+            return Citation(style,
+                            **kwargs)
+
+        return Citation(style,
+                        markdown=markdown,
+                        **kwargs)
+
+    STYLE = 'pymice'
+    SOFTWARE = {'1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software\n    (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
+                '1.1.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (December\xa013,\xa02016) \"PyMICE\" computer software\n    (v.\xa01.1.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.200648",
+                '1.0.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (May\xa06,\xa02016) \"PyMICE\" computer software\n    (v.\xa01.0.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.51092",
+                '0.2.5': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa011,\xa02016) \"PyMICE\" computer software\n    (v.\xa00.2.5; RRID:nlx_158570) doi:\xa010.5281/zenodo.49550",
+                '0.2.4': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (January\xa030,\xa02016) \"PyMICE\" computer software\n    (v.\xa00.2.4; RRID:nlx_158570) doi:\xa010.5281/zenodo.47305",
+                '0.2.3': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (January\xa030,\xa02016) \"PyMICE\" computer software\n    (v.\xa00.2.3; RRID:nlx_158570) doi:\xa010.5281/zenodo.47259",
+                'unknown': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (v.\xa0unknown;\n    RRID:nlx_158570)",
+                None: u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (RRID:nlx_158570)",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
+                     '1.1.0': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian 2016)",
+                     'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
+                     None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
+                     }
+    PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017)\n    \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior\n    Research Methods doi:\xa010.3758/s13428-017-0907-5"
+
+
 
 # class TestCitationGivenStyleChicago(TestCitationBase):
 #     STYLE = 'chicago'
@@ -255,11 +306,11 @@ class TestCitationGivenStylePymice(TestCitationBase):
 
 class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStyleAPA6):
     def setUp(self):
-        self.reference = Citation()
+        self.reference = Citation(maxLineWidth=None)
 
     def testSoftwareDefaultStyleIsAPA6(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
-                               self.reference.softwareReference())
+                               self.reference.referenceSoftware())
 
 
 if __name__ == '__main__':

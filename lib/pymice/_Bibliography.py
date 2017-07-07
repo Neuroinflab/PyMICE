@@ -37,17 +37,17 @@ def _authorBibliographyAPA6(familyName, *names):
     return u'{},\u00a0{}'.format(familyName, u'\xa0'.join(n[0] + '.' for n in names))
 
 class Citation(object):
-    DEFAULT_META = {'rrid': __RRID__,
+    _DEFAULT_META = {'rrid': __RRID__,
                     'authors': [('Dzik', 'Jakub', 'Mateusz'),
                                 (u'Łęski', 'Szymon'),
                                 (u'Puścian', 'Alicja'),
                                 ],
-                    }
-    META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
+                     }
+    _META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
                       'year': 2017,
                       'month': 'April',
                       'day': 24,
-                      },
+                       },
             '1.1.0': {'doi': '10.5281/zenodo.200648',
                       'year': 2016,
                       'month': 'December',
@@ -58,24 +58,24 @@ class Citation(object):
                       'month': 'May',
                       'day': 6,
                       },
-            '0.2.5': {'doi': '10.5281/zenodo.49550',
+             '0.2.5': {'doi': '10.5281/zenodo.49550',
                       'year': 2016,
                       'month': 'April',
                       'day': 11,
                       },
-            '0.2.4': {'doi': '10.5281/zenodo.47305',
+             '0.2.4': {'doi': '10.5281/zenodo.47305',
                       'year': 2016,
                       'month': 'January',
                       'day': 30,
                       },
-            '0.2.3': {'doi': '10.5281/zenodo.47259',
+             '0.2.3': {'doi': '10.5281/zenodo.47259',
                       'year': 2016,
                       'month': 'January',
                       'day': 30,
                       },
-            }
+             }
 
-    PAPER_META = {
+    _PAPER_META = {
         'authors': [('Dzik', 'Jakub', 'Mateusz'),
                     (u'Puścian', 'Alicja'),
                     ('Mijakowska', 'Zofia'),
@@ -104,11 +104,12 @@ class Citation(object):
         }
 
 
-    DEFAULT_MARKDOWN = {'apa6': 'txt',
+    _DEFAULT_STYLE = 'apa6'
+    _DEFAULT_MARKDOWN = {'apa6': 'txt',
                         'bibtex': 'latex',
                         'pymice': 'txt',
-                        }
-    SOFTWARE_PATTERNS = {
+                         }
+    _SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"{authors} ({date}). {title} [{note}]{doi}",
                   'latex': u"\\bibitem{{pymice{version}}} {authors} ({date}). {title} [{note}]{doi}",
                   },
@@ -144,7 +145,7 @@ class Citation(object):
                     ('doi', ''.format),
                     ])
         }
-    CITE_SOFTWARE_PATTERNS = {
+    _CITE_SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017{version}{authors}, {date})",
                   'latex': u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version_latex}}}",
                   },
@@ -168,7 +169,7 @@ class Citation(object):
                     ])
         }
 
-    MARKDOWN_ESCAPE = {
+    _MARKDOWN_ESCAPE = {
                        'latex': [('_', '\\_'),
                                  (u'\xa0', '~'),
                                  ('<em>', '\\emph{'),
@@ -198,16 +199,16 @@ class Citation(object):
                                ]
                        }
 
-    PAPER_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title}. {journal}{doi}",
+    _PAPER_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title}. {journal}{doi}",
                                 'latex': u"\\bibitem{{dzik2017pm}} {authors} ({date}). {title}. {journal}{doi}",
-                                },
-                               [('authors', _authorsBibliographyAPA6),
+                                 },
+                                [('authors', _authorsBibliographyAPA6),
                                 ('date', u'{year}'.format),
                                 ('title', u"{title}".format),
                                 ('journal', '<em>{journal}</em>'.format),
                                 ('doi', u'. doi:\xa0{doi}'.format),
                                 ]),
-                      'bibtex': (u"@Article{{dzik2017pm{title},\nAuthor = {{{authors}}}{date}{journal}{doi}{issn}{url}{abstract}\n}}\n",
+                       'bibtex': (u"@Article{{dzik2017pm{title},\nAuthor = {{{authors}}}{date}{journal}{doi}{issn}{url}{abstract}\n}}\n",
                                  [('authors', lambda **kwargs: ' and '.join(u'{}, {}'.format(a[0], ' '.join(a[1:])) for a in kwargs['authors'])),
                                   ('title', u",\nTitle = {{{title}}}".format),
                                   ('date', ",\nYear = {{{year}}},\nMonth = {{{month}}},\nDay = {{{day}}}".format),
@@ -217,25 +218,52 @@ class Citation(object):
                                   ('url', ",\nUrl = {{http://dx.doi.org/{doi}}}".format),
                                   ('abstract', ",\nAbstract = {{{abstract}}}".format),
                                   ]),
-                      'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5",
+                       'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5",
                                  [])
-                      }
+                       }
 
-    def __init__(self, style='apa6', markdown=None, version=__version__):
-        self._style = style
+    def __init__(self, style=None, markdown=None, version=__version__,
+                       maxLineWidth=80):
         self._version = version
-        self._setMarkdown(markdown)
+        self._setStyle(style)
+        self._markdown = markdown
+        self._maxLineWidth = maxLineWidth
 
-    def _setMarkdown(self, markdown):
-        self._markdown = markdown if markdown is not None else self.DEFAULT_MARKDOWN[self._style]
+    def _setStyle(self, style):
+        self._style = style if style is not None else self._DEFAULT_STYLE
 
-    def paperReference(self, style=None):
+    def referencePaper(self, style=None):
         if style is None:
             style = self._style
 
-        pattern, sections = self._getFormatters(self.PAPER_PATTERNS,
+        pattern, sections = self._getFormatters(self._PAPER_PATTERNS,
                                                 style)
-        return self._applyMarkdown(self._formatMeta(pattern, sections, self.PAPER_META))
+        return self._fold(self._applyMarkdown(self._formatMeta(pattern,
+                                                               sections,
+                                                               self._PAPER_META),
+                                              self._getMarkdown(style, self._markdown)))
+
+    @property
+    def PAPER(self):
+        return self.referencePaper()
+
+    def _fold(self, string):
+        maxWidth = self._maxLineWidth
+        if maxWidth is None:
+            return string
+
+        indentWidth = 4
+
+        words = [w for w in string.split(' ') if w != '']
+        lines = [words[0]]
+
+        for w in words[1:]:
+            if len(w) + len(lines[-1]) < maxWidth:
+                lines[-1] += ' ' + w
+            else:
+                lines.append(' ' * indentWidth + w)
+
+        return '\n'.join(lines)
 
     def _formatMeta(self, template, sections, meta):
         return self._format(template,
@@ -245,27 +273,47 @@ class Citation(object):
     def _format(self, pattern, sections):
         return pattern.format(**dict(sections))
 
-    def softwareReference(self, style=None, **kwargs):
+    def referenceSoftware(self, style=None, **kwargs):
         if style is None:
             style = self._style
 
         version = kwargs.get('version',
                              self._version)
 
-        pattern, sections = self._getFormatters(self.SOFTWARE_PATTERNS,
+        pattern, sections = self._getFormatters(self._SOFTWARE_PATTERNS,
                                                 style)
-        return self._applyMarkdown(self._formatMeta(pattern, sections, self._getMeta(version)))
+        return self._fold(self._applyMarkdown(self._formatMeta(pattern,
+                                                    sections,
+                                                    self._getMeta(version)),
+                                   self._getMarkdown(style,
+                                                     self._markdown)))
+
+    @property
+    def SOFTWARE(self):
+        return self.referenceSoftware()
 
     def cite(self, version, style):
-        pattern, sections = self._getFormatters(self.CITE_SOFTWARE_PATTERNS,
+        pattern, sections = self._getFormatters(self._CITE_SOFTWARE_PATTERNS,
                                                 style)
-        formatted = self._formatMeta(pattern, sections, self._getMeta(version))
-        return self._applyMarkdown(formatted)
+        formatted = self._formatMeta(pattern,
+                                     sections,
+                                     self._getMeta(version))
+        return self._applyMarkdown(formatted,
+                                   self._getMarkdown(style,
+                                                     self._markdown))
 
-    def _applyMarkdown(self, string):
+    def _applyMarkdown(self, string, markdown):
         return reduce(lambda s, substitution: s.replace(*substitution),
-                      self.MARKDOWN_ESCAPE[self._markdown],
+                      self._MARKDOWN_ESCAPE[markdown],
                       string)
+
+    def _getMarkdown(self, style, markdown):
+        if markdown is not None: return markdown
+
+        try:
+            return self._DEFAULT_MARKDOWN[style]
+        except KeyError:
+            pass #return self._DEFAULT_MARKDOWN[self._DEFAULT_STYLE]
 
     def _getFormatters(self, formatters, style):
         pattern, sections = formatters[style]
@@ -274,17 +322,17 @@ class Citation(object):
         except TypeError:
             pass
         except KeyError:
-            pattern = pattern[self.DEFAULT_MARKDOWN[style]]
+            pattern = pattern[self._DEFAULT_MARKDOWN[style]]
 
         return pattern, sections
 
     def _getMeta(self, version):
-        meta = self.DEFAULT_META.copy()
+        meta = self._DEFAULT_META.copy()
         if version is not None:
             meta['__version__'] = version
 
         try:
-            meta.update(self.META[version])
+            meta.update(self._META[version])
         except KeyError:
             pass
 

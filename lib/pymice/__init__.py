@@ -40,26 +40,9 @@ from ._Tools import hTime, convertTime, warn
 
 from ._Bibliography import Citation
 
-_citation = Citation(style='pymice')
+__citation = Citation(style='pymice')
 
 __all__ = []
-
-def _fold(string):
-    LINE_WIDTH = 80
-    INDENT_WIDTH = 4
-    words = [w for w in string.split(' ') if w != '']
-    lines = [words[0]]
-
-    for w in words[1:]:
-        if len(w) + len(lines[-1]) < LINE_WIDTH:
-            lines[-1] += ' ' + w
-        else:
-            lines.append(' ' * INDENT_WIDTH + w)
-
-    return '\n'.join(lines)
-
-
-
 
 __welcomeMessage = u"""PyMICE library v. {version}
 
@@ -68,17 +51,15 @@ as well as to the library itself is provided in any published research making
 use of PyMICE.
 
 The recommended in-text citation format is:
-{citeInText}
+{cite}
 
 and the recommended bibliography entry format:
-{softwareReference}
+{cite.SOFTWARE}
 
-{paperReference}
+{cite.PAPER}
 """.format(version=__version__,
            #rrid=__RRID__,
-           citeInText=_citation,
-           softwareReference=_fold(_citation.softwareReference()),
-           paperReference=_fold(_citation.paperReference()))
+           cite=__citation)
 sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
