@@ -87,6 +87,7 @@ class Citation(object):
         'day': 22,
         'month': 'June',
         'journal': 'Behavior Research Methods',
+        'journalAbbreviationNLM': 'Behav Res Methods',
         'doi': '10.3758/s13428-017-0907-5',
         'issn': '1554-3528',
         'abstract': '{IntelliCage} is an automated system for recording the '
@@ -106,8 +107,9 @@ class Citation(object):
 
     _DEFAULT_STYLE = 'apa6'
     _DEFAULT_MARKDOWN = {'apa6': 'txt',
-                        'bibtex': 'latex',
-                        'pymice': 'txt',
+                         'bibtex': 'latex',
+                         'pymice': 'txt',
+                         'vancouver': 'txt',
                          }
     _SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"{authors} ({date}). {title} [{note}]{doi}",
@@ -143,8 +145,16 @@ class Citation(object):
                     ('version', u'computer software ({rrid})'.format),
                     ('doi', u' doi:\xa0{doi}'.format),
                     ('doi', ''.format),
-                    ])
-        }
+                    ]),
+        'vancouver': (u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software].{version} Warsaw: Nencki Institute{date}.{doi}",
+                      [('version', u' Version {__version__}.'.format),
+                       ('version', u''.format),
+                       ('date', '; {year}'.format),
+                       ('date', ''.format),
+                       ('doi', u' DOI:\xa0{doi}'.format),
+                       ('doi', ''.format),
+                       ]),
+    }
     _CITE_SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017{version}{authors}, {date})",
                   'latex': u"\\emph{{PyMICE}}~\\cite{{dzik2017pm{version_latex}}}",
@@ -166,8 +176,13 @@ class Citation(object):
                     ('version', '; '.format),
                     ('date', ' {year}'.format),
                     ('date', ''.format),
-                    ])
-        }
+                    ]),
+        'vancouver': (u"PyMICE\xa0({rrid})\xa0[1{version}2]",
+                      [('rrid', '{rrid}'.format),
+                       ('version', u'] v.\xa0{__version__}\xa0['.format),
+                       ('version', ','.format),
+                       ]),
+    }
 
     _MARKDOWN_ESCAPE = {
                        'latex': [('_', '\\_'),
@@ -204,7 +219,7 @@ class Citation(object):
                                  },
                                 [('authors', _authorsBibliographyAPA6),
                                 ('date', u'{year}'.format),
-                                ('title', u"{title}".format),
+                                ('title', u'{title}'.format),
                                 ('journal', '<em>{journal}</em>'.format),
                                 ('doi', u'. doi:\xa0{doi}'.format),
                                 ]),
@@ -219,8 +234,14 @@ class Citation(object):
                                   ('abstract', ",\nAbstract = {{{abstract}}}".format),
                                   ]),
                        'pymice': (u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5",
-                                 [])
-                       }
+                                 []),
+                       'vancouver': (u"Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. {title}. {journal}. {date}. {doi}",
+                                     [('date', u'{year}'.format),
+                                      ('title', u'{title}'.format),
+                                      ('journal', '{journalAbbreviationNLM}'.format),
+                                      ('doi', u'DOI:\xa0{doi}'.format),
+                                      ]),
+    }
 
     def __init__(self, style=None, markdown=None, version=__version__,
                        maxLineWidth=80):

@@ -36,7 +36,14 @@ class TestCitationBase(TestCase):
     if sys.version_info.major < 3:
         def checkUnicodeEqual(self, expected, observed):
             self.maxDiff = None
-            self.assertEqual(expected, observed)
+            try:
+                self.assertEqual(expected, observed)
+            except AssertionError:
+                for i, (a, b) in enumerate(zip(expected, observed)):
+                    if a != b:
+                        print(u'\n{} ({} != {})'.format(expected[:i], ord(a), ord(b)))
+                        break
+                raise
             self.assertIsInstance(observed, unicode)
 
         def checkStrEqual(self, expected, observed):
@@ -284,6 +291,25 @@ class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
                      }
     PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017)\n    \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior\n    Research Methods doi:\xa010.3758/s13428-017-0907-5"
 
+
+class TestCitationGivenStyleVancouver(TestCitationBase):
+    STYLE = 'vancouver'
+
+    SOFTWARE = {'1.1.1': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute; 2017. DOI:\xa010.5281/zenodo.557087",
+                '1.1.0': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.200648",
+                '1.0.0': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.51092",
+                '0.2.5': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.49550",
+                '0.2.4': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.47305",
+                '0.2.3': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.47259",
+                'unknown': u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute.",
+                None: u"Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute.",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
+                     '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.0\xa0[2]",
+                     'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa0unknown\xa0[2]",
+                     None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
+                     }
+    PAPER = u"Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
 
 
 # class TestCitationGivenStyleChicago(TestCitationBase):
