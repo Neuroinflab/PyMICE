@@ -83,6 +83,18 @@ Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\
 Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017)
     \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior
     Research Methods doi:\xa010.3758/s13428-017-0907-5
+
+If the journal does not allow for inclusion of the resource identifier
+({rrid}) in the bibliography, we ask to provide it in-text:
+PyMICE\xa0({rrid})\xa0[1] v.\xa0{version}\xa0[2]
+
+1. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python
+    library for analysis of IntelliCage data. Behav Res Methods. 2017.
+    DOI:\xa010.3758/s13428-017-0907-5
+2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1.
+    Warsaw: Nencki Institute; 2017. DOI:\xa010.5281/zenodo.557087
+
+
 """.format(version=pm.__version__, rrid=pm.__RRID__),
                             stderr.CAPTURED)
             for line in stderr.CAPTURED.split('\n'):

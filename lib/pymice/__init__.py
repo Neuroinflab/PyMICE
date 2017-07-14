@@ -57,9 +57,20 @@ and the recommended bibliography entry format:
 {cite.SOFTWARE}
 
 {cite.PAPER}
+
+If the journal does not allow for inclusion of the resource identifier
+({rrid}) in the bibliography, we ask to provide it in-text:
+{vancouver}
+
+1. {vancouver.PAPER}
+2. {vancouver.SOFTWARE}
+
+
 """.format(version=__version__,
-           #rrid=__RRID__,
-           cite=__citation)
+           rrid=__RRID__,
+           cite=__citation,
+           vancouver=Citation(style='vancouver',
+                              maxLineWidth=78))
 sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
