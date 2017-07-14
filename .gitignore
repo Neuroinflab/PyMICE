@@ -1,6 +1,11 @@
 *.swp
 *.pyc
-*.zip
+/*.zip
+/test/*.zip
+/test/data/*.zip
+/test/data/*/*zip
+/tutorial/*/*.zip
+/tutorial/*/*/*.zip
 /build
 .coverage
 coverage.xml
