@@ -330,13 +330,15 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
 #     PAPER = u"Dzik, Jakub\xa0M., Alicja Puścian, Zofia Mijakowska, Kasia Radwanska, and Szymon Łęski. 2017. \"PyMICE: A Python library for analysis of IntelliCage data\". Behavior Research Methods. doi:10.3758/s13428-017-0907-5."
 
 
-class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStyleAPA6):
+class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStylePymice):
     def setUp(self):
         self.reference = Citation(maxLineWidth=None)
 
-    def testSoftwareDefaultStyleIsAPA6(self):
+    def testSoftwareDefaultStyleIsPymice(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
                                self.reference.referenceSoftware())
+
+
 
 
 if __name__ == '__main__':

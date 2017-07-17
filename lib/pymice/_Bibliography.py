@@ -105,7 +105,7 @@ class Citation(object):
         }
 
 
-    _DEFAULT_STYLE = 'apa6'
+    _DEFAULT_STYLE = 'pymice'
     _DEFAULT_MARKDOWN = {'apa6': 'txt',
                          'bibtex': 'latex',
                          'pymice': 'txt',
