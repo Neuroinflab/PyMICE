@@ -402,6 +402,8 @@ class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStylePymice):
 class TestCitationGivenCamelCaseMarkdown(TestCitationGivenStyleAPA6markdownLaTeX):
     MARKDOWN = 'LaTeX'
 
+class TestCitationGivenCamelCaseStyle(TestCitationGivenStyleAPA6markdownLaTeX):
+    STYLE = 'Apa6'
 
 if __name__ == '__main__':
     unittest.main()

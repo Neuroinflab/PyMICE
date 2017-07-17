@@ -252,12 +252,9 @@ class Citation(object):
     def __init__(self, style=None, markdown=None, version=__version__,
                        maxLineWidth=80):
         self._version = version
-        self._setStyle(style)
+        self._style = style
         self._markdown = markdown
         self._maxLineWidth = maxLineWidth
-
-    def _setStyle(self, style):
-        self._style = style if style is not None else self._DEFAULT_STYLE
 
     def referencePaper(self, style=None, markdown=None):
         return self._applyTemplate(self._PAPER_PATTERNS,
@@ -288,8 +285,13 @@ class Citation(object):
     def _applyTemplate(self, template, meta, style, markdown):
         return self._applyTemplateOfGivenStyle(template,
                                                meta,
-                                               style if style is not None else self._style,
+                                               self._getStyle(style).lower(),
                                                markdown)
+
+    def _getStyle(self, style):
+        if style is not None: return style
+        if self._style is not None: return self._style
+        return self._DEFAULT_STYLE
 
     def _applyTemplateOfGivenStyle(self, template, meta, style, markdown):
         return self._applyTemplateOfGivenMarkdown(template, meta, style,
