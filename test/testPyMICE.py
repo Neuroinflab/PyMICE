@@ -30,7 +30,10 @@ from unittest import TestCase
 import pymice as pm
 
 if sys.version_info.major > 2:
-    from importlib import reload
+    try:
+        from importlib import reload
+    except ImportError:
+        from imp import reload
 
 
 class CaptureSTDERR(object):
