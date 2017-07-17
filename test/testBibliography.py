@@ -25,9 +25,23 @@
 import sys
 import unittest
 from unittest import TestCase
+import functools
 
 import pymice as pm
 from pymice._Bibliography import Citation
+
+
+def requireMarkdown(f):
+    @functools.wraps(f)
+    def wrapper(self):
+        try:
+            markdown = self.MARKDOWN
+        except AttributeError:
+            self.skipTest('no markdown given')
+        else:
+            return f(self, markdown)
+
+    return wrapper
 
 
 class TestCitationBase(TestCase):
@@ -73,38 +87,54 @@ class TestCitationBase(TestCase):
 
     def Citation(self, style, **kwargs):
         try:
-            markdown = self.MARKDOWN
+            markdown = kwargs.pop('markdown')
 
-        except AttributeError:
-            return Citation(style,
-                            maxLineWidth=self.MAX_LINE_WIDTH,
-                            **kwargs)
+        except KeyError:
+            try:
+                markdown = self.MARKDOWN
+
+            except AttributeError:
+                return Citation(style,
+                                maxLineWidth=self.MAX_LINE_WIDTH,
+                                **kwargs)
 
         return Citation(style,
                         markdown=markdown,
                         maxLineWidth=self.MAX_LINE_WIDTH,
                         **kwargs)
 
+    def testSoftwareReferenceCurrentVersionIsDefault(self):
+        self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
+                               self.reference.referenceSoftware(style=self.STYLE))
+
     def testSoftwareReferenceDefaultStyleIsGivenInConstructor(self):
         self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
                                self.reference.referenceSoftware())
-
-    def testSoftwareReferenceAttributeOverridesConstructorVersion(self):
-        for version, expected in self.SOFTWARE.items():
-            self.checkUnicodeEqual(expected,
-                                   self.reference.referenceSoftware(version=version))
-
-    def testSoftwareReferenceAttributesOverridesConstructorVersionAndStyle(self):
-        for version, expected in self.SOFTWARE.items():
-            self.checkUnicodeEqual(expected,
-                                   self.Citation('__unknown__').referenceSoftware(version=version,
-                                                                                  style=self.STYLE))
 
     def testSoftwareReferenceDefaultVersionIsGivenInConstructor(self):
         for version, expected in self.SOFTWARE.items():
             self.checkUnicodeEqual(expected,
                                    self.Citation(self.STYLE,
                                                  version=version).referenceSoftware())
+
+    def testSoftwareReferenceArgumentOverridesConstructorVersion(self):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.reference.referenceSoftware(version=version))
+
+    def testSoftwareReferenceArgumentOverridesConstructorVersionAndStyle(self):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation('__unknown__').referenceSoftware(version=version,
+                                                                                  style=self.STYLE))
+
+    @requireMarkdown
+    def testSoftwareReferenceArgumentOverridesConstructorMarkdown(self, markdown):
+        for version, expected in self.SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(markdown='__unknown__',
+                                                 style=self.STYLE,
+                                                 version=version).referenceSoftware(markdown=markdown))
 
     def testSoftwareReferenceProperty(self):
         for version, expected in self.SOFTWARE.items():
@@ -122,12 +152,36 @@ class TestCitationBase(TestCase):
                                self.Citation(self.STYLE,
                                              version=version))
 
-    def testCiteSoftware(self):
+    def testCiteSoftwareCurrentVersionIsDefault(self):
+        self.checkUnicodeEqual(self.CITE_SOFTWARE[pm.__version__],
+                               self.reference.cite(style=self.STYLE))
+
+    def testCiteSoftwareDefaultVersionAndStyleGivenInConstructor(self):
         for version, expected in self.CITE_SOFTWARE.items():
             self.checkUnicodeEqual(expected,
-                                   self.reference.cite(version, self.STYLE))
+                                   self.Citation(style=self.STYLE,
+                                                 version=version).cite())
 
-    def testPaperReference(self):
+    def testCiteSoftwareArgumentOverridesVersion(self):
+        for version, expected in self.CITE_SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.reference.cite(version=version))
+
+    def testCiteSoftwareArgumentOverridesConstructorVersionAndStyle(self):
+        for version, expected in self.CITE_SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation('__unknown__').cite(version=version,
+                                                                     style=self.STYLE))
+
+    @requireMarkdown
+    def testCiteSoftwareArgumentOverridesConstructorMarkdown(self, markdown):
+        for version, expected in self.CITE_SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(markdown='__unknown__',
+                                                 style=self.STYLE,
+                                                 version=version).cite(markdown=markdown))
+
+    def testPaperReferenceDefaultStyleAndMarkdownSetInConstructor(self):
         self.checkUnicodeEqual(self.PAPER,
                                self.reference.referencePaper())
 
@@ -135,9 +189,15 @@ class TestCitationBase(TestCase):
         self.checkUnicodeEqual(self.PAPER,
                                self.reference.PAPER)
 
-    def testSoftwareCurrentVersionIsDefault(self):
-        self.checkUnicodeEqual(self.SOFTWARE[pm.__version__],
-                               self.reference.referenceSoftware(style=self.STYLE))
+    def testPaperReferenceArgumentOverridesConstructorStyle(self):
+        self.checkUnicodeEqual(self.PAPER,
+                               self.Citation('__unknown__').referencePaper(style=self.STYLE))
+
+    @requireMarkdown
+    def testPaperReferenceArgumentOverridesConstructorMarkdown(self, markdown):
+        self.checkUnicodeEqual(self.PAPER,
+                               self.Citation(self.STYLE,
+                                             markdown='__unknown__').referencePaper(markdown=markdown))
 
 
 class TestCitationGivenStyleAPA6(TestCitationBase):
@@ -339,6 +399,8 @@ class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStylePymice):
                                self.reference.referenceSoftware())
 
 
+class TestCitationGivenCamelCaseMarkdown(TestCitationGivenStyleAPA6markdownLaTeX):
+    MARKDOWN = 'LaTeX'
 
 
 if __name__ == '__main__':

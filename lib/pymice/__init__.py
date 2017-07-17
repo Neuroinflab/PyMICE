@@ -40,8 +40,6 @@ from ._Tools import hTime, convertTime, warn
 
 from ._Bibliography import Citation
 
-__citation = Citation(style='pymice')
-
 __all__ = []
 
 __welcomeMessage = u"""PyMICE library v. {version}
@@ -68,7 +66,7 @@ If the journal does not allow for inclusion of the resource identifier
 
 """.format(version=__version__,
            rrid=__RRID__,
-           cite=__citation,
+           cite=Citation(),
            vancouver=Citation(style='vancouver',
                               maxLineWidth=78))
 sys.stderr.write(__welcomeMessage)

@@ -259,20 +259,51 @@ class Citation(object):
     def _setStyle(self, style):
         self._style = style if style is not None else self._DEFAULT_STYLE
 
-    def referencePaper(self, style=None):
-        if style is None:
-            style = self._style
+    def referencePaper(self, style=None, markdown=None):
+        return self._applyTemplate(self._PAPER_PATTERNS,
+                                   self._PAPER_META,
+                                   style,
+                                   markdown)
 
-        pattern, sections = self._getFormatters(self._PAPER_PATTERNS,
-                                                style)
+    def referenceSoftware(self, style=None, markdown=None, **kwargs):
+        return self._applyTemplate(self._SOFTWARE_PATTERNS,
+                                   self._getSoftwareReleaseMeta(kwargs),
+                                   style,
+                                   markdown)
+
+    def _getSoftwareReleaseMeta(self, kwargs):
+        return self._getSoftwareMeta(
+            self._getVersion(kwargs))
+
+    def _getVersion(self, kwargs):
+        return kwargs.get('version',
+                          self._version)
+
+    def cite(self, style=None, markdown=None, **kwargs):
+        return self._applyTemplate(self._CITE_SOFTWARE_PATTERNS,
+                                   self._getSoftwareReleaseMeta(kwargs),
+                                   style,
+                                   markdown)
+
+    def _applyTemplate(self, template, meta, style, markdown):
+        return self._applyTemplateOfGivenStyle(template,
+                                               meta,
+                                               style if style is not None else self._style,
+                                               markdown)
+
+    def _applyTemplateOfGivenStyle(self, template, meta, style, markdown):
+        return self._applyTemplateOfGivenMarkdown(template, meta, style,
+                                                  self._getMarkdown(style,
+                                                                    markdown).lower())
+
+    def _applyTemplateOfGivenMarkdown(self, template, meta, style, markdown):
+        pattern, sections = self._getFormatters(template,
+                                                style,
+                                                markdown)
         return self._fold(self._applyMarkdown(self._formatMeta(pattern,
                                                                sections,
-                                                               self._PAPER_META),
-                                              self._getMarkdown(style, self._markdown)))
-
-    @property
-    def PAPER(self):
-        return self.referencePaper()
+                                                               meta),
+                                              markdown))
 
     def _fold(self, string):
         maxWidth = self._maxLineWidth
@@ -300,35 +331,6 @@ class Citation(object):
     def _format(self, pattern, sections):
         return pattern.format(**dict(sections))
 
-    def referenceSoftware(self, style=None, **kwargs):
-        if style is None:
-            style = self._style
-
-        version = kwargs.get('version',
-                             self._version)
-
-        pattern, sections = self._getFormatters(self._SOFTWARE_PATTERNS,
-                                                style)
-        return self._fold(self._applyMarkdown(self._formatMeta(pattern,
-                                                    sections,
-                                                    self._getMeta(version)),
-                                   self._getMarkdown(style,
-                                                     self._markdown)))
-
-    @property
-    def SOFTWARE(self):
-        return self.referenceSoftware()
-
-    def cite(self, version, style):
-        pattern, sections = self._getFormatters(self._CITE_SOFTWARE_PATTERNS,
-                                                style)
-        formatted = self._formatMeta(pattern,
-                                     sections,
-                                     self._getMeta(version))
-        return self._applyMarkdown(formatted,
-                                   self._getMarkdown(style,
-                                                     self._markdown))
-
     def _applyMarkdown(self, string, markdown):
         return reduce(lambda s, substitution: s.replace(*substitution),
                       self._MARKDOWN_ESCAPE[markdown],
@@ -336,16 +338,17 @@ class Citation(object):
 
     def _getMarkdown(self, style, markdown):
         if markdown is not None: return markdown
+        if self._markdown is not None: return self._markdown
 
         try:
             return self._DEFAULT_MARKDOWN[style]
         except KeyError:
             pass #return self._DEFAULT_MARKDOWN[self._DEFAULT_STYLE]
 
-    def _getFormatters(self, formatters, style):
+    def _getFormatters(self, formatters, style, markdown):
         pattern, sections = formatters[style]
         try:
-            pattern = pattern[self._markdown]
+            pattern = pattern[markdown]
         except TypeError:
             pass
         except KeyError:
@@ -353,7 +356,7 @@ class Citation(object):
 
         return pattern, sections
 
-    def _getMeta(self, version):
+    def _getSoftwareMeta(self, version):
         meta = self._DEFAULT_META.copy()
         if version is not None:
             meta['__version__'] = version
@@ -373,7 +376,7 @@ class Citation(object):
                 pass
 
     def _str(self):
-        return self.cite(self._version, self._style)
+        return self.cite()
 
     if sys.version_info.major < 3:
         def __unicode__(self):
@@ -385,5 +388,14 @@ class Citation(object):
     else:
         def __str__(self):
             return self._str()
+
+    @property
+    def SOFTWARE(self):
+        return self.referenceSoftware()
+
+    @property
+    def PAPER(self):
+        return self.referencePaper()
+
 
 reference = Citation()
