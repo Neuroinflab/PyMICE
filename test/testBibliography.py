@@ -5,7 +5,7 @@
 #    PyMICE library                                                           #
 #                                                                             #
 #    Copyright (C) 2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of          #
-#    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
+#    Neuroinformatics; Nencki Institute - PAS of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
@@ -373,14 +373,14 @@ class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
 class TestCitationGivenStyleVancouver(TestCitationBase):
     STYLE = 'vancouver'
 
-    SOFTWARE = {'1.1.1': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute; 2017. DOI:\xa010.5281/zenodo.557087",
-                '1.1.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.200648",
-                '1.0.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.51092",
-                '0.2.5': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.49550",
-                '0.2.4': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.47305",
-                '0.2.3': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute; 2016. DOI:\xa010.5281/zenodo.47259",
-                'unknown': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute.",
-                None: u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute.",
+    SOFTWARE = {'1.1.1': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
+                '1.1.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.200648",
+                '1.0.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.51092",
+                '0.2.5': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.49550",
+                '0.2.4': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.47305",
+                '0.2.3': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.47259",
+                'unknown': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
+                None: u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
     CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
                      '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.0\xa0[2]",
@@ -392,14 +392,14 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
 
 class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouver):
     MARKDOWN = 'latex'
-    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute; 2017. DOI:~10.5281/zenodo.557087",
-                '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.200648",
-                '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.51092",
-                '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.49550",
-                '0.2.4': u"\\bibitem{pymice0.2.4} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.47305",
-                '0.2.3': u"\\bibitem{pymice0.2.3} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.47259",
-                'unknown': u"\\bibitem{pymiceunknown} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute.",
-                None: u"\\bibitem{pymice} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute.",
+    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{pymice0.2.4} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{pymice0.2.3} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{pymiceunknown} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
+                None: u"\\bibitem{pymice} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
     CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
                      'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
