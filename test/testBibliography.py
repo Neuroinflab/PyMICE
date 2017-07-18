@@ -240,6 +240,33 @@ class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
     PAPER = u"\\bibitem{dzik2017pm} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., &~Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
 
+class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAPA6markdownLaTeX):
+    PAPER_KEY = 'dzikPaper'
+    SOFTWARE_KEY = 'dzikSoft'
+
+    def Citation(self, style, **kwargs):
+        return super(TestCitationGivenStyleAPA6markdownLaTeXcustomKeys,
+                     self).Citation(style,
+                                    paperKey = self.PAPER_KEY,
+                                    softwareKey = self.SOFTWARE_KEY,
+                                    **kwargs)
+
+    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~December). PyMICE (v.~1.1.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~May). PyMICE (v.~1.0.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~April). PyMICE (v.~0.2.5) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~January). PyMICE (v.~0.2.4) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~January). PyMICE (v.~0.2.3) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
+                None: u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                     }
+    PAPER = u"\\bibitem{dzikPaper} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., &~Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
+
+
 class TestCitationGivenStyleAPA6markdownMD(TestCitationGivenStyleAPA6):
     MARKDOWN = 'md'
     SOFTWARE = {'1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.557087",
@@ -302,6 +329,34 @@ class TestCitationGivenStyleBibTeX(TestCitationBase):
     PAPER = u"@Article{dzik2017pm,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
 
 
+class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
+    PAPER_KEY = 'dzikPaper'
+    SOFTWARE_KEY = 'dzikSoft'
+
+    def Citation(self, style, **kwargs):
+        return super(TestCitationGivenStyleBibTeXcustomKeys,
+                     self).Citation(style,
+                                    paperKey = self.PAPER_KEY,
+                                    softwareKey = self.SOFTWARE_KEY,
+                                    **kwargs)
+
+    SOFTWARE = {'1.1.1': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
+                '1.1.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {December},\nDay = {13},\nDoi = {10.5281/zenodo.200648}\n}\n",
+                '1.0.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.0.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {May},\nDay = {6},\nDoi = {10.5281/zenodo.51092}\n}\n",
+                '0.2.5': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~0.2.5)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {April},\nDay = {11},\nDoi = {10.5281/zenodo.49550}\n}\n",
+                '0.2.4': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~0.2.4)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {January},\nDay = {30},\nDoi = {10.5281/zenodo.47305}\n}\n",
+                '0.2.3': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~0.2.3)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {January},\nDay = {30},\nDoi = {10.5281/zenodo.47259}\n}\n",
+                'unknown': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~unknown)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
+                None: u"@Misc{dzikSoft,\nTitle = {{PyMICE}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                     }
+    PAPER = u"@Article{dzikPaper,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
+
+
+
 class TestCitationGivenStylePymice(TestCitationBase):
     STYLE = 'pymice'
     SOFTWARE = {'1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
@@ -337,6 +392,34 @@ class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
                      None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                      }
     PAPER = u"\\bibitem{dzik2017pm} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
+
+
+class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStylePymiceMarkdownLaTeX):
+    MARKDOWN = 'latex'
+    PAPER_KEY = 'dzikPaper'
+    SOFTWARE_KEY = 'dzikSoft'
+
+    def Citation(self, style, **kwargs):
+        return super(TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys,
+                     self).Citation(style,
+                                    paperKey = self.PAPER_KEY,
+                                    softwareKey = self.SOFTWARE_KEY,
+                                    **kwargs)
+
+    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (December~13,~2016) ``PyMICE'' computer software (v.~1.1.0; RRID:nlx\_158570) doi:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (May~6,~2016) ``PyMICE'' computer software (v.~1.0.0; RRID:nlx\_158570) doi:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~11,~2016) ``PyMICE'' computer software (v.~0.2.5; RRID:nlx\_158570) doi:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (January~30,~2016) ``PyMICE'' computer software (v.~0.2.4; RRID:nlx\_158570) doi:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (January~30,~2016) ``PyMICE'' computer software (v.~0.2.3; RRID:nlx\_158570) doi:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
+                None: u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                     }
+    PAPER = u"\\bibitem{dzikPaper} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
 
 
 class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
@@ -406,6 +489,63 @@ class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouv
                      None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
                      }
     PAPER = u"\\bibitem{dzik2017pm} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
+
+
+class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouver):
+    STYLE = 'vancouver'
+    PAPER_KEY = 42
+    SOFTWARE_KEY = 69
+
+    def Citation(self, style, **kwargs):
+        return super(TestCitationGivenStyleVancouverAndCustomKeys,
+                     self).Citation(style,
+                                    paperKey = self.PAPER_KEY,
+                                    softwareKey = self.SOFTWARE_KEY,
+                                    **kwargs)
+
+    SOFTWARE = {'1.1.1': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
+                '1.1.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.200648",
+                '1.0.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.51092",
+                '0.2.5': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.49550",
+                '0.2.4': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.47305",
+                '0.2.3': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.47259",
+                'unknown': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
+                None: u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.1\xa0[69]",
+                     '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.0\xa0[69]",
+                     'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa0unknown\xa0[69]",
+                     None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[42,69]",
+                     }
+    PAPER = u"42. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
+
+
+class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenStyleVancouverMarkdownLaTeX):
+    MARKDOWN = 'latex'
+    PAPER_KEY = 'dzikPaper'
+    SOFTWARE_KEY = 'dzikSoft'
+
+    def Citation(self, style, **kwargs):
+        return super(TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys,
+                     self).Citation(style,
+                                    paperKey = self.PAPER_KEY,
+                                    softwareKey = self.SOFTWARE_KEY,
+                                    **kwargs)
+    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
+                None: u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                     'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                     None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper,dzikSoft}",
+                     }
+    PAPER = u"\\bibitem{dzikPaper} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
+
 
 
 # class TestCitationGivenStyleChicago(TestCitationBase):
