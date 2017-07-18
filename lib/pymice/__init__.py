@@ -60,15 +60,14 @@ If the journal does not allow for inclusion of the resource identifier
 ({rrid}) in the bibliography, we ask to provide it in-text:
 {vancouver}
 
-1. {vancouver.PAPER}
-2. {vancouver.SOFTWARE}
+{vancouver.PAPER}
+{vancouver.SOFTWARE}
 
 
 """.format(version=__version__,
            rrid=__RRID__,
            cite=Citation(),
-           vancouver=Citation(style='vancouver',
-                              maxLineWidth=78))
+           vancouver=Citation(style='Vancouver'))
 sys.stderr.write(__welcomeMessage)
 
 # COPYING, LICENSE and PGP key below
