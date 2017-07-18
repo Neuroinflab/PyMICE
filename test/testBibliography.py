@@ -321,6 +321,24 @@ class TestCitationGivenStylePymice(TestCitationBase):
     PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5"
 
 
+class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
+    MARKDOWN = 'latex'
+    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~J.~M., Łęski~S., Puścian~A. (December~13,~2016) ``PyMICE'' computer software (v.~1.1.0; RRID:nlx\_158570) doi:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~J.~M., Łęski~S., Puścian~A. (May~6,~2016) ``PyMICE'' computer software (v.~1.0.0; RRID:nlx\_158570) doi:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~J.~M., Łęski~S., Puścian~A. (April~11,~2016) ``PyMICE'' computer software (v.~0.2.5; RRID:nlx\_158570) doi:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{pymice0.2.4} Dzik~J.~M., Łęski~S., Puścian~A. (January~30,~2016) ``PyMICE'' computer software (v.~0.2.4; RRID:nlx\_158570) doi:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{pymice0.2.3} Dzik~J.~M., Łęski~S., Puścian~A. (January~30,~2016) ``PyMICE'' computer software (v.~0.2.3; RRID:nlx\_158570) doi:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{pymiceunknown} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
+                None: u"\\bibitem{pymice} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                     'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                     None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+                     }
+    PAPER = u"\\bibitem{dzik2017pm} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
+
+
 class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
     def Citation(self, style, **kwargs):
         try:
@@ -370,6 +388,24 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
                      None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
                      }
     PAPER = u"1. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
+
+
+class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouver):
+    MARKDOWN = 'latex'
+    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute; 2017. DOI:~10.5281/zenodo.557087",
+                '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.200648",
+                '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.51092",
+                '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.49550",
+                '0.2.4': u"\\bibitem{pymice0.2.4} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.4. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.47305",
+                '0.2.3': u"\\bibitem{pymice0.2.3} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.3. Warsaw: Nencki Institute; 2016. DOI:~10.5281/zenodo.47259",
+                'unknown': u"\\bibitem{pymiceunknown} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute.",
+                None: u"\\bibitem{pymice} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute.",
+                }
+    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                     'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                     None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
+                     }
+    PAPER = u"\\bibitem{dzik2017pm} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
 
 
 # class TestCitationGivenStyleChicago(TestCitationBase):
