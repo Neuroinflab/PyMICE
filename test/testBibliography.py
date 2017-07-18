@@ -85,21 +85,30 @@ class TestCitationBase(TestCase):
         else:
             self.reference = self.Citation(style)
 
-    def Citation(self, style, **kwargs):
-        try:
-            markdown = kwargs.pop('markdown')
-
-        except KeyError:
+    def Citation(self, style, _noMaxLineWidth=False, **kwargs):
+        if 'markdown' not in kwargs:
             try:
-                markdown = self.MARKDOWN
+                kwargs['markdown'] = self.MARKDOWN
 
             except AttributeError:
-                return Citation(style,
-                                maxLineWidth=self.MAX_LINE_WIDTH,
-                                **kwargs)
+                pass
+
+        try:
+            kwargs['paperKey'] = self.PAPER_KEY
+
+        except AttributeError:
+            pass
+
+        try:
+            kwargs['softwareKey'] = self.SOFTWARE_KEY
+
+        except AttributeError:
+            pass
+
+        if _noMaxLineWidth:
+            return Citation(style, **kwargs)
 
         return Citation(style,
-                        markdown=markdown,
                         maxLineWidth=self.MAX_LINE_WIDTH,
                         **kwargs)
 
@@ -244,13 +253,6 @@ class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAP
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    def Citation(self, style, **kwargs):
-        return super(TestCitationGivenStyleAPA6markdownLaTeXcustomKeys,
-                     self).Citation(style,
-                                    paperKey = self.PAPER_KEY,
-                                    softwareKey = self.SOFTWARE_KEY,
-                                    **kwargs)
-
     SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~December). PyMICE (v.~1.1.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~May). PyMICE (v.~1.0.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.51092",
@@ -333,13 +335,6 @@ class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    def Citation(self, style, **kwargs):
-        return super(TestCitationGivenStyleBibTeXcustomKeys,
-                     self).Citation(style,
-                                    paperKey = self.PAPER_KEY,
-                                    softwareKey = self.SOFTWARE_KEY,
-                                    **kwargs)
-
     SOFTWARE = {'1.1.1': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
                 '1.1.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {December},\nDay = {13},\nDoi = {10.5281/zenodo.200648}\n}\n",
                 '1.0.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.0.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {May},\nDay = {6},\nDoi = {10.5281/zenodo.51092}\n}\n",
@@ -399,13 +394,6 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    def Citation(self, style, **kwargs):
-        return super(TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys,
-                     self).Citation(style,
-                                    paperKey = self.PAPER_KEY,
-                                    softwareKey = self.SOFTWARE_KEY,
-                                    **kwargs)
-
     SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (December~13,~2016) ``PyMICE'' computer software (v.~1.1.0; RRID:nlx\_158570) doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (May~6,~2016) ``PyMICE'' computer software (v.~1.0.0; RRID:nlx\_158570) doi:~10.5281/zenodo.51092",
@@ -424,16 +412,10 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
 
 class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
     def Citation(self, style, **kwargs):
-        try:
-            markdown = self.MARKDOWN
-
-        except AttributeError:
-            return Citation(style,
-                            **kwargs)
-
-        return Citation(style,
-                        markdown=markdown,
-                        **kwargs)
+        return super(TestDefaultLineWidthLimitIs80,
+                     self).Citation(style,
+                                    _noMaxLineWidth=True,
+                                    **kwargs)
 
     STYLE = 'pymice'
     SOFTWARE = {'1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software\n    (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
@@ -496,13 +478,6 @@ class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouv
     PAPER_KEY = 42
     SOFTWARE_KEY = 69
 
-    def Citation(self, style, **kwargs):
-        return super(TestCitationGivenStyleVancouverAndCustomKeys,
-                     self).Citation(style,
-                                    paperKey = self.PAPER_KEY,
-                                    softwareKey = self.SOFTWARE_KEY,
-                                    **kwargs)
-
     SOFTWARE = {'1.1.1': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
                 '1.1.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.200648",
                 '1.0.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.51092",
@@ -525,12 +500,6 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    def Citation(self, style, **kwargs):
-        return super(TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys,
-                     self).Citation(style,
-                                    paperKey = self.PAPER_KEY,
-                                    softwareKey = self.SOFTWARE_KEY,
-                                    **kwargs)
     SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.51092",

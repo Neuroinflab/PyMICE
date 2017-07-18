@@ -161,6 +161,7 @@ class Citation(object):
                        ('key', '{__software__}'.format),
                        ]),
     }
+
     _CITE_SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017{version}{authors}, {date})",
                   'latex': u"\\emph{{PyMICE}}~\\cite{{{paperKey}{versionLaTeX}{softwareKey}}}",
@@ -206,36 +207,6 @@ class Citation(object):
                        ]),
     }
 
-    _MARKDOWN_ESCAPE = {
-                       'latex': [('_', '\\_'),
-                                 (u'\xa0', '~'),
-                                 ('<em>', '\\emph{'),
-                                 ('</em>', '}'),
-                                 ],
-                       'html': [('{', ''),
-                                ('}', ''),
-                                ('&', '&amp;'),
-                                (u'\xa0', '&nbsp;'),
-                                ],
-                       'md': [('{', ''),
-                              ('}', ''),
-                              ('_', '\\_'),
-                              ('<em>', '_'),
-                              ('</em>', '_'),
-                              ],
-                       'rst': [('{', ''),
-                               ('}', ''),
-                               ('_', '\\_'),
-                               ('<em>', '*'),
-                               ('</em>', '*'),
-                               ],
-                       'txt': [('{', ''),
-                               ('}', ''),
-                               ('<em>', ''),
-                               ('</em>', ''),
-                               ]
-                       }
-
     _PAPER_PATTERNS = {'apa6': ({'txt': u"{authors} ({date}). {title}. {journal}{doi}",
                                  'latex': u"\\bibitem{{{key}}} {authors} ({date}). {title}. {journal}{doi}",
                                  },
@@ -278,6 +249,36 @@ class Citation(object):
                                       ('key', '{__paper__}'.format),
                                       ]),
     }
+
+    _MARKDOWN_ESCAPE = {
+                       'latex': [('_', '\\_'),
+                                 (u'\xa0', '~'),
+                                 ('<em>', '\\emph{'),
+                                 ('</em>', '}'),
+                                 ],
+                       'html': [('{', ''),
+                                ('}', ''),
+                                ('&', '&amp;'),
+                                (u'\xa0', '&nbsp;'),
+                                ],
+                       'md': [('{', ''),
+                              ('}', ''),
+                              ('_', '\\_'),
+                              ('<em>', '_'),
+                              ('</em>', '_'),
+                              ],
+                       'rst': [('{', ''),
+                               ('}', ''),
+                               ('_', '\\_'),
+                               ('<em>', '*'),
+                               ('</em>', '*'),
+                               ],
+                       'txt': [('{', ''),
+                               ('}', ''),
+                               ('<em>', ''),
+                               ('</em>', ''),
+                               ]
+                       }
 
     def __init__(self, style=None, markdown=None, version=__version__,
                        maxLineWidth=80,
