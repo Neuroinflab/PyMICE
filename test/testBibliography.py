@@ -349,6 +349,37 @@ class TestCitationGivenStyleBibTeX(TestCitationBase):
     PAPER = u"@Article{dzik2017pm,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
 
 
+class TestDefaultLineWidthLimitIs80_GivenStyleBibTeX(TestCitationGivenStyleBibTeX):
+    def Citation(self, style, **kwargs):
+        return super(TestDefaultLineWidthLimitIs80_GivenStyleBibTeX,
+                     self).Citation(style,
+                                    _noMaxLineWidth=True,
+                                    **kwargs)
+
+    PAPER = u"""@Article{dzik2017pm,
+Title = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},
+Author = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and
+    Radwanska, Kasia and Łęski, Szymon},
+Year = {2017},
+Month = {June},
+Day = {22},
+Journal = {Behavior Research Methods},
+Doi = {10.3758/s13428-017-0907-5},
+Issn = {1554-3528},
+Url = {http://dx.doi.org/10.3758/s13428-017-0907-5},
+Abstract = {{IntelliCage} is an automated system for recording the behavior of a
+    group of mice housed together. It produces rich, detailed behavioral data
+    calling for new methods and software for their analysis. Here we present
+    {PyMICE}, a free and open-source library for analysis of {IntelliCage} data
+    in the {Python} programming language. We describe the design and demonstrate
+    the use of the library through a series of examples. {PyMICE} provides easy
+    and intuitive access to {IntelliCage} data, and thus facilitates the
+    possibility of using numerous other {Python} scientific libraries to form a
+    complete data analysis workflow.}
+}
+"""
+
+
 class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'

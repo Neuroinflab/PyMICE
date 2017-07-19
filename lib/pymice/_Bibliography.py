@@ -362,16 +362,23 @@ class Citation(object):
 
         indentWidth = 4
 
-        words = [w for w in string.split(' ') if w != '']
+        words = [w for l in string.splitlines(True) for w in l.split(' ') if w != '' ]
         lines = [words[0]]
 
         for w in words[1:]:
-            if len(w) + len(lines[-1]) < maxWidth:
-                lines[-1] += ' ' + w
-            else:
+            if lines[-1][-1] == '\n':
+                lines.append(w)
+
+            elif len(w.rstrip('\n')) + len(lines[-1]) >= maxWidth:
                 lines.append(' ' * indentWidth + w)
 
-        return '\n'.join(lines)
+            else:
+                lines[-1] += ' ' + w
+
+        if lines[-1][-1] == '\n':
+            lines.append('')
+
+        return '\n'.join(l.rstrip('\n') for l in lines)
 
     def _formatMeta(self, template, sections, meta):
         return self._format(template,
