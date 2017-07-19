@@ -303,16 +303,16 @@ class Citation(object):
         return 2
 
     def referencePaper(self, style=None, markdown=None):
-        return self._applyTemplate(self._PAPER_PATTERNS,
-                                   self._PAPER_META, #.copy(),
-                                   style,
-                                   markdown)
+        return self._fold(self._applyTemplate(self._PAPER_PATTERNS,
+                                              self._PAPER_META, #.copy(),
+                                              style,
+                                              markdown))
 
     def referenceSoftware(self, style=None, markdown=None, **kwargs):
-        return self._applyTemplate(self._SOFTWARE_PATTERNS,
-                                   self._getSoftwareReleaseMeta(kwargs),
-                                   style,
-                                   markdown)
+        return self._fold(self._applyTemplate(self._SOFTWARE_PATTERNS,
+                                              self._getSoftwareReleaseMeta(kwargs),
+                                              style,
+                                              markdown))
 
     def _getSoftwareReleaseMeta(self, kwargs):
         return self._getSoftwareMeta(
@@ -350,10 +350,10 @@ class Citation(object):
         pattern, sections = self._getFormatters(template,
                                                 style,
                                                 markdown)
-        return self._fold(self._applyMarkdown(self._formatMeta(pattern,
-                                                               sections,
-                                                               meta),
-                                              markdown))
+        return self._applyMarkdown(self._formatMeta(pattern,
+                                                    sections,
+                                                    meta),
+                                   markdown)
 
     def _fold(self, string):
         maxWidth = self._maxLineWidth
