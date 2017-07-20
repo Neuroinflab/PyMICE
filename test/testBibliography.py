@@ -5,7 +5,7 @@
 #    PyMICE library                                                           #
 #                                                                             #
 #    Copyright (C) 2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of          #
-#    Neuroinformatics; Nencki Institute - PAS of Experimental Biology of Polish     #
+#    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
@@ -152,34 +152,73 @@ class TestCitationBase(TestCase):
                                                  version=version).SOFTWARE)
 
     def testDefaultToString(self):
-        self.checkToString(self.CITE_SOFTWARE[pm.__version__],
+        self.checkToString(self.CITE_PYMICE[pm.__version__],
                            self.reference)
 
     def testToString(self):
-        for version, expected in self.CITE_SOFTWARE.items():
+        for version, expected in self.CITE_PYMICE.items():
             self.checkToString(expected,
                                self.Citation(self.STYLE,
                                              version=version))
 
+    def testCitePymiceCurrentVersionIsDefault(self):
+        self.checkUnicodeEqual(self.CITE_PYMICE[pm.__version__],
+                               self.reference.cite(style=self.STYLE))
+
+    def testCitePymiceDefaultVersionAndStyleGivenInConstructor(self):
+        for version, expected in self.CITE_PYMICE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(style=self.STYLE,
+                                                 version=version).cite())
+
+    def testCitePymiceArgumentOverridesVersion(self):
+        for version, expected in self.CITE_PYMICE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.reference.cite(version=version))
+
+    def testCitePymiceArgumentOverridesConstructorVersionAndStyle(self):
+        for version, expected in self.CITE_PYMICE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation('__unknown__').cite(version=version,
+                                                                     style=self.STYLE))
+
+    @requireMarkdown
+    def testCitePymiceArgumentOverridesConstructorMarkdown(self, markdown):
+        for version, expected in self.CITE_PYMICE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(markdown='__unknown__',
+                                                 style=self.STYLE,
+                                                 version=version).cite(markdown=markdown))
+
+    def testCiteSoftwarePropertyDefault(self):
+        self.checkUnicodeEqual(self.CITE_SOFTWARE[pm.__version__],
+                               self.reference.CITE_SOFTWARE)
+
+    def testCiteSoftwareProperty(self):
+        for version, expected in self.CITE_SOFTWARE.items():
+            self.checkUnicodeEqual(expected,
+                                   self.Citation(self.STYLE,
+                                                 version=version).CITE_SOFTWARE)
+
     def testCiteSoftwareCurrentVersionIsDefault(self):
         self.checkUnicodeEqual(self.CITE_SOFTWARE[pm.__version__],
-                               self.reference.cite(style=self.STYLE))
+                               self.reference.citeSoftware(style=self.STYLE))
 
     def testCiteSoftwareDefaultVersionAndStyleGivenInConstructor(self):
         for version, expected in self.CITE_SOFTWARE.items():
             self.checkUnicodeEqual(expected,
                                    self.Citation(style=self.STYLE,
-                                                 version=version).cite())
+                                                 version=version).citeSoftware())
 
     def testCiteSoftwareArgumentOverridesVersion(self):
         for version, expected in self.CITE_SOFTWARE.items():
             self.checkUnicodeEqual(expected,
-                                   self.reference.cite(version=version))
+                                   self.reference.citeSoftware(version=version))
 
     def testCiteSoftwareArgumentOverridesConstructorVersionAndStyle(self):
         for version, expected in self.CITE_SOFTWARE.items():
             self.checkUnicodeEqual(expected,
-                                   self.Citation('__unknown__').cite(version=version,
+                                   self.Citation('__unknown__').citeSoftware(version=version,
                                                                      style=self.STYLE))
 
     @requireMarkdown
@@ -188,7 +227,7 @@ class TestCitationBase(TestCase):
             self.checkUnicodeEqual(expected,
                                    self.Citation(markdown='__unknown__',
                                                  style=self.STYLE,
-                                                 version=version).cite(markdown=markdown))
+                                                 version=version).citeSoftware(markdown=markdown))
 
     def testPaperReferenceDefaultStyleAndMarkdownSetInConstructor(self):
         self.checkUnicodeEqual(self.PAPER,
@@ -219,10 +258,15 @@ class TestCitationGivenStyleAPA6(TestCitationBase):
                 '0.2.3': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0January). PyMICE (v.\xa00.2.3) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.47259",
                 'unknown': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (n.d.). PyMICE (v.\xa0unknown) [computer software; RRID:nlx_158570]",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian, 2017)",
-                     '1.1.0': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian, 2016)",
-                     'unknown': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian, n.d.)",
-                     None: u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017; Dzik, Łęski, &\xa0Puścian, n.d.)",
+    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian, 2017)",
+                   '1.1.0': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian, 2016)",
+                   'unknown': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian, n.d.)",
+                   None: u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017; Dzik, Łęski, &\xa0Puścian, n.d.)",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian, 2017",
+                     '1.1.0': u"Dzik, Łęski, &\xa0Puścian, 2016",
+                     'unknown': u"Dzik, Łęski, &\xa0Puścian, n.d.",
+                     None: u"Dzik, Łęski, &\xa0Puścian, n.d.",
                      }
     PAPER = u"Dzik,\xa0J.\xa0M., Puścian,\xa0A., Mijakowska,\xa0Z., Radwanska,\xa0K., &\xa0Łęski,\xa0S. (2017). PyMICE: A Python library for analysis of IntelliCage data. Behavior Research Methods. doi:\xa010.3758/s13428-017-0907-5"
 
@@ -260,9 +304,13 @@ class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
                 'unknown': u"\\bibitem{pymiceunknown} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
                 None: u"\\bibitem{pymice} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
-                     None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                   None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+                     'unknown': u"pymiceunknown",
+                     None: u"pymice",
                      }
     PAPER = u"\\bibitem{dzik2017pm} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., &~Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
@@ -280,9 +328,13 @@ class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAP
                 'unknown': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
                 None: u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
-                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                   None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
+                     'unknown': u"dzikSoft",
+                     None: u"dzikSoft",
                      }
     PAPER = u"\\bibitem{dzikPaper} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., &~Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
@@ -323,12 +375,17 @@ class TestCitationGivenStyleAPA6markdownHTML(TestCitationGivenStyleAPA6):
                 '0.2.3': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2016,&nbsp;January). PyMICE (v.&nbsp;0.2.3) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.47259",
                 'unknown': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (n.d.). PyMICE (v.&nbsp;unknown) [computer software; RRID:nlx_158570]",
                 }
-    PAPER = u"Dzik,&nbsp;J.&nbsp;M., Puścian,&nbsp;A., Mijakowska,&nbsp;Z., Radwanska,&nbsp;K., &amp;&nbsp;Łęski,&nbsp;S. (2017). PyMICE: A Python library for analysis of IntelliCage data. <em>Behavior Research Methods</em>. doi:&nbsp;10.3758/s13428-017-0907-5"
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.1&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2017)",
-                     '1.1.0': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.0&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2016)",
-                     'unknown': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;unknown&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
-                     None: u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017; Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
+    CITE_PYMICE = {'1.1.1': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.1&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2017)",
+                   '1.1.0': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.0&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2016)",
+                   'unknown': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;unknown&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
+                   None: u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017; Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
                      }
+    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2017",
+                     '1.1.0': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2016",
+                     'unknown': u"Dzik, Łęski, &amp;&nbsp;Puścian, n.d.",
+                     None: u"Dzik, Łęski, &amp;&nbsp;Puścian, n.d.",
+                     }
+    PAPER = u"Dzik,&nbsp;J.&nbsp;M., Puścian,&nbsp;A., Mijakowska,&nbsp;Z., Radwanska,&nbsp;K., &amp;&nbsp;Łęski,&nbsp;S. (2017). PyMICE: A Python library for analysis of IntelliCage data. <em>Behavior Research Methods</em>. doi:&nbsp;10.3758/s13428-017-0907-5"
 
 
 class TestCitationGivenStyleBibTeX(TestCitationBase):
@@ -342,9 +399,13 @@ class TestCitationGivenStyleBibTeX(TestCitationBase):
                 'unknown': u"@Misc{pymiceunknown,\nTitle = {{PyMICE (v.~unknown)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 None: u"@Misc{pymice,\nTitle = {{PyMICE}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
-                     None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                   None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+                     'unknown': u"pymiceunknown",
+                     None: u"pymice",
                      }
     PAPER = u"@Article{dzik2017pm,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
 
@@ -393,9 +454,13 @@ class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
                 'unknown': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~unknown)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 None: u"@Misc{dzikSoft,\nTitle = {{PyMICE}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
-                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                   None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
+                     'unknown': u"dzikSoft",
+                     None: u"dzikSoft",
                      }
     PAPER = u"@Article{dzikPaper,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
 
@@ -412,10 +477,15 @@ class TestCitationGivenStylePymice(TestCitationBase):
                 'unknown': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (v.\xa0unknown; RRID:nlx_158570)",
                 None: u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (RRID:nlx_158570)",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
-                     '1.1.0': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian 2016)",
-                     'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
-                     None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
+    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
+                   '1.1.0': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian 2016)",
+                   'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
+                   None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian 2017",
+                     '1.1.0': u"Dzik, Łęski, &\xa0Puścian 2016",
+                     'unknown': u"Dzik, Łęski, &\xa0Puścian",
+                     None: u"Dzik, Łęski, &\xa0Puścian",
                      }
     PAPER = u"Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017) \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior Research Methods doi:\xa010.3758/s13428-017-0907-5"
 
@@ -431,9 +501,13 @@ class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
                 'unknown': u"\\bibitem{pymiceunknown} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
                 None: u"\\bibitem{pymice} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
-                     None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                   None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+                     'unknown': u"pymiceunknown",
+                     None: u"pymice",
                      }
     PAPER = u"\\bibitem{dzik2017pm} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
 
@@ -452,9 +526,13 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
                 'unknown': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
                 None: u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
-                     'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
-                     None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                   'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                   None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
+                     'unknown': u"dzikSoft",
+                     None: u"dzikSoft",
                      }
     PAPER = u"\\bibitem{dzikPaper} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
 
@@ -490,10 +568,15 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
                 'unknown': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
-                     '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.0\xa0[2]",
-                     'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa0unknown\xa0[2]",
-                     None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
+    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
+                   '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.0\xa0[2]",
+                   'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa0unknown\xa0[2]",
+                   None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"2",
+                     '1.1.0': u"2",
+                     'unknown': u"2",
+                     None: u"2",
                      }
     PAPER = u"1. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
 
@@ -509,9 +592,13 @@ class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouv
                 'unknown': u"\\bibitem{pymiceunknown} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"\\bibitem{pymice} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
-                     'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
-                     None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+                   'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
+                   None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
+                 }
+    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+                     'unknown': u"pymiceunknown",
+                     None: u"pymice",
                      }
     PAPER = u"\\bibitem{dzik2017pm} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
 
@@ -530,10 +617,15 @@ class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouv
                 'unknown': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.1\xa0[69]",
-                     '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.0\xa0[69]",
-                     'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa0unknown\xa0[69]",
-                     None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[42,69]",
+    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.1\xa0[69]",
+                   '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.0\xa0[69]",
+                   'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa0unknown\xa0[69]",
+                   None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[42,69]",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"69",
+                     '1.1.0': u"69",
+                     'unknown': u"69",
+                     None: u"69",
                      }
     PAPER = u"42. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
 
@@ -552,9 +644,13 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
                 'unknown': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_SOFTWARE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
-                     'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
-                     None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper,dzikSoft}",
+    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+                   'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
+                   None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper,dzikSoft}",
+                   }
+    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
+                     'unknown': u"dzikSoft",
+                     None: u"dzikSoft",
                      }
     PAPER = u"\\bibitem{dzikPaper} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
 
@@ -570,7 +666,7 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
 #                 '0.2.3': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0January). PyMICE (v.\xa00.2.3) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.47259",
 #                 'unknown': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (n.d.). PyMICE (v.\xa0unknown) [computer software; RRID:nlx_158570]",
 #                 }
-#     CITE_SOFTWARE = {'1.1.1': u"PyMICE (Dzik et al. 2017) v.\xa01.1.1 (Dzik, Łęski and Puścian 2017)",
+#     CITE_PYMICE = {'1.1.1': u"PyMICE (Dzik et al. 2017) v.\xa01.1.1 (Dzik, Łęski and Puścian 2017)",
 #                      '1.1.0': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\xa01.1.0 (Dzik, Łęski, & Puścian, 2016)",
 #                      'unknown': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\xa0unknown (Dzik, Łęski, & Puścian, n.d.)",
 #                      None: u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017; Dzik, Łęski, & Puścian, n.d.)",

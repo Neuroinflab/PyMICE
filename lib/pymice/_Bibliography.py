@@ -162,7 +162,7 @@ class Citation(object):
                        ]),
     }
 
-    _CITE_SOFTWARE_PATTERNS = {
+    _CITE_PAPER_SOFTWARE_PATTERNS = {
         'apa6': ({'txt': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017{version}{authors}, {date})",
                   'latex': u"\\emph{{PyMICE}}~\\cite{{{paperKey}{versionLaTeX}{softwareKey}}}",
                   },
@@ -204,6 +204,29 @@ class Citation(object):
                        ('versionLaTeX', ','.format),
                        ('softwareKey', '{__software__}'.format),
                        ('paperKey', '{__paper__}'.format),
+                       ]),
+    }
+    _CITE_SOFTWARE_PATTERNS = {
+        'apa6': ({'txt': u"{authors}, {date}",
+                  'latex': u"{softwareKey}",
+                  },
+                 [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + [u'&\xa0' + x['authors'][-1][0]])),
+                  ('date', '{year}'.format),
+                  ('date', 'n.d.'.format),
+                  ('softwareKey', '{__software__}'.format),
+                  ]),
+        'bibtex': (u"{softwareKey}",
+                   [('softwareKey', '{__software__}'.format),
+                   ]),
+        'pymice': ({'txt': u"Dzik, Łęski, &\xa0Puścian{date}",
+                    'latex': u"{softwareKey}",
+                    },
+                   [('softwareKey', '{__software__}'.format),
+                    ('date', ' {year}'.format),
+                    ('date', ''.format),
+                    ]),
+        'vancouver': (u"{softwareKey}",
+                      [('softwareKey', '{__software__}'.format),
                        ]),
     }
 
@@ -323,6 +346,12 @@ class Citation(object):
                           self._version)
 
     def cite(self, style=None, markdown=None, **kwargs):
+        return self._applyTemplate(self._CITE_PAPER_SOFTWARE_PATTERNS,
+                                   self._getSoftwareReleaseMeta(kwargs),
+                                   style,
+                                   markdown)
+
+    def citeSoftware(self, style=None, markdown=None, **kwargs):
         return self._applyTemplate(self._CITE_SOFTWARE_PATTERNS,
                                    self._getSoftwareReleaseMeta(kwargs),
                                    style,
@@ -453,6 +482,10 @@ class Citation(object):
     @property
     def PAPER(self):
         return self.referencePaper()
+
+    @property
+    def CITE_SOFTWARE(self):
+        return self.citeSoftware()
 
 
 reference = Citation()
