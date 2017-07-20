@@ -63,6 +63,12 @@ If the journal does not allow for inclusion of the resource identifier
 {vancouver.PAPER}
 {vancouver.SOFTWARE}
 
+We have provided a solution to facilitate referencing to the library. Please run
+
+>>> help(pm.Citation)
+
+for more information (given that the library is imported as `pm`).
+
 
 """.format(version=__version__,
            rrid=__RRID__,

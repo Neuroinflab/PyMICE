@@ -97,6 +97,12 @@ PyMICE\xa0({rrid})\xa0[1] v.\xa0{version}\xa0[2]
 2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version {version}.
     Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.832982
 
+We have provided a solution to facilitate referencing to the library. Please run
+
+>>> help(pm.Citation)
+
+for more information (given that the library is imported as `pm`).
+
 
 """.format(version=pm.__version__, rrid=pm.__RRID__),
                             stderr.CAPTURED)
