@@ -26,6 +26,8 @@
 from ._Version import __version__, __RRID__
 import sys
 
+import functools
+
 if sys.version_info.major == 3:
     from functools import reduce
 
@@ -35,6 +37,47 @@ def _authorsBibliographyAPA6(authors, **kwargs):
 
 def _authorBibliographyAPA6(familyName, *names):
     return u'{},\u00a0{}'.format(familyName, u'\xa0'.join(n[0] + '.' for n in names))
+
+
+def _determineStyle(f):
+    @functools.wraps(f)
+    def wrapper(self, style=None, **kwargs):
+        return f(self,
+                 style=self._getStyle(style).lower(),
+                 **kwargs)
+
+    return wrapper
+
+def _determineMarkdown(f):
+    @functools.wraps(f)
+    def wrapper(self, style, markdown=None, **kwargs):
+        return f(self,
+                 style=style,
+                 markdown=self._getMarkdown(style,
+                                            markdown).lower(),
+                 **kwargs)
+
+    return wrapper
+
+def _applyMarkdown(f):
+    @functools.wraps(f)
+    def wrapper(self, markdown, **kwargs):
+        return self._applyMarkdown(f(self,
+                                     markdown=markdown,
+                                     **kwargs),
+                                   markdown)
+
+    return wrapper
+
+def _fold(f):
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        return self._fold(f(self,
+                            *args,
+                            **kwargs))
+
+    return wrapper
+
 
 class Citation(object):
     _DEFAULT_META = {'rrid': __RRID__,
@@ -163,47 +206,42 @@ class Citation(object):
     }
 
     _CITE_PAPER_SOFTWARE_PATTERNS = {
-        'apa6': ({'txt': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017{version}{authors}, {date})",
-                  'latex': u"\\emph{{PyMICE}}~\\cite{{{paperKey}{versionLaTeX}{softwareKey}}}",
+        'apa6': ({'txt': u"PyMICE\xa0({paper}{version}{software})",
+                  'latex': u"\\emph{{PyMICE}}~\\cite{{{paper}{versionLaTeX}{software}}}",
                   },
-                 [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + [u'&\xa0' + x['authors'][-1][0]])),
-                  ('date', '{year}'.format),
-                  ('date', 'n.d.'.format),
-                  ('version', u') v.\xa0{__version__}\xa0('.format),
+                 [('version', u') v.\xa0{__version__}\xa0('.format),
                   ('version', '; '.format),
                   ('versionLaTeX', '}} v.~{__version__}~\\cite{{'.format),
                   ('versionLaTeX', ','.format),
-                  ('softwareKey', '{__software__}'.format),
-                  ('paperKey', '{__paper__}'.format),
+                  ('paper', '{__cite_paper__}'.format),
+                  ('software', '{__cite_software__}'.format),
                   ]),
-        'bibtex': (u"\\emph{{PyMICE}}~\\cite{{{paperKey}{version}{softwareKey}}}",
+        'bibtex': (u"\\emph{{PyMICE}}~\\cite{{{paper}{version}{software}}}",
                    [('version', '}} v.~{__version__}~\\cite{{'.format),
                     ('version', ','.format),
-                    ('softwareKey', '{__software__}'.format),
-                    ('paperKey', '{__paper__}'.format),
-                   ]),
-        'pymice': ({'txt': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017{version}Dzik, Łęski, &\xa0Puścian{date})",
-                    'latex': u"\\emph{{PyMICE}}~\\cite{{{paperKey}{versionLaTeX}{softwareKey}}}",
+                    ('paper', '{__cite_paper__}'.format),
+                    ('software', '{__cite_software__}'.format),
+                    ]),
+        'pymice': ({'txt': u"PyMICE\xa0({paper}{version}{software})",
+                    'latex': u"\\emph{{PyMICE}}~\\cite{{{paper}{versionLaTeX}{software}}}",
                     },
                    [('version', u') v.\xa0{__version__}\xa0('.format),
                     ('version', '; '.format),
                     ('versionLaTeX', '}} v.~{__version__}~\\cite{{'.format),
                     ('versionLaTeX', ','.format),
-                    ('date', ' {year}'.format),
-                    ('date', ''.format),
-                    ('softwareKey', '{__software__}'.format),
-                    ('paperKey', '{__paper__}'.format),
+                    ('paper', '{__cite_paper__}'.format),
+                    ('software', '{__cite_software__}'.format),
                     ]),
-        'vancouver': ({'txt': u"PyMICE\xa0({rrid})\xa0[{paperKey}{version}{softwareKey}]",
-                       'latex': u"\\emph{{PyMICE}}\xa0({rrid})\xa0\\cite{{{paperKey}{versionLaTeX}{softwareKey}}}",
+        'vancouver': ({'txt': u"PyMICE\xa0({rrid})\xa0[{paper}{version}{software}]",
+                       'latex': u"\\emph{{PyMICE}}\xa0({rrid})\xa0\\cite{{{paper}{versionLaTeX}{software}}}",
                        },
                       [('rrid', '{rrid}'.format),
                        ('version', u'] v.\xa0{__version__}\xa0['.format),
                        ('version', ','.format),
                        ('versionLaTeX', u'}} v.\xa0{__version__}\xa0\\cite{{'.format),
                        ('versionLaTeX', ','.format),
-                       ('softwareKey', '{__software__}'.format),
-                       ('paperKey', '{__paper__}'.format),
+                       ('paper', '{__cite_paper__}'.format),
+                       ('software', '{__cite_software__}'.format),
                        ]),
     }
     _CITE_SOFTWARE_PATTERNS = {
@@ -230,8 +268,7 @@ class Citation(object):
                        ]),
     }
     _CITE_PAPER_PATTERNS = {
-        'apa6': ({#'txt': u"Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017",
-                  'txt': u"{authors}, {date}",
+        'apa6': ({'txt': u"{authors}, {date}",
                   'latex': u"{paperKey}",
                   },
                  [('authors', lambda **x: ', '.join([a[0] for a in x['authors'][:-1]] + [u'&\xa0' + x['authors'][-1][0]])),
@@ -348,70 +385,107 @@ class Citation(object):
                 return 'pymice'
         return 2
 
-    def referencePaper(self, style=None, markdown=None):
-        return self._fold(self._applyTemplate(self._PAPER_PATTERNS,
-                                              self._PAPER_META, #.copy(),
-                                              style,
-                                              markdown))
+    @_determineStyle
+    @_determineMarkdown
+    @_fold
+    @_applyMarkdown
+    def referencePaper(self, style, markdown):
+        return self._applyTemplate(self._PAPER_PATTERNS,
+                                   self._PAPER_META, #.copy(),
+                                   style,
+                                   markdown)
 
-    def referenceSoftware(self, style=None, markdown=None, **kwargs):
-        return self._fold(self._applyTemplate(self._SOFTWARE_PATTERNS,
-                                              self._getSoftwareReleaseMeta(kwargs),
-                                              style,
-                                              markdown))
+    @_determineStyle
+    @_determineMarkdown
+    @_fold
+    @_applyMarkdown
+    def referenceSoftware(self, style, markdown, **kwargs):
+        return self._applyTemplate(self._SOFTWARE_PATTERNS,
+                                   self._getSoftwareReleaseMeta(kwargs),
+                                   style,
+                                   markdown)
 
     def _getSoftwareReleaseMeta(self, kwargs):
-        return self._getSoftwareMeta(
-            self._getVersion(kwargs))
+        return self._getSoftwareMeta(self._getVersion(kwargs))
 
     def _getVersion(self, kwargs):
         return kwargs.get('version',
                           self._version)
 
-    def cite(self, style=None, markdown=None, **kwargs):
+    @_determineStyle
+    @_determineMarkdown
+    @_applyMarkdown
+    def cite(self, style, markdown, **kwargs):
         return self._applyTemplate(self._CITE_PAPER_SOFTWARE_PATTERNS,
-                                   self._getSoftwareReleaseMeta(kwargs),
+                                   self._getCiteMeta(style, markdown,
+                                                     **kwargs),
                                    style,
                                    markdown)
 
-    def citeSoftware(self, style=None, markdown=None, **kwargs):
+    def _getCiteMeta(self, style, markdown, **kwargs):
+        meta = self._DEFAULT_META.copy()
+        meta.update({'__cite_paper__': self._citePaper(style,
+                                                       markdown),
+                     '__cite_software__': self._citeSoftware(style,
+                                                             markdown,
+                                                             kwargs)})
+        version = self._getVersion(kwargs)
+        if version is not None:
+            meta['__version__'] = version
+
+        return meta
+
+    @_determineStyle
+    @_determineMarkdown
+    @_applyMarkdown
+    def citeSoftware(self, style, markdown, **kwargs):
+        return self._citeSoftware(style, markdown, kwargs)
+
+    def _citeSoftware(self, style, markdown, kwargs):
         return self._applyTemplate(self._CITE_SOFTWARE_PATTERNS,
                                    self._getSoftwareReleaseMeta(kwargs),
                                    style,
                                    markdown)
+    @_determineStyle
+    @_determineMarkdown
+    @_applyMarkdown
+    def citePaper(self, style, markdown):
+        return self._citePaper(style, markdown)
 
-    def citePaper(self, style=None, markdown=None):
+    def _citePaper(self, style, markdown):
         return self._applyTemplate(self._CITE_PAPER_PATTERNS,
                                    self._PAPER_META,
                                    style,
                                    markdown)
-
-    def _applyTemplate(self, template, meta, style, markdown):
-        return self._applyTemplateOfGivenStyle(template,
-                                               meta,
-                                               self._getStyle(style).lower(),
-                                               markdown)
 
     def _getStyle(self, style):
         if style is not None: return style
         if self._style is not None: return self._style
         return self._DEFAULT_STYLE
 
-    def _applyTemplateOfGivenStyle(self, template, meta, style, markdown):
-        return self._applyTemplateOfGivenMarkdown(template, meta, style,
-                                                  self._getMarkdown(style,
-                                                                    markdown).lower())
-
-    def _applyTemplateOfGivenMarkdown(self, template, meta, style, markdown):
+    def _applyTemplate(self, template, meta, style, markdown):
+    #     return self._applyTemplateOfGivenStyle(template,
+    #                                            meta,
+    #                                            self._getStyle(style).lower(),
+    #                                            markdown)
+    #
+    #
+    #
+    # def _applyTemplateOfGivenStyle(self, template, meta, style, markdown):
+    #     return self._applyTemplateOfGivenMarkdown(template, meta, style,
+    #                                               self._getMarkdown(style,
+    #                                                                 markdown).lower())
+    #
+    # def _applyTemplateOfGivenMarkdown(self, template, meta, style, markdown):
         meta.update(__paper__ = self._getPaperKey(markdown),
                     __software__ = self._getSoftwareKey(meta, markdown))
         pattern, sections = self._getFormatters(template,
                                                 style,
                                                 markdown)
-        return self._applyMarkdown(self._formatMeta(pattern,
-                                                    sections,
-                                                    meta),
-                                   markdown)
+        formatted = self._formatMeta(pattern, sections, meta)
+        return formatted
+        # return self._applyMarkdown(formatted,
+        #                           markdown)
 
     def _fold(self, string):
         maxWidth = self._maxLineWidth
