@@ -270,7 +270,8 @@ class TestCitationBase(TestCase):
 
 class TestCitationGivenStyleAPA6(TestCitationBase):
     STYLE = 'apa6'
-    SOFTWARE = {'1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0July). PyMICE (v.\xa01.2.0) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0December). PyMICE (v.\xa01.1.0) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0May). PyMICE (v.\xa01.0.0) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0April). PyMICE (v.\xa00.2.5) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.49550",
@@ -278,13 +279,15 @@ class TestCitationGivenStyleAPA6(TestCitationBase):
                 '0.2.3': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0January). PyMICE (v.\xa00.2.3) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.47259",
                 'unknown': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (n.d.). PyMICE (v.\xa0unknown) [computer software; RRID:nlx_158570]",
                 }
-    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian, 2017)",
+    CITE_PYMICE = {'1.2.0': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.2.0\xa0(Dzik, Łęski, &\xa0Puścian, 2017)",
+                   '1.1.1': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian, 2017)",
                    '1.1.0': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian, 2016)",
                    'unknown': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian, n.d.)",
                    None: u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017; Dzik, Łęski, &\xa0Puścian, n.d.)",
                    }
     CITE_PAPER = u"Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017"
-    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian, 2017",
+    CITE_SOFTWARE = {'1.2.0': u"Dzik, Łęski, &\xa0Puścian, 2017",
+                     '1.1.1': u"Dzik, Łęski, &\xa0Puścian, 2017",
                      '1.1.0': u"Dzik, Łęski, &\xa0Puścian, 2016",
                      'unknown': u"Dzik, Łęski, &\xa0Puścian, n.d.",
                      None: u"Dzik, Łęski, &\xa0Puścian, n.d.",
@@ -299,7 +302,8 @@ class TestDefaultLineWidthLimitIs80_GivenStyleAPA6(TestCitationGivenStyleAPA6):
                                     _noMaxLineWidth=True,
                                     **kwargs)
 
-    SOFTWARE = {'1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer\n    software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0July). PyMICE (v.\xa01.2.0) [computer\n    software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer\n    software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0December). PyMICE (v.\xa01.1.0)\n    [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0May). PyMICE (v.\xa01.0.0) [computer\n    software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0April). PyMICE (v.\xa00.2.5) [computer\n    software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.49550",
@@ -316,7 +320,8 @@ class TestCitationGivenStyleAPA6markdownTXT(TestCitationGivenStyleAPA6):
 
 class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
     MARKDOWN = 'latex'
-    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{pymice1.2.0} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~July). PyMICE (v.~1.2.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{pymice1.1.1} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{pymice1.1.0} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~December). PyMICE (v.~1.1.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{pymice1.0.0} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~May). PyMICE (v.~1.0.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{pymice0.2.5} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~April). PyMICE (v.~0.2.5) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.49550",
@@ -325,12 +330,14 @@ class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
                 'unknown': u"\\bibitem{pymiceunknown} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
                 None: u"\\bibitem{pymice} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.2.0~\\cite{pymice1.2.0}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
     CITE_PAPER = u"dzik2017pm"
-    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+    CITE_SOFTWARE = {'1.2.0': u"pymice1.2.0",
+                     '1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
                      }
@@ -341,7 +348,8 @@ class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAP
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~July). PyMICE (v.~1.2.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2017,~April). PyMICE (v.~1.1.1) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~December). PyMICE (v.~1.1.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~May). PyMICE (v.~1.0.0) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (2016,~April). PyMICE (v.~0.2.5) [computer software; RRID:nlx\_158570]. doi:~10.5281/zenodo.49550",
@@ -350,21 +358,20 @@ class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAP
                 'unknown': u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE (v.~unknown) [computer software; RRID:nlx\_158570]",
                 None: u"\\bibitem{dzikSoft} Dzik,~J.~M., Łęski,~S., &~Puścian,~A. (n.d.). PyMICE [computer software; RRID:nlx\_158570]",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.2.0~\\cite{dzikSoft}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
     CITE_PAPER = u"dzikPaper"
-    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
-                     'unknown': u"dzikSoft",
-                     None: u"dzikSoft",
-                     }
+    CITE_SOFTWARE = {k: u"dzikSoft" for k in SOFTWARE}
     PAPER = u"\\bibitem{dzikPaper} Dzik,~J.~M., Puścian,~A., Mijakowska,~Z., Radwanska,~K., &~Łęski,~S. (2017). {PyMICE}: A {Python} library for analysis of {IntelliCage} data. \emph{Behavior Research Methods}. doi:~10.3758/s13428-017-0907-5"
 
 
 class TestCitationGivenStyleAPA6markdownMD(TestCitationGivenStyleAPA6):
     MARKDOWN = 'md'
-    SOFTWARE = {'1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0July). PyMICE (v.\xa01.2.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0December). PyMICE (v.\xa01.1.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0May). PyMICE (v.\xa01.0.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0April). PyMICE (v.\xa00.2.5) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.49550",
@@ -377,7 +384,8 @@ class TestCitationGivenStyleAPA6markdownMD(TestCitationGivenStyleAPA6):
 
 class TestCitationGivenStyleAPA6markdownRST(TestCitationGivenStyleAPA6):
     MARKDOWN = 'rst'
-    SOFTWARE = {'1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0July). PyMICE (v.\xa01.2.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2017,\xa0April). PyMICE (v.\xa01.1.1) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0December). PyMICE (v.\xa01.1.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0May). PyMICE (v.\xa01.0.0) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., &\xa0Puścian,\xa0A. (2016,\xa0April). PyMICE (v.\xa00.2.5) [computer software; RRID:nlx\\_158570]. doi:\xa010.5281/zenodo.49550",
@@ -390,7 +398,8 @@ class TestCitationGivenStyleAPA6markdownRST(TestCitationGivenStyleAPA6):
 
 class TestCitationGivenStyleAPA6markdownHTML(TestCitationGivenStyleAPA6):
     MARKDOWN = 'html'
-    SOFTWARE = {'1.1.1': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2017,&nbsp;April). PyMICE (v.&nbsp;1.1.1) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2017,&nbsp;July). PyMICE (v.&nbsp;1.2.0) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.832982",
+                '1.1.1': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2017,&nbsp;April). PyMICE (v.&nbsp;1.1.1) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.557087",
                 '1.1.0': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2016,&nbsp;December). PyMICE (v.&nbsp;1.1.0) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.200648",
                 '1.0.0': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2016,&nbsp;May). PyMICE (v.&nbsp;1.0.0) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.51092",
                 '0.2.5': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2016,&nbsp;April). PyMICE (v.&nbsp;0.2.5) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.49550",
@@ -398,13 +407,15 @@ class TestCitationGivenStyleAPA6markdownHTML(TestCitationGivenStyleAPA6):
                 '0.2.3': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (2016,&nbsp;January). PyMICE (v.&nbsp;0.2.3) [computer software; RRID:nlx_158570]. doi:&nbsp;10.5281/zenodo.47259",
                 'unknown': u"Dzik,&nbsp;J.&nbsp;M., Łęski,&nbsp;S., &amp;&nbsp;Puścian,&nbsp;A. (n.d.). PyMICE (v.&nbsp;unknown) [computer software; RRID:nlx_158570]",
                 }
-    CITE_PYMICE = {'1.1.1': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.1&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2017)",
+    CITE_PYMICE = {'1.2.0': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.2.0&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2017)",
+                   '1.1.1': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.1&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2017)",
                    '1.1.0': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.0&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2016)",
                    'unknown': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;unknown&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
                    None: u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017; Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
                    }
     CITE_PAPER = u"Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017"
-    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2017",
+    CITE_SOFTWARE = {'1.2.0': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2017",
+                     '1.1.1': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2017",
                      '1.1.0': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2016",
                      'unknown': u"Dzik, Łęski, &amp;&nbsp;Puścian, n.d.",
                      None: u"Dzik, Łęski, &amp;&nbsp;Puścian, n.d.",
@@ -414,7 +425,8 @@ class TestCitationGivenStyleAPA6markdownHTML(TestCitationGivenStyleAPA6):
 
 class TestCitationGivenStyleBibTeX(TestCitationBase):
     STYLE = 'bibtex'
-    SOFTWARE = {'1.1.1': u"@Misc{pymice1.1.1,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
+    SOFTWARE = {'1.2.0': u"@Misc{pymice1.2.0,\nTitle = {{PyMICE (v.~1.2.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {July},\nDay = {21},\nDoi = {10.5281/zenodo.832982}\n}\n",
+                '1.1.1': u"@Misc{pymice1.1.1,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
                 '1.1.0': u"@Misc{pymice1.1.0,\nTitle = {{PyMICE (v.~1.1.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {December},\nDay = {13},\nDoi = {10.5281/zenodo.200648}\n}\n",
                 '1.0.0': u"@Misc{pymice1.0.0,\nTitle = {{PyMICE (v.~1.0.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {May},\nDay = {6},\nDoi = {10.5281/zenodo.51092}\n}\n",
                 '0.2.5': u"@Misc{pymice0.2.5,\nTitle = {{PyMICE (v.~0.2.5)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {April},\nDay = {11},\nDoi = {10.5281/zenodo.49550}\n}\n",
@@ -423,12 +435,14 @@ class TestCitationGivenStyleBibTeX(TestCitationBase):
                 'unknown': u"@Misc{pymiceunknown,\nTitle = {{PyMICE (v.~unknown)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 None: u"@Misc{pymice,\nTitle = {{PyMICE}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.2.0~\\cite{pymice1.2.0}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
     CITE_PAPER = u"dzik2017pm"
-    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+    CITE_SOFTWARE = {'1.2.0': u"pymice1.2.0",
+                     '1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
                      }
@@ -470,7 +484,8 @@ class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    SOFTWARE = {'1.1.1': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
+    SOFTWARE = {'1.2.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.2.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {July},\nDay = {21},\nDoi = {10.5281/zenodo.832982}\n}\n",
+                '1.1.1': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.1)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2017},\nMonth = {April},\nDay = {24},\nDoi = {10.5281/zenodo.557087}\n}\n",
                 '1.1.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.1.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {December},\nDay = {13},\nDoi = {10.5281/zenodo.200648}\n}\n",
                 '1.0.0': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~1.0.0)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {May},\nDay = {6},\nDoi = {10.5281/zenodo.51092}\n}\n",
                 '0.2.5': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~0.2.5)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja},\nYear = {2016},\nMonth = {April},\nDay = {11},\nDoi = {10.5281/zenodo.49550}\n}\n",
@@ -479,22 +494,21 @@ class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
                 'unknown': u"@Misc{dzikSoft,\nTitle = {{PyMICE (v.~unknown)}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 None: u"@Misc{dzikSoft,\nTitle = {{PyMICE}},\nNote = {computer software; RRID:nlx\\_158570},\nAuthor = {Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}\n}\n",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.2.0~\\cite{dzikSoft}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
     CITE_PAPER = u"dzikPaper"
-    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
-                     'unknown': u"dzikSoft",
-                     None: u"dzikSoft",
-                     }
+    CITE_SOFTWARE = {k: u"dzikSoft" for k in SOFTWARE}
     PAPER = u"@Article{dzikPaper,\nTitle = {{PyMICE}: A {Python} library for analysis of {IntelliCage} data},\nAuthor = {Dzik, Jakub Mateusz and Puścian, Alicja and Mijakowska, Zofia and Radwanska, Kasia and Łęski, Szymon},\nYear = {2017},\nMonth = {June},\nDay = {22},\nJournal = {Behavior Research Methods},\nDoi = {10.3758/s13428-017-0907-5},\nIssn = {1554-3528},\nUrl = {http://dx.doi.org/10.3758/s13428-017-0907-5},\nAbstract = {{IntelliCage} is an automated system for recording the behavior of a group of mice housed together. It produces rich, detailed behavioral data calling for new methods and software for their analysis. Here we present {PyMICE}, a free and open-source library for analysis of {IntelliCage} data in the {Python} programming language. We describe the design and demonstrate the use of the library through a series of examples. {PyMICE} provides easy and intuitive access to {IntelliCage} data, and thus facilitates the possibility of using numerous other {Python} scientific libraries to form a complete data analysis workflow.}\n}\n"
 
 
 
 class TestCitationGivenStylePymice(TestCitationBase):
     STYLE = 'pymice'
-    SOFTWARE = {'1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (July\xa021,\xa02017) \"PyMICE\" computer software (v.\xa01.2.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (December\xa013,\xa02016) \"PyMICE\" computer software (v.\xa01.1.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (May\xa06,\xa02016) \"PyMICE\" computer software (v.\xa01.0.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa011,\xa02016) \"PyMICE\" computer software (v.\xa00.2.5; RRID:nlx_158570) doi:\xa010.5281/zenodo.49550",
@@ -503,13 +517,15 @@ class TestCitationGivenStylePymice(TestCitationBase):
                 'unknown': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (v.\xa0unknown; RRID:nlx_158570)",
                 None: u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. \"PyMICE\" computer software (RRID:nlx_158570)",
                 }
-    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
+    CITE_PYMICE = {'1.2.0': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.2.0\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
+                   '1.1.1': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.1\xa0(Dzik, Łęski, &\xa0Puścian 2017)",
                    '1.1.0': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa01.1.0\xa0(Dzik, Łęski, &\xa0Puścian 2016)",
                    'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
                    None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
                    }
     CITE_PAPER = u"Dzik, Puścian, et\xa0al. 2017"
-    CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian 2017",
+    CITE_SOFTWARE = {'1.2.0': u"Dzik, Łęski, &\xa0Puścian 2017",
+                     '1.1.1': u"Dzik, Łęski, &\xa0Puścian 2017",
                      '1.1.0': u"Dzik, Łęski, &\xa0Puścian 2016",
                      'unknown': u"Dzik, Łęski, &\xa0Puścian",
                      None: u"Dzik, Łęski, &\xa0Puścian",
@@ -519,7 +535,8 @@ class TestCitationGivenStylePymice(TestCitationBase):
 
 class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
     MARKDOWN = 'latex'
-    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{pymice1.2.0} Dzik~J.~M., Łęski~S., Puścian~A. (July~21,~2017) ``PyMICE'' computer software (v.~1.2.0; RRID:nlx\_158570) doi:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{pymice1.1.1} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~J.~M., Łęski~S., Puścian~A. (December~13,~2016) ``PyMICE'' computer software (v.~1.1.0; RRID:nlx\_158570) doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~J.~M., Łęski~S., Puścian~A. (May~6,~2016) ``PyMICE'' computer software (v.~1.0.0; RRID:nlx\_158570) doi:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~J.~M., Łęski~S., Puścian~A. (April~11,~2016) ``PyMICE'' computer software (v.~0.2.5; RRID:nlx\_158570) doi:~10.5281/zenodo.49550",
@@ -528,12 +545,14 @@ class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
                 'unknown': u"\\bibitem{pymiceunknown} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
                 None: u"\\bibitem{pymice} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.2.0~\\cite{pymice1.2.0}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
     CITE_PAPER = u"dzik2017pm"
-    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+    CITE_SOFTWARE = {'1.2.0': u"pymice1.2.0",
+                     '1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
                      }
@@ -545,7 +564,8 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (July~21,~2017) ``PyMICE'' computer software (v.~1.2.0; RRID:nlx\_158570) doi:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~24,~2017) ``PyMICE'' computer software (v.~1.1.1; RRID:nlx\_158570) doi:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (December~13,~2016) ``PyMICE'' computer software (v.~1.1.0; RRID:nlx\_158570) doi:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (May~6,~2016) ``PyMICE'' computer software (v.~1.0.0; RRID:nlx\_158570) doi:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. (April~11,~2016) ``PyMICE'' computer software (v.~0.2.5; RRID:nlx\_158570) doi:~10.5281/zenodo.49550",
@@ -554,15 +574,13 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
                 'unknown': u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (v.~unknown; RRID:nlx\_158570)",
                 None: u"\\bibitem{dzikSoft} Dzik~J.~M., Łęski~S., Puścian~A. ``PyMICE'' computer software (RRID:nlx\_158570)",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.2.0~\\cite{dzikSoft}",
+                   '1.1.1': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
     CITE_PAPER = u"dzikPaper"
-    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
-                     'unknown': u"dzikSoft",
-                     None: u"dzikSoft",
-                     }
+    CITE_SOFTWARE = {k: u"dzikSoft" for k in SOFTWARE}
     PAPER = u"\\bibitem{dzikPaper} Dzik~J.~M., Puścian~A., Mijakowska~Z., Radwanska~K., Łęski~S. (June~22,~2017) ``{PyMICE}: A {Python} library for analysis of {IntelliCage} data'' Behavior Research Methods doi:~10.3758/s13428-017-0907-5"
 
 
@@ -573,7 +591,8 @@ class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
                                     _noMaxLineWidth=True,
                                     **kwargs)
 
-    SOFTWARE = {'1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software\n    (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (July\xa021,\xa02017) \"PyMICE\" computer software\n    (v.\xa01.2.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.832982",
+                '1.1.1': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software\n    (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087",
                 '1.1.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (December\xa013,\xa02016) \"PyMICE\" computer software\n    (v.\xa01.1.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.200648",
                 '1.0.0': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (May\xa06,\xa02016) \"PyMICE\" computer software\n    (v.\xa01.0.0; RRID:nlx_158570) doi:\xa010.5281/zenodo.51092",
                 '0.2.5': u"Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa011,\xa02016) \"PyMICE\" computer software\n    (v.\xa00.2.5; RRID:nlx_158570) doi:\xa010.5281/zenodo.49550",
@@ -588,7 +607,8 @@ class TestDefaultLineWidthLimitIs80(TestCitationGivenStylePymice):
 class TestCitationGivenStyleVancouver(TestCitationBase):
     STYLE = 'vancouver'
 
-    SOFTWARE = {'1.1.1': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.2.0. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.832982",
+                '1.1.1': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
                 '1.1.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.200648",
                 '1.0.0': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.51092",
                 '0.2.5': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.49550",
@@ -597,23 +617,21 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
                 'unknown': u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
+    CITE_PYMICE = {'1.2.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.2.0\xa0[2]",
+                   '1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.1\xa0[2]",
                    '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa01.1.0\xa0[2]",
                    'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa0unknown\xa0[2]",
                    None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
                    }
     CITE_PAPER = u"1"
-    CITE_SOFTWARE = {'1.1.1': u"2",
-                     '1.1.0': u"2",
-                     'unknown': u"2",
-                     None: u"2",
-                     }
+    CITE_SOFTWARE = {k: u"2" for k in SOFTWARE}
     PAPER = u"1. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
 
 
 class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouver):
     MARKDOWN = 'latex'
-    SOFTWARE = {'1.1.1': u"\\bibitem{pymice1.1.1} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{pymice1.2.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.2.0. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{pymice1.1.1} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{pymice1.1.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{pymice1.0.0} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{pymice0.2.5} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.49550",
@@ -622,12 +640,14 @@ class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouv
                 'unknown': u"\\bibitem{pymiceunknown} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"\\bibitem{pymice} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.2.0~\\cite{pymice1.2.0}",
+                   '1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~1.1.1~\\cite{pymice1.1.1}",
                    'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
                  }
     CITE_PAPER = u"dzik2017pm"
-    CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
+    CITE_SOFTWARE = {'1.2.0': u"pymice1.2.0",
+                     '1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
                      }
@@ -639,7 +659,8 @@ class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouv
     PAPER_KEY = 42
     SOFTWARE_KEY = 69
 
-    SOFTWARE = {'1.1.1': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.2.0. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.832982",
+                '1.1.1': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.557087",
                 '1.1.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.200648",
                 '1.0.0': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.51092",
                 '0.2.5': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:\xa010.5281/zenodo.49550",
@@ -648,17 +669,14 @@ class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouv
                 'unknown': u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"69. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_PYMICE = {'1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.1\xa0[69]",
+    CITE_PYMICE = {'1.2.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.2.0\xa0[69]",
+                   '1.1.1': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.1\xa0[69]",
                    '1.1.0': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa01.1.0\xa0[69]",
                    'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa0unknown\xa0[69]",
                    None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[42,69]",
                    }
     CITE_PAPER = u"42"
-    CITE_SOFTWARE = {'1.1.1': u"69",
-                     '1.1.0': u"69",
-                     'unknown': u"69",
-                     None: u"69",
-                     }
+    CITE_SOFTWARE = {k: u"69" for k in SOFTWARE}
     PAPER = u"42. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python library for analysis of IntelliCage data. Behav Res Methods. 2017. DOI:\xa010.3758/s13428-017-0907-5"
 
 
@@ -667,7 +685,8 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
     PAPER_KEY = 'dzikPaper'
     SOFTWARE_KEY = 'dzikSoft'
 
-    SOFTWARE = {'1.1.1': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
+    SOFTWARE = {'1.2.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.2.0. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.832982",
+                '1.1.1': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.1. Warsaw: Nencki Institute - PAS; 2017. DOI:~10.5281/zenodo.557087",
                 '1.1.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.1.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.200648",
                 '1.0.0': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 1.0.0. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.51092",
                 '0.2.5': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version 0.2.5. Warsaw: Nencki Institute - PAS; 2016. DOI:~10.5281/zenodo.49550",
@@ -676,35 +695,14 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
                 'unknown': u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Version unknown. Warsaw: Nencki Institute - PAS.",
                 None: u"\\bibitem{dzikSoft} Dzik~JM, Łęski~S, Puścian~A. PyMICE [computer software]. Warsaw: Nencki Institute - PAS.",
                 }
-    CITE_PYMICE = {'1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
+    CITE_PYMICE = {'1.2.0': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.2.0~\\cite{dzikSoft}",
+                   '1.1.1': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~1.1.1~\\cite{dzikSoft}",
                    'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper,dzikSoft}",
                    }
     CITE_PAPER = u"dzikPaper"
-    CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
-                     'unknown': u"dzikSoft",
-                     None: u"dzikSoft",
-                     }
+    CITE_SOFTWARE = {k: u"dzikSoft" for k in SOFTWARE}
     PAPER = u"\\bibitem{dzikPaper} Dzik~JM, Puścian~A, Mijakowska~Z, Radwanska~K, Łęski~S. {PyMICE}: A {Python} library for analysis of {IntelliCage} data. Behav Res Methods. 2017. DOI:~10.3758/s13428-017-0907-5"
-
-
-
-# class TestCitationGivenStyleChicago(TestCitationBase):
-#     STYLE = 'chicago'
-#     SOFTWARE = {'1.1.1': u"Dzik, Jakub Mateusz, Szymon Łęski, and Alicja Puścian. 2017. PyMICE (version\xa01.1.1; RRID:nlx_158570). doi:\xa010.5281/zenodo.557087.",
-#                 '1.1.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0December). PyMICE (v.\xa01.1.0) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.200648",
-#                 '1.0.0': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0May). PyMICE (v.\xa01.0.0) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.51092",
-#                 '0.2.5': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0April). PyMICE (v.\xa00.2.5) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.49550",
-#                 '0.2.4': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0January). PyMICE (v.\xa00.2.4) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.47305",
-#                 '0.2.3': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (2016,\xa0January). PyMICE (v.\xa00.2.3) [computer software; RRID:nlx_158570]. doi:\xa010.5281/zenodo.47259",
-#                 'unknown': u"Dzik,\xa0J.\xa0M., Łęski,\xa0S., & Puścian,\xa0A. (n.d.). PyMICE (v.\xa0unknown) [computer software; RRID:nlx_158570]",
-#                 }
-#     CITE_PYMICE = {'1.1.1': u"PyMICE (Dzik et al. 2017) v.\xa01.1.1 (Dzik, Łęski and Puścian 2017)",
-#                      '1.1.0': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\xa01.1.0 (Dzik, Łęski, & Puścian, 2016)",
-#                      'unknown': u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017) v.\xa0unknown (Dzik, Łęski, & Puścian, n.d.)",
-#                      None: u"PyMICE (Dzik, Puścian, Mijakowska, Radwanska, & Łęski, 2017; Dzik, Łęski, & Puścian, n.d.)",
-#                      }
-#     PAPER = u"Dzik, Jakub\xa0M., Alicja Puścian, Zofia Mijakowska, Kasia Radwanska, and Szymon Łęski. 2017. \"PyMICE: A Python library for analysis of IntelliCage data\". Behavior Research Methods. doi:10.3758/s13428-017-0907-5."
 
 
 class TestCitationGivenNoDefaultStyleNorVersion(TestCitationGivenStylePymice):

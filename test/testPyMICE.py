@@ -80,8 +80,8 @@ The recommended in-text citation format is:
 PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0{version}\xa0(Dzik, Łęski, &\xa0Puścian 2017)
 
 and the recommended bibliography entry format:
-Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (April\xa024,\xa02017) \"PyMICE\" computer software
-    (v.\xa01.1.1; RRID:nlx_158570) doi:\xa010.5281/zenodo.557087
+Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (July\xa021,\xa02017) \"PyMICE\" computer software
+    (v.\xa0{version}; RRID:nlx_158570) doi:\xa010.5281/zenodo.832982
 
 Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017)
     \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior
@@ -94,8 +94,8 @@ PyMICE\xa0({rrid})\xa0[1] v.\xa0{version}\xa0[2]
 1. Dzik\xa0JM, Puścian\xa0A, Mijakowska\xa0Z, Radwanska\xa0K, Łęski\xa0S. PyMICE: A Python
     library for analysis of IntelliCage data. Behav Res Methods. 2017.
     DOI:\xa010.3758/s13428-017-0907-5
-2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version 1.1.1.
-    Warsaw: Nencki Institute; 2017. DOI:\xa010.5281/zenodo.557087
+2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version {version}.
+    Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.832982
 
 
 """.format(version=pm.__version__, rrid=pm.__RRID__),
