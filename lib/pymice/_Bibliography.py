@@ -405,8 +405,8 @@ class Citation(object):
                        }
 
     def __init__(self, style=None, markdown=None, version=__version__,
-                       maxLineWidth=80,
-                       paperKey=None, softwareKey=None):
+                       paperKey=None, softwareKey=None,
+                       **kwargs):
         """
         :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
                         'BibTeX'; defaults to 'PyMICE'
@@ -439,7 +439,7 @@ class Citation(object):
         self._version = version
         self._style = style
         self._markdown = markdown
-        self._maxLineWidth = maxLineWidth
+        self._maxLineWidth = kwargs.get('maxLineWidth', 80)
         self._paperKey = paperKey
         self._softwareKey = softwareKey
 
