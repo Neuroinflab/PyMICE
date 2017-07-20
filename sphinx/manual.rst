@@ -117,6 +117,32 @@ Package pymice
    .. autodata:: __PGP_PUBLIC_KEY__
       :annotation: = < ASCII armored PGP public key >
 
+   .. autoclass:: Citation
+
+      .. automethod:: __init__
+
+      .. automethod:: __str__
+
+      .. automethod:: __unicode__
+
+      .. automethod:: cite
+
+      .. autoattribute:: PAPER
+
+      .. automethod:: referencePaper
+
+      .. autoattribute:: SOFTWARE
+
+      .. automethod:: referenceSoftware
+
+      .. autoattribute:: CITE_PAPER
+
+      .. automethod:: citePaper
+
+      .. autoattribute:: CITE_SOFTWARE
+
+      .. automethod:: citeSoftware
+
 
 Module pymice.debug
 -------------------
