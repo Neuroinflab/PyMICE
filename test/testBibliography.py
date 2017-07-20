@@ -229,6 +229,26 @@ class TestCitationBase(TestCase):
                                                  style=self.STYLE,
                                                  version=version).citeSoftware(markdown=markdown))
 
+
+    def testCitePaperProperty(self):
+        self.checkUnicodeEqual(self.CITE_PAPER,
+                               self.reference.CITE_PAPER)
+
+    def testCitePaper(self):
+        self.checkUnicodeEqual(self.CITE_PAPER,
+                               self.reference.citePaper())
+
+    def testCitePaperArgumentOverridesConstructorStyle(self):
+        self.checkUnicodeEqual(self.CITE_PAPER,
+                               self.Citation('__unknown__').citePaper(style=self.STYLE))
+
+    @requireMarkdown
+    def testCitePaperArgumentOverridesConstructorMarkdown(self, markdown):
+        self.checkUnicodeEqual(self.CITE_PAPER,
+                               self.Citation(markdown='__unknown__',
+                                             style=self.STYLE).citePaper(markdown=markdown))
+
+
     def testPaperReferenceDefaultStyleAndMarkdownSetInConstructor(self):
         self.checkUnicodeEqual(self.PAPER,
                                self.reference.referencePaper())
@@ -263,6 +283,7 @@ class TestCitationGivenStyleAPA6(TestCitationBase):
                    'unknown': u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian, n.d.)",
                    None: u"PyMICE\xa0(Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017; Dzik, Łęski, &\xa0Puścian, n.d.)",
                    }
+    CITE_PAPER = u"Dzik, Puścian, Mijakowska, Radwanska, &\xa0Łęski, 2017"
     CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian, 2017",
                      '1.1.0': u"Dzik, Łęski, &\xa0Puścian, 2016",
                      'unknown': u"Dzik, Łęski, &\xa0Puścian, n.d.",
@@ -308,6 +329,7 @@ class TestCitationGivenStyleAPA6markdownLaTeX(TestCitationGivenStyleAPA6):
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
+    CITE_PAPER = u"dzik2017pm"
     CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
@@ -332,6 +354,7 @@ class TestCitationGivenStyleAPA6markdownLaTeXcustomKeys(TestCitationGivenStyleAP
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
+    CITE_PAPER = u"dzikPaper"
     CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
                      'unknown': u"dzikSoft",
                      None: u"dzikSoft",
@@ -379,7 +402,8 @@ class TestCitationGivenStyleAPA6markdownHTML(TestCitationGivenStyleAPA6):
                    '1.1.0': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;1.1.0&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, 2016)",
                    'unknown': u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017) v.&nbsp;unknown&nbsp;(Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
                    None: u"PyMICE&nbsp;(Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017; Dzik, Łęski, &amp;&nbsp;Puścian, n.d.)",
-                     }
+                   }
+    CITE_PAPER = u"Dzik, Puścian, Mijakowska, Radwanska, &amp;&nbsp;Łęski, 2017"
     CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2017",
                      '1.1.0': u"Dzik, Łęski, &amp;&nbsp;Puścian, 2016",
                      'unknown': u"Dzik, Łęski, &amp;&nbsp;Puścian, n.d.",
@@ -403,6 +427,7 @@ class TestCitationGivenStyleBibTeX(TestCitationBase):
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
+    CITE_PAPER = u"dzik2017pm"
     CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
@@ -458,6 +483,7 @@ class TestCitationGivenStyleBibTeXcustomKeys(TestCitationGivenStyleBibTeX):
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
+    CITE_PAPER = u"dzikPaper"
     CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
                      'unknown': u"dzikSoft",
                      None: u"dzikSoft",
@@ -482,6 +508,7 @@ class TestCitationGivenStylePymice(TestCitationBase):
                    'unknown': u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0unknown\xa0(Dzik, Łęski, &\xa0Puścian)",
                    None: u"PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017; Dzik, Łęski, &\xa0Puścian)",
                    }
+    CITE_PAPER = u"Dzik, Puścian, et\xa0al. 2017"
     CITE_SOFTWARE = {'1.1.1': u"Dzik, Łęski, &\xa0Puścian 2017",
                      '1.1.0': u"Dzik, Łęski, &\xa0Puścian 2016",
                      'unknown': u"Dzik, Łęski, &\xa0Puścian",
@@ -505,6 +532,7 @@ class TestCitationGivenStylePymiceMarkdownLaTeX(TestCitationGivenStylePymice):
                    'unknown': u"\\emph{PyMICE}~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~\\cite{dzik2017pm,pymice}",
                    }
+    CITE_PAPER = u"dzik2017pm"
     CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
@@ -530,6 +558,7 @@ class TestCitationGivenStylePymiceMarkdownLaTeXcustomKeys(TestCitationGivenStyle
                    'unknown': u"\\emph{PyMICE}~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~\\cite{dzikPaper,dzikSoft}",
                    }
+    CITE_PAPER = u"dzikPaper"
     CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
                      'unknown': u"dzikSoft",
                      None: u"dzikSoft",
@@ -573,6 +602,7 @@ class TestCitationGivenStyleVancouver(TestCitationBase):
                    'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[1] v.\xa0unknown\xa0[2]",
                    None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[1,2]",
                    }
+    CITE_PAPER = u"1"
     CITE_SOFTWARE = {'1.1.1': u"2",
                      '1.1.0': u"2",
                      'unknown': u"2",
@@ -596,6 +626,7 @@ class TestCitationGivenStyleVancouverMarkdownLaTeX(TestCitationGivenStyleVancouv
                    'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm} v.~unknown~\\cite{pymiceunknown}",
                    None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzik2017pm,pymice}",
                  }
+    CITE_PAPER = u"dzik2017pm"
     CITE_SOFTWARE = {'1.1.1': u"pymice1.1.1",
                      'unknown': u"pymiceunknown",
                      None: u"pymice",
@@ -622,6 +653,7 @@ class TestCitationGivenStyleVancouverAndCustomKeys(TestCitationGivenStyleVancouv
                    'unknown': u"PyMICE\xa0(RRID:nlx_158570)\xa0[42] v.\xa0unknown\xa0[69]",
                    None: u"PyMICE\xa0(RRID:nlx_158570)\xa0[42,69]",
                    }
+    CITE_PAPER = u"42"
     CITE_SOFTWARE = {'1.1.1': u"69",
                      '1.1.0': u"69",
                      'unknown': u"69",
@@ -648,6 +680,7 @@ class TestCitationGivenStyleVancouverMarkdownLaTeXcustomKeys(TestCitationGivenSt
                    'unknown': u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper} v.~unknown~\\cite{dzikSoft}",
                    None: u"\\emph{PyMICE}~(RRID:nlx\\_158570)~\\cite{dzikPaper,dzikSoft}",
                    }
+    CITE_PAPER = u"dzikPaper"
     CITE_SOFTWARE = {'1.1.1': u"dzikSoft",
                      'unknown': u"dzikSoft",
                      None: u"dzikSoft",
