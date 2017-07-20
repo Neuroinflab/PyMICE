@@ -22,7 +22,9 @@
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
 ###############################################################################
-
+"""
+.. versionadded:: 1.2.0
+"""
 from ._Version import __version__, __RRID__
 import sys
 
@@ -78,44 +80,79 @@ def _fold(f):
 
     return wrapper
 
+def _formatDostring(*args, **kwargs):
+    def decorator(o):
+        o.__doc__ = o.__doc__.format(*args, **kwargs)
+        return o
+
+    return decorator
 
 class Citation(object):
+    """
+    A class of objects facilitating referencing the PyMICE library.
+
+    Example::
+
+      >>> citation = Citation(version='1.1.1')
+      >>> print('''{reference}
+      ... had no Citation class.
+      ...
+      ... Bibliography
+      ...
+      ... {reference.PAPER}
+      ...
+      ... {reference.SOFTWARE}
+      ... '''.format(reference=citation))
+      PyMICE (Dzik, Puścian, et al. 2017) v. 1.1.1 (Dzik, Łęski, & Puścian 2017)
+      had no Citation class.
+
+      Bibliography
+
+      Dzik J. M., Puścian A., Mijakowska Z., Radwanska K., Łęski S. (June 22, 2017)
+          "PyMICE: A Python library for analysis of IntelliCage data" Behavior
+          Research Methods doi: 10.3758/s13428-017-0907-5
+
+      Dzik J. M., Łęski S., Puścian A. (April 24, 2017) "PyMICE" computer software
+          (v. 1.1.1; RRID:nlx_158570) doi: 10.5281/zenodo.557087
+
+    .. versionadded:: 1.2.0
+    """
     _DEFAULT_META = {'rrid': __RRID__,
-                    'authors': [('Dzik', 'Jakub', 'Mateusz'),
-                                (u'Łęski', 'Szymon'),
-                                (u'Puścian', 'Alicja'),
-                                ],
+                     'authors': [('Dzik', 'Jakub', 'Mateusz'),
+                                 (u'Łęski', 'Szymon'),
+                                 (u'Puścian', 'Alicja'),
+                                 ],
                      }
     _META = {'1.1.1': {'doi': '10.5281/zenodo.557087',
-                      'year': 2017,
-                      'month': 'April',
-                      'day': 24,
+                       'year': 2017,
+                       'month': 'April',
+                       'day': 24,
                        },
-            '1.1.0': {'doi': '10.5281/zenodo.200648',
-                      'year': 2016,
-                      'month': 'December',
-                      'day': 13,
-                      },
-            '1.0.0': {'doi': '10.5281/zenodo.51092',
-                      'year': 2016,
-                      'month': 'May',
-                      'day': 6,
-                      },
+             '1.1.0': {'doi': '10.5281/zenodo.200648',
+                       'year': 2016,
+                       'month': 'December',
+                       'day': 13,
+                       },
+             '1.0.0': {'doi': '10.5281/zenodo.51092',
+                       'year': 2016,
+                       'month': 'May',
+                       'day': 6,
+                       },
              '0.2.5': {'doi': '10.5281/zenodo.49550',
-                      'year': 2016,
-                      'month': 'April',
-                      'day': 11,
-                      },
+                       'year': 2016,
+                       'month': 'April',
+                       'day': 11,
+                       },
              '0.2.4': {'doi': '10.5281/zenodo.47305',
-                      'year': 2016,
-                      'month': 'January',
-                      'day': 30,
-                      },
+                       'year': 2016,
+                       'month': 'January',
+                       'day': 30,
+                       },
              '0.2.3': {'doi': '10.5281/zenodo.47259',
-                      'year': 2016,
-                      'month': 'January',
-                      'day': 30,
-                      },
+                       'year': 2016,
+                       'month': 'January',
+                       'day': 30,
+                       },
              }
 
     _PAPER_META = {
@@ -146,7 +183,6 @@ class Citation(object):
                     '{Python} scientific libraries to form a complete data '
                     'analysis workflow.'
         }
-
 
     _DEFAULT_STYLE = 'pymice'
     _DEFAULT_MARKDOWN = {'apa6': 'txt',
@@ -366,6 +402,35 @@ class Citation(object):
     def __init__(self, style=None, markdown=None, version=__version__,
                        maxLineWidth=80,
                        paperKey=None, softwareKey=None):
+        """
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'; defaults to 'PyMICE'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'; default value depends on the reference
+                           style
+        :type markdown: str
+
+        :keyword version: version of the PyMICE library to be referenced; None if no
+                          version shall be referenced; omit to reference the current
+                          version
+        :type version: str or None
+
+        :keyword paperKey: a key (e.g. LaTeX label or entry number) for the bibliography
+                           entry referencing the paper introducing the PyMICE library
+        :type paperKey: str or int
+
+        :keyword softwareKey: a key (e.g. LaTeX label or entry number) for the
+                              bibliography entry referencing the PyMICE library
+        :type softwareKey: str or int
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+
+          No undocumented parameter shall be used.
+        """
         self._version = version
         self._style = style
         self._markdown = markdown
@@ -389,7 +454,41 @@ class Citation(object):
     @_determineMarkdown
     @_fold
     @_applyMarkdown
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def referencePaper(self, style, markdown):
+        """
+        Generete a bibliography entry for the paper introducing the PyMICE library.
+        Keyword attributes override parameters set in the object constructor.
+
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'
+        :type markdown: str
+
+        :returns: the bibliography entry
+        :rtype: {unicode}
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print('''Bibliography:
+          ...
+          ... {{reference}}
+          ... '''.format(reference=citation.referencePaper(style='Vancouver',
+          ...                                              markdown='HTML')))
+          Bibliography:
+
+          1. Dzik&nbsp;JM, Puścian&nbsp;A, Mijakowska&nbsp;Z, Radwanska&nbsp;K,
+              Łęski&nbsp;S. PyMICE: A Python library for analysis of IntelliCage data.
+              Behav Res Methods. 2017. DOI:&nbsp;10.3758/s13428-017-0907-5
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+        """
         return self._applyTemplate(self._PAPER_PATTERNS,
                                    self._PAPER_META, #.copy(),
                                    style,
@@ -399,7 +498,47 @@ class Citation(object):
     @_determineMarkdown
     @_fold
     @_applyMarkdown
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def referenceSoftware(self, style, markdown, **kwargs):
+        """
+        Generete a bibliography entry for the PyMICE library.
+        Keyword attributes override parameters set in the object constructor.
+
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'; if default value depends on the reference
+                           style (if not set in the constructor)
+        :type markdown: str
+
+        :keyword version: version of the PyMICE library to be referenced; None if no
+                          version shall be referenced
+        :type version: str or None
+
+        :returns: the bibliography entry
+        :rtype: {unicode}
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print(citation.referenceSoftware(style='BibTeX',
+          ...                                  version='1.0.0'))
+          @Misc{{pymice1.0.0,
+          Title = {{{{PyMICE (v.~1.0.0)}}}},
+          Note = {{computer software; RRID:nlx\_158570}},
+          Author = {{Dzik, Jakub Mateusz and Łęski, Szymon and Puścian, Alicja}},
+          Year = {{2016}},
+          Month = {{May}},
+          Day = {{6}},
+          Doi = {{10.5281/zenodo.51092}}
+          }}
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+        """
         return self._applyTemplate(self._SOFTWARE_PATTERNS,
                                    self._getSoftwareReleaseMeta(kwargs),
                                    style,
@@ -415,7 +554,38 @@ class Citation(object):
     @_determineStyle
     @_determineMarkdown
     @_applyMarkdown
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def cite(self, style, markdown, **kwargs):
+        """
+        Generete an in-text reference to the PyMICE library in the recommended format.
+        Keyword attributes override parameters set in the object constructor.
+
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'; if default value depends on the reference
+                           style (if not set in the constructor)
+        :type markdown: str
+
+        :keyword version: version of the PyMICE library to be referenced; None if no
+                          version shall be referenced
+        :type version: str or None
+
+        :returns: the in-text reference
+        :rtype: {unicode}
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print(reference.cite(version='0.2.3'))
+          PyMICE (Dzik, Puścian, et al. 2017) v. 0.2.3 (Dzik, Łęski, & Puścian 2016)
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+        """
         return self._applyTemplate(self._CITE_PAPER_SOFTWARE_PATTERNS,
                                    self._getCiteMeta(style, markdown,
                                                      **kwargs),
@@ -438,7 +608,38 @@ class Citation(object):
     @_determineStyle
     @_determineMarkdown
     @_applyMarkdown
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def citeSoftware(self, style, markdown, **kwargs):
+        """
+        Prefabricate the stem of an in-text reference to the PyMICE library.
+        Keyword attributes override parameters set in the object constructor.
+
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'; if default value depends on the reference
+                           style (if not set in the constructor)
+        :type markdown: str
+
+        :keyword version: version of the PyMICE library to be referenced; None if no
+                          version shall be referenced
+        :type version: str or None
+
+        :returns: the prefabricated reference stem
+        :rtype: {unicode}
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print(reference.citeSoftware(version='1.1.1', style='APA6'))
+          Dzik, Łęski, & Puścian, 2017
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+        """
         return self._citeSoftware(style, markdown, kwargs)
 
     def _citeSoftware(self, style, markdown, kwargs):
@@ -449,7 +650,41 @@ class Citation(object):
     @_determineStyle
     @_determineMarkdown
     @_applyMarkdown
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def citePaper(self, style, markdown):
+        """
+        Prefabricate the stem of an in-text reference to the publication introducing the
+        PyMICE library.
+        Keyword attributes override parameters set in the object constructor.
+
+        :keyword style: reference style; must be one of 'PyMICE', 'APA6', 'Vancouver',
+                        'BibTeX'
+        :type style: str
+
+        :keyword markdown: markdown language to be used; must be one of 'txt', 'rst',
+                           'md', 'html', 'LaTeX'; if default value depends on the reference
+                           style (if not set in the constructor)
+        :type markdown: str
+
+        :returns: the prefabricated reference stem
+        :rtype: {unicode}
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print('''The library has been introduced in our paper~\\\\cite{{{{{{}}}}}},
+          ... so we ask that reference to the paper is provided in any published
+          ... research making use of PyMICE.
+          ... '''.format(reference.citePaper(markdown='LaTeX')))
+          The library has been introduced in our paper~\\cite{{dzik2017pm}},
+          so we ask that reference to the paper is provided in any published
+          research making use of PyMICE.
+
+
+        .. warning::
+
+          All constructor parameters shall be given as keyword arguments.
+        """
         return self._citePaper(style, markdown)
 
     def _citePaper(self, style, markdown):
@@ -464,19 +699,6 @@ class Citation(object):
         return self._DEFAULT_STYLE
 
     def _applyTemplate(self, template, meta, style, markdown):
-    #     return self._applyTemplateOfGivenStyle(template,
-    #                                            meta,
-    #                                            self._getStyle(style).lower(),
-    #                                            markdown)
-    #
-    #
-    #
-    # def _applyTemplateOfGivenStyle(self, template, meta, style, markdown):
-    #     return self._applyTemplateOfGivenMarkdown(template, meta, style,
-    #                                               self._getMarkdown(style,
-    #                                                                 markdown).lower())
-    #
-    # def _applyTemplateOfGivenMarkdown(self, template, meta, style, markdown):
         meta.update(__paper__ = self._getPaperKey(markdown),
                     __software__ = self._getSoftwareKey(meta, markdown))
         pattern, sections = self._getFormatters(template,
@@ -484,8 +706,6 @@ class Citation(object):
                                                 markdown)
         formatted = self._formatMeta(pattern, sections, meta)
         return formatted
-        # return self._applyMarkdown(formatted,
-        #                           markdown)
 
     def _fold(self, string):
         maxWidth = self._maxLineWidth
@@ -569,29 +789,110 @@ class Citation(object):
 
     if sys.version_info.major < 3:
         def __unicode__(self):
+            """
+            Example::
+
+              >>> citation = Citation(version='1.1.1')
+              >>> print(unicode(citation))
+              PyMICE (Dzik, Puścian, et al. 2017) v. 1.1.1 (Dzik, Łęski, & Puścian 2017)
+
+            :return: recommended in-text reference
+            :rtype: unicode
+            """
             return self._str()
 
         def __str__(self):
+            """
+            Example::
+
+              >>> citation = Citation(version='1.1.1')
+              >>> print(str(citation))
+              PyMICE (Dzik, Puścian, et al. 2017) v. 1.1.1 (Dzik, Łęski, & Puścian 2017)
+
+            :return: UTF-8 encoded recommended in-text reference
+            :rtype: str
+            """
             return self._str().encode('utf-8')
 
     else:
         def __str__(self):
+            """
+            Example::
+
+              >>> citation = Citation(version='1.1.1')
+              >>> print(str(citation))
+              PyMICE (Dzik, Puścian, et al. 2017) v. 1.1.1 (Dzik, Łęski, & Puścian 2017)
+
+
+            :return: recommended in-text reference
+            :rtype: str
+            """
             return self._str()
 
     @property
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def SOFTWARE(self):
+        """
+        A bibliography entry for the PyMICE library.
+
+        Example::
+
+          >>> citation = Citation(version='1.1.1')
+          >>> print('''Bibliography:
+          ...
+          ... {{reference.SOFTWARE}}
+          ... '''.format(reference=citation))
+          Bibliography:
+
+          Dzik J. M., Łęski S., Puścian A. (April 24, 2017) "PyMICE" computer software
+              (v. 1.1.1; RRID:nlx_158570) doi: 10.5281/zenodo.557087
+
+        :type: {unicode}
+        """
         return self.referenceSoftware()
 
     @property
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def PAPER(self):
+        """
+        A bibliography entry for the paper introducing the PyMICE library.
+
+        Example::
+
+          >>> citation = Citation()
+          >>> print('''Bibliography:
+          ...
+          ... {{reference.PAPER}}
+          ... '''.format(reference=citation))
+          Bibliography:
+
+          Dzik J. M., Puścian A., Mijakowska Z., Radwanska K., Łęski S. (June 22, 2017)
+              "PyMICE: A Python library for analysis of IntelliCage data" Behavior
+              Research Methods doi: 10.3758/s13428-017-0907-5
+
+        :type: {unicode}
+        """
         return self.referencePaper()
 
     @property
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def CITE_SOFTWARE(self):
+        """
+        A prefabricated stem of an in-text reference of the PyMICE library.
+
+        :type: {unicode}
+        """
         return self.citeSoftware()
 
     @property
+    @_formatDostring(unicode='unicode' if sys.version_info.major < 3 else 'str')
     def CITE_PAPER(self):
+        """
+        A prefabricated stem of an in-text reference of the paper introducing the PyMICE
+        library.
+
+        :type: {unicode}
+        """
         return self.citePaper()
 
 
