@@ -9,7 +9,7 @@ PyMICE Python library
     :target: https://travis-ci.org/Neuroinflab/PyMICE
     :alt: Travis badge
 
-.. image:: [https://zenodo.org/badge/DOI/10.5281/zenodo.832982.svg
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.832982.svg
    :target: https://doi.org/10.5281/zenodo.832982
    :alt: DOI badge
 
