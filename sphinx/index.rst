@@ -15,6 +15,10 @@ Introduction
     :target: https://travis-ci.org/Neuroinflab/PyMICE
     :alt: Travis badge
 
+.. image:: https://img.shields.io/badge/License-GPL%20v3-blue.svg
+    :target: https://www.gnu.org/licenses/gpl-3.0
+    :alt: License: GPL v3 badge
+
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.832982.svg
    :target: https://doi.org/10.5281/zenodo.832982
    :alt: DOI badge
@@ -46,7 +50,7 @@ Terms of use
 ============
 
 The library is available under `GPL3 license
-<http://www.gnu.org/licenses/>`_.
+<http://www.gnu.org/licenses/gpl-3.0>`_.
 
 We ask that  that reference to our paper as well as to the library itself is
 provided in any published research making use of PyMICE.
