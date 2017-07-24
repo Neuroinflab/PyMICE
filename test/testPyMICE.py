@@ -74,9 +74,20 @@ class TestPyMICE(TestCase, CaptureSTDERR):
 
 The library is available under GPL3 license; we ask that reference to our paper
 as well as to the library itself is provided in any published research making
-use of PyMICE.
+use of PyMICE. Please run:
 
-The recommended in-text citation format is:
+>>> print(pm.__REFERENCING__)
+
+for more information (given that the library is imported as `pm`).
+
+
+""".format(version=pm.__version__, rrid=pm.__RRID__),
+                            stderr.CAPTURED)
+            for line in stderr.CAPTURED.split('\n'):
+                self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
+
+    def testReferencingDescription(self):
+        self.assertEqual(u"""The recommended in-text citation format is:
 PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0{version}\xa0(Dzik, Łęski, &\xa0Puścian 2017)
 
 and the recommended bibliography entry format:
@@ -102,12 +113,10 @@ We have provided a solution to facilitate referencing to the library. Please run
 >>> help(pm.Citation)
 
 for more information (given that the library is imported as `pm`).
-
-
 """.format(version=pm.__version__, rrid=pm.__RRID__),
-                            stderr.CAPTURED)
-            for line in stderr.CAPTURED.split('\n'):
-                self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
+        pm.__REFERENCING__)
+        for line in pm.__REFERENCING__.split('\n'):
+            self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
 
 if __name__ == '__main__':
     unittest.main()

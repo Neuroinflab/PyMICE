@@ -46,9 +46,12 @@ __welcomeMessage = u"""PyMICE library v. {version}
 
 The library is available under GPL3 license; we ask that reference to our paper
 as well as to the library itself is provided in any published research making
-use of PyMICE.
+use of PyMICE. Please run:
 
-{referencing}
+>>> print(pm.__REFERENCING__)
+
+for more information (given that the library is imported as `pm`).
+
 
 """
 
