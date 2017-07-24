@@ -48,7 +48,11 @@ The library is available under GPL3 license; we ask that reference to our paper
 as well as to the library itself is provided in any published research making
 use of PyMICE.
 
-The recommended in-text citation format is:
+{referencing}
+
+"""
+
+__REFERENCING__ = """The recommended in-text citation format is:
 {cite}
 
 and the recommended bibliography entry format:
@@ -68,13 +72,12 @@ We have provided a solution to facilitate referencing to the library. Please run
 >>> help(pm.Citation)
 
 for more information (given that the library is imported as `pm`).
-
-
-""".format(version=__version__,
-           rrid=__RRID__,
+""".format(rrid=__RRID__,
            cite=Citation(),
            vancouver=Citation(style='Vancouver'))
-sys.stderr.write(__welcomeMessage)
+
+sys.stderr.write(__welcomeMessage.format(version=__version__,
+                                         referencing=__REFERENCING__))
 
 # COPYING, LICENSE and PGP key below
 __COPYING__ = """PyMICE library v. {version}
