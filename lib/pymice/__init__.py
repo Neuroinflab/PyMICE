@@ -55,7 +55,7 @@ for more information (given that the library is imported as `pm`).
 
 """
 
-__REFERENCING__ = """The recommended in-text citation format is:
+__REFERENCING__ = u"""The recommended in-text citation format is:
 {cite}
 
 and the recommended bibliography entry format:
