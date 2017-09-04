@@ -123,7 +123,12 @@ class Citation(object):
                                  (u'Puścian', 'Alicja'),
                                  ],
                      }
-    _META = {'1.2.0': {'doi': '10.5281/zenodo.832982',
+    _META = {'1.2.1': {'doi': '10.5281/zenodo.884419',
+                       'year': 2017,
+                       'month': 'September',
+                       'day': 5,
+                       },
+             '1.2.0': {'doi': '10.5281/zenodo.832982',
                        'year': 2017,
                        'month': 'July',
                        'day': 21,
