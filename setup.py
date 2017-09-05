@@ -53,7 +53,7 @@ def loadTextFrom(path):
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'PyMICE',
-      version = __version__ + 'dev1',
+      version = __version__,
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
       description = 'PyMICE - a Python® library for mice behavioural data analysis',
       long_description = loadTextFrom('README.rst'),
