@@ -348,7 +348,7 @@ class Loader(Data):
 
   def _extractSessions(self, zf):
     try:
-      with self._openZipFile(zf, 'Sessions.xml') as fh:
+      with self._findAndOpenZipFile(zf, 'Sessions.xml') as fh:
         dom = minidom.parse(fh)
 
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
@@ -416,7 +416,7 @@ class Loader(Data):
 
 
   def _checkVersion(self, zf):
-    with self._openZipFile(zf, 'DataDescriptor.xml') as fh:
+    with self._findAndOpenZipFile(zf, 'DataDescriptor.xml') as fh:
       dom = minidom.parse(fh)
 
     dd = dom.getElementsByTagName('DataDescriptor')[0]
@@ -426,34 +426,29 @@ class Loader(Data):
     return versionStr.nodeValue.strip().lower()
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
-    return self._fromCSV(self._openZipFile(zf, path + '.txt'),
-                         source=source,
-                         convert=self._convertZip.get(path),
-                         oldLabels=oldLabels)
+    with self._findAndOpenZipFile(zf, path + '.txt') as fh:
+      return self._fromCSV(fh,
+                           source=source,
+                           convert=self._convertZip.get(path),
+                           oldLabels=oldLabels)
 
   @staticmethod
-  def _openZipFile(zf, path):
+  def _findAndOpenZipFile(zf, path):
     try:
       return zf.open(path)
 
     except KeyError:
       return zf.open('IntelliCage/' + path)
 
-  @staticmethod
-  def _fromCSV(fname, source=None, convert=None, oldLabels=None):
-    if isString(fname):
-      fname = open(fname, 'rb')
+  def _fromCSV(self, fh, source=None, convert=None, oldLabels=None):
+    return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
+                          source,
+                          convert,
+                          oldLabels)
 
-    reader = csv.reader(fname, delimiter='\t')
-    data = list(reader)
-    fname.close()
-
-    return Loader.__fromCSV(data, source, convert, oldLabels)
-
-  @staticmethod
-  def __fromCSV(data, source, convert, oldLabels):
+  def __fromCSV(self, data, source, convert, oldLabels):
     if len(data) == 0:
-      return
+      return None
 
     labels = data.pop(0)
     if isinstance(oldLabels, set):
@@ -465,7 +460,7 @@ class Loader(Data):
       return dict((l, []) for l in labels)
 
     emptyStringToNone(data)
-    return Loader.__DictOfColumns(labels, data, source, convert)
+    return self.__DictOfColumns(labels, data, source, convert)
 
   class __DictOfColumns(dict):
     def __init__(self, labels, rows, source, conversions):
