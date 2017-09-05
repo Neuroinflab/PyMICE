@@ -201,14 +201,6 @@ class PathZipFile(object):
       raise KeyError(name)
 
 
-
-
-
-
-
-
-
-
 def groupBy(objects, getKey=lambda x: x, requiredKeys=()):
   """
   >>> import operator
