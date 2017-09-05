@@ -348,8 +348,9 @@ class Loader(Data):
 
   def _extractSessions(self, zf):
     try:
-      fh = self._openZipFile(zf, 'Sessions.xml')
-      dom = minidom.parse(fh)
+      with self._openZipFile(zf, 'Sessions.xml') as fh:
+        dom = minidom.parse(fh)
+
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
       ss = aos.getElementsByTagName('Session')
       sessions = []
@@ -415,8 +416,9 @@ class Loader(Data):
 
 
   def _checkVersion(self, zf):
-    fh = self._openZipFile(zf, 'DataDescriptor.xml')
-    dom = minidom.parse(fh)
+    with self._openZipFile(zf, 'DataDescriptor.xml') as fh:
+      dom = minidom.parse(fh)
+
     dd = dom.getElementsByTagName('DataDescriptor')[0]
     version = dd.getElementsByTagName('Version')[0]
     versionStr = version.childNodes[0]
