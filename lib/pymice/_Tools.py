@@ -32,20 +32,32 @@ from math import modf
 from operator import attrgetter
 
 import pytz
-
-#from numbers import Number
-#import numpy as np
-#if not issubclass(np.floating, Number):
-#  Number.register(np.floating)
+import zipfile
 
 from ._FixTimezones import LatticeOrderer
 
-# XXX: isString, mapAsList are imported from elsewhere
-if sys.version_info >= (3, 0):
+# XXX: imported objects are imported from elsewhere
+if sys.version_info.major >= 3:
   from ._Python3.Tools import isString, mapAsList
+
+  import io
+
+  class ArchiveZipFile(zipfile.ZipFile):
+    def open(self, *args, **kwargs):
+      return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
+      # if sys.version_info < (3, 2):
+      #   # XXX: Python3 monkey-path
+      #   fh.readable = lambda: True
+      #   fh.writable = lambda: False
+      #   fh.seekable = lambda: False
+      #   fh.read1 = items_file.read
+      #   #io.BytesIO(fh.read())
 
 else:
   from ._Python2.Tools import isString, mapAsList
+
+  class ArchiveZipFile(zipfile.ZipFile):
+    pass
 
 
 def timeString(x, tz=None):
@@ -165,6 +177,7 @@ def timeToList(tStr):
   #return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
   return LatticeOrderer.Node(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
 
+
 class timeListList(list):
   def __eq__(self, x):
     return self[0] == x[0]
@@ -185,7 +198,7 @@ class timeListList(list):
     return self[0] > x[0]
 
 
-class PathZipFile(object):
+class DirectoryZipFile(object):
   """
   A class emulating zipfile.ZipFile behaviour with filesystem directories.
   """

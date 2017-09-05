@@ -31,7 +31,6 @@ if sys.version_info >= (3, 0):
   unicode = str
 
 import os
-import zipfile
 import csv
 import warnings
 
@@ -63,8 +62,8 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import (timeToList, PathZipFile, warn, groupBy, isString,
-                     mapAsList)
+from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
+                     isString, mapAsList)
 from ._FixTimezones import inferTimezones, LatticeOrderer
 from ._Analysis import Aggregator
 
@@ -200,10 +199,10 @@ class Loader(Data):
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isString(fname) and os.path.isdir(fname):
-        zf = PathZipFile(fname)
+        zf = DirectoryZipFile(fname)
 
       else:
-        zf = zipfile.ZipFile(fname)
+        zf = ArchiveZipFile(fname)
 
       self._loadZip(zf, source=fname)
 
@@ -433,22 +432,10 @@ class Loader(Data):
   @staticmethod
   def _openZipFile(zf, path):
     try:
-      fh = zf.open(path)
+      return zf.open(path)
 
     except KeyError:
-      fh = zf.open('IntelliCage/' + path)
-
-    if sys.version_info >= (3, 0):
-      # if sys.version_info < (3, 2):
-      #   # XXX: Python3 monkey-path
-      #   fh.readable = lambda: True
-      #   fh.writable = lambda: False
-      #   fh.seekable = lambda: False
-      #   fh.read1 = items_file.read
-      #   #io.BytesIO(fh.read())
-      return io.TextIOWrapper(fh)
-
-    return fh
+      return zf.open('IntelliCage/' + path)
 
   @staticmethod
   def _fromCSV(fname, source=None, convert=None, oldLabels=None):
