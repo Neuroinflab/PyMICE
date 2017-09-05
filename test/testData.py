@@ -1314,6 +1314,11 @@ class LoadIntelliCagePlus3DataTest(LoaderIntegrationTest):
     self.assertEqual(['Air', 'Air', 'LED', 'Door', 'Door', 'LED'],
                      [h.Type for h in self.data.getHardwareEvents(order='DateTime')])
 
+
+class LoadUncompressedIntelliCagePlus3DataTest(LoadIntelliCagePlus3DataTest):
+  DATA_FILE = 'icp3_data'
+
+
 class LoadEmptyDataTest(LoaderIntegrationTest):
   DATA_FILE = 'empty_data.zip'
 
