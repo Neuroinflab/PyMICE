@@ -24,7 +24,6 @@
 ###############################################################################
 
 import os, sys
-from lib.pymice import __version__
 
 try:
   from setuptools import setup, Extension
@@ -50,6 +49,8 @@ def loadUTF8(path):
 def loadTextFrom(path):
   return loadUTF8(os.path.join(os.path.dirname(__file__),
                                path))
+
+__version__ = loadTextFrom('lib/pymice/__version__.txt')
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'PyMICE',
