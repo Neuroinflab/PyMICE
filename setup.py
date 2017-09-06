@@ -50,7 +50,7 @@ def loadTextFrom(path):
   return loadUTF8(os.path.join(os.path.dirname(__file__),
                                path))
 
-__version__ = loadTextFrom('lib/pymice/__version__.txt')
+__version__ = loadTextFrom('lib/pymice/data/__version__.txt')
 
 cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
 setup(name = 'PyMICE',
@@ -97,8 +97,9 @@ setup(name = 'PyMICE',
                                'data/tutorial/FVB/timeline.ini',
                                'data/tutorial/FVB/LICENSE',
                                'data/tutorial/FVB/COPYING',
+                               'data/__version__.txt',
                                ]},
-      requires=['dateutil',
-                'matplotlib',
-                'numpy',
-                'pytz'])
+      install_requires=['python-dateutil',
+                        'matplotlib',
+                        'numpy',
+                        'pytz'])

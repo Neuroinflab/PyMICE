@@ -27,6 +27,6 @@ import os
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = open(os.path.join(os.path.dirname(__file__),
-                                '__version__.txt'),
+                                'data/__version__.txt'),
                    'r').read()
 __ID__ = __RRID__ + ' ' + __version__
