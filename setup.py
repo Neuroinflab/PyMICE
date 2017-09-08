@@ -25,9 +25,26 @@
 
 import os, sys
 
+SETUP_PARAMETERS = {}
+
 INSTALL_REQUIRES = ['python-dateutil', 'matplotlib', 'numpy', 'pytz']
 
-SETUP_PARAMETERS = {}
+WARNINGS = []
+
+NO_SETUPTOOLS_WARNING = """\
+ The setuptools package is not found - 'Unable to find vcvarsall.bat' error (and
+ many others) might occur.
+
+ Please ensure that the following dependencies are installed:
+{}.
+""".format(',\n'.join(['  - {}'.format(dependency)
+                       for dependency in INSTALL_REQUIRES]))
+
+NO_CYTHON_WARNING = """\
+ No Cython detected - installing only pure Python routines.
+
+ In order to install optimized Cython routines please install Cython and run
+ {} again.""".format(sys.argv[0])
 
 
 def loadUTF8(path):
@@ -46,19 +63,8 @@ try:
     # XXX a fix for https://bugs.python.org/issue23246 bug
 
 except ImportError:
+    WARNINGS.append(NO_CYTHON_WARNING)
     from distutils.core import setup, Extension
-
-    print("")
-    print("WARNING!!!")
-    print("")
-    print(" The setuptools package is not found - 'Unable to find vcvarsall.bat' error")
-    print(" (and many others) might occur.")
-    print("")
-    print(" Please ensure that the following dependencies are installed:")
-    for dependency in INSTALL_REQUIRES:
-        print("  - {}".format(dependency))
-
-    print("")
 
 else:
     SETUP_PARAMETERS['install_requires'] = INSTALL_REQUIRES
@@ -68,14 +74,7 @@ try:
     from Cython.Build import cythonize
 
 except ImportError:
-    print("")
-    print("WARNING!!!")
-    print("")
-    print(" No Cython detected - installing only pure Python routines.")
-    print("")
-    print(" In order to install optimized Cython routines please install Cython and run")
-    print(" {} again.".format(sys.argv[0]))
-    print("")
+    WARNINGS.append(NO_CYTHON_WARNING)
 
 else:
     cPymice = Extension('pymice._cymice', sources=['_cymice.pyx'])
@@ -131,3 +130,11 @@ setup(name = 'PyMICE',
                                'data/__version__.txt',
                                ]},
       **SETUP_PARAMETERS)
+
+if WARNINGS:
+    print("")
+    for message in WARNINGS:
+        print("WARNING!!!")
+        print("")
+        print(message)
+        print("")
