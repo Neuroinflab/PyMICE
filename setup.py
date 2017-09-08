@@ -25,7 +25,64 @@
 
 import os, sys
 
-SETUP_PARAMETERS = {}
+def loadUTF8(path):
+    if sys.version_info.major >= 3:
+        return open(path, encoding='utf-8').read()
+
+    return open(path).read().decode('utf-8')
+
+def loadTextFrom(path):
+    return loadUTF8(os.path.join(os.path.dirname(__file__),
+                                 path))
+
+
+SETUP_PARAMETERS = {
+    'name': 'PyMICE',
+    'version': loadTextFrom('lib/pymice/data/__version__.txt') + 'dev1',
+    'url': 'https://neuroinflab.wordpress.com/research/pymice/',
+    'description': 'PyMICE - a Python® library for mice behavioural data analysis',
+    'long_description': loadTextFrom('README.rst'),
+    'author': "Jakub M. Dzik a.k.a. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
+    'author_email': "jakub.m.dzik+pymice@gmail.com, sz.leski+pymice@gmail.com",
+    'license': 'GPL3',
+    'classifiers': ['Development Status :: 5 - Production/Stable',
+                    'Intended Audience :: Developers',
+                    'Intended Audience :: Science/Research',
+                    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                    'Natural Language :: English',
+                    'Operating System :: OS Independent',
+                    'Programming Language :: C',
+                    'Programming Language :: Python',
+                    'Programming Language :: Python :: 2',
+                    'Programming Language :: Python :: 2.7',
+                    'Programming Language :: Python :: 3',
+                    'Programming Language :: Python :: 3.3',
+                    'Programming Language :: Python :: 3.4',
+                    'Programming Language :: Python :: 3.5',
+                    'Programming Language :: Python :: 3.6',
+                    'Topic :: Scientific/Engineering',
+                    'Topic :: Scientific/Engineering :: Bio-Informatics',
+                    'Topic :: Software Development',
+                    'Topic :: Software Development :: Libraries :: Python Modules'],
+    'keywords': 'IntelliCage mice behavioural data loading analysis',
+    'packages': ['pymice',
+                 'pymice._Python{.major}'.format(sys.version_info),
+                 ],
+    'package_dir': {'': 'lib'},
+    'package_data': {'pymice': ['data/tutorial/demo.zip',
+                                'data/tutorial/LICENSE',
+                                'data/tutorial/COPYING',
+                                'data/tutorial/C57_AB/*.zip',
+                                'data/tutorial/C57_AB/timeline.ini',
+                                'data/tutorial/C57_AB/LICENSE',
+                                'data/tutorial/C57_AB/COPYING',
+                                'data/tutorial/FVB/*.zip',
+                                'data/tutorial/FVB/timeline.ini',
+                                'data/tutorial/FVB/LICENSE',
+                                'data/tutorial/FVB/COPYING',
+                                'data/__version__.txt',
+                                ]},
+}
 
 INSTALL_REQUIRES = ['python-dateutil', 'matplotlib', 'numpy', 'pytz']
 
@@ -45,17 +102,6 @@ NO_CYTHON_WARNING = """\
 
  In order to install optimized Cython routines please install Cython and run
  {} again.""".format(sys.argv[0])
-
-
-def loadUTF8(path):
-    if sys.version_info.major >= 3:
-        return open(path, encoding='utf-8').read()
-
-    return open(path).read().decode('utf-8')
-
-def loadTextFrom(path):
-    return loadUTF8(os.path.join(os.path.dirname(__file__),
-                                 path))
 
 
 try:
@@ -81,55 +127,8 @@ else:
     SETUP_PARAMETERS['ext_modules'] = cythonize([cPymice])
 
 
-__version__ = loadTextFrom('lib/pymice/data/__version__.txt')
+setup(**SETUP_PARAMETERS)
 
-
-setup(name = 'PyMICE',
-      version = __version__ + 'dev1',
-      url = 'https://neuroinflab.wordpress.com/research/pymice/',
-      description = 'PyMICE - a Python® library for mice behavioural data analysis',
-      long_description = loadTextFrom('README.rst'),
-      author="Jakub M. Dzik a.k.a. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
-      author_email="jakub.m.dzik+pymice@gmail.com, sz.leski+pymice@gmail.com",
-      license='GPL3',
-      classifiers = ['Development Status :: 5 - Production/Stable',
-                     'Intended Audience :: Developers',
-                     'Intended Audience :: Science/Research',
-                     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-                     'Natural Language :: English',
-                     'Operating System :: OS Independent',
-                     'Programming Language :: C',
-                     'Programming Language :: Python',
-                     'Programming Language :: Python :: 2',
-                     'Programming Language :: Python :: 2.7',
-                     'Programming Language :: Python :: 3',
-                     'Programming Language :: Python :: 3.3',
-                     'Programming Language :: Python :: 3.4',
-                     'Programming Language :: Python :: 3.5',
-                     'Programming Language :: Python :: 3.6',
-                     'Topic :: Scientific/Engineering',
-                     'Topic :: Scientific/Engineering :: Bio-Informatics',
-                     'Topic :: Software Development',
-                     'Topic :: Software Development :: Libraries :: Python Modules'],
-      keywords ='IntelliCage mice behavioural data loading analysis',
-      packages = ['pymice',
-                  'pymice._Python{.major}'.format(sys.version_info),
-                  ],
-      package_dir = {'': 'lib'},
-      package_data={'pymice': ['data/tutorial/demo.zip',
-                               'data/tutorial/LICENSE',
-                               'data/tutorial/COPYING',
-                               'data/tutorial/C57_AB/*.zip',
-                               'data/tutorial/C57_AB/timeline.ini',
-                               'data/tutorial/C57_AB/LICENSE',
-                               'data/tutorial/C57_AB/COPYING',
-                               'data/tutorial/FVB/*.zip',
-                               'data/tutorial/FVB/timeline.ini',
-                               'data/tutorial/FVB/LICENSE',
-                               'data/tutorial/FVB/COPYING',
-                               'data/__version__.txt',
-                               ]},
-      **SETUP_PARAMETERS)
 
 if WARNINGS:
     print("")
