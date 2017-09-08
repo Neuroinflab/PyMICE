@@ -38,7 +38,7 @@ def loadTextFrom(path):
 
 SETUP_PARAMETERS = {
     'name': 'PyMICE',
-    'version': loadTextFrom('lib/pymice/data/__version__.txt') + '.dev1',
+    'version': loadTextFrom('lib/pymice/data/__version__.txt'),
     'url': 'https://neuroinflab.wordpress.com/research/pymice/',
     'description': 'PyMICE - a Python® library for mice behavioural data analysis',
     'long_description': loadTextFrom('README.rst'),
