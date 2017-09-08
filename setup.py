@@ -25,39 +25,65 @@
 
 import os, sys
 
-try:
-  from setuptools import setup, Extension
-  # XXX a fix for https://bugs.python.org/issue23246 bug
+INSTALL_REQUIRES = ['python-dateutil', 'matplotlib', 'numpy', 'pytz']
 
-except ImportError:
-  from distutils.core import setup, Extension
-  print("The setuptools module is not found - 'Unable to find vcvarsall.bat' error")
-  print("(and many others) might occur.")
-  print("")
-  setuptoolsPresent = False
-
-else:
-  setuptoolsPresent = True
-
-setup(setup_requires=['cython'])
-
-from Cython.Build import cythonize
+SETUP_PARAMETERS = {}
 
 
 def loadUTF8(path):
-  if sys.version_info.major >= 3:
-    return open(path, encoding='utf-8').read()
+    if sys.version_info.major >= 3:
+        return open(path, encoding='utf-8').read()
 
-  return open(path).read().decode('utf-8')
+    return open(path).read().decode('utf-8')
 
 def loadTextFrom(path):
-  return loadUTF8(os.path.join(os.path.dirname(__file__),
-                               path))
+    return loadUTF8(os.path.join(os.path.dirname(__file__),
+                                 path))
+
+
+try:
+    from setuptools import setup, Extension
+    # XXX a fix for https://bugs.python.org/issue23246 bug
+
+except ImportError:
+    from distutils.core import setup, Extension
+
+    print("")
+    print("WARNING!!!")
+    print("")
+    print(" The setuptools package is not found - 'Unable to find vcvarsall.bat' error")
+    print(" (and many others) might occur.")
+    print("")
+    print(" Please ensure that the following dependencies are installed:")
+    for dependency in INSTALL_REQUIRES:
+        print("  - {}".format(dependency))
+
+    print("")
+
+else:
+    SETUP_PARAMETERS['install_requires'] = INSTALL_REQUIRES
+
+
+try:
+    from Cython.Build import cythonize
+
+except ImportError:
+    print("")
+    print("WARNING!!!")
+    print("")
+    print(" No Cython detected - installing only pure Python routines.")
+    print("")
+    print(" In order to install optimized Cython routines please install Cython and run")
+    print(" {} again.".format(sys.argv[0]))
+    print("")
+
+else:
+    cPymice = Extension('pymice._cymice', sources=['_cymice.pyx'])
+    SETUP_PARAMETERS['ext_modules'] = cythonize([cPymice])
+
 
 __version__ = loadTextFrom('lib/pymice/data/__version__.txt')
 
-#cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
-cPymice = Extension('pymice._cymice', sources = ['_cymice.pyx'])
 
 setup(name = 'PyMICE',
       version = __version__ + 'dev1',
@@ -87,7 +113,6 @@ setup(name = 'PyMICE',
                      'Topic :: Software Development',
                      'Topic :: Software Development :: Libraries :: Python Modules'],
       keywords ='IntelliCage mice behavioural data loading analysis',
-      ext_modules = cythonize([cPymice]),
       packages = ['pymice',
                   'pymice._Python{.major}'.format(sys.version_info),
                   ],
@@ -105,7 +130,4 @@ setup(name = 'PyMICE',
                                'data/tutorial/FVB/COPYING',
                                'data/__version__.txt',
                                ]},
-      install_requires=['python-dateutil',
-                        'matplotlib',
-                        'numpy',
-                        'pytz'])
+      **SETUP_PARAMETERS)
