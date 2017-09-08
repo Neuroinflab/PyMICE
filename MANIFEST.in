@@ -8,4 +8,3 @@ recursive-include test *
 prune test/data/*.zip
 include tutorial/*/*.ipynb
 include lib/pymice/_Python?/*.py
-include lib/__init__.py

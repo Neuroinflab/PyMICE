@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of          #
+#    Copyright (C) 2012-2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of     #
 #    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
@@ -22,3 +22,16 @@
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
 ###############################################################################
+
+def emptyStringToNone(l):
+    _emptyStringToNone(l)
+    return l
+
+cdef void _emptyStringToNone(list l):
+    cdef long i
+    for i, x in enumerate(l):
+        if isinstance(x, list):
+            emptyStringToNone(x)
+
+        elif x == '':
+            l[i] = None

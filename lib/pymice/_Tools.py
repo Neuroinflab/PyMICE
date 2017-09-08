@@ -45,13 +45,6 @@ if sys.version_info.major >= 3:
   class ArchiveZipFile(zipfile.ZipFile):
     def open(self, *args, **kwargs):
       return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
-      # if sys.version_info < (3, 2):
-      #   # XXX: Python3 monkey-path
-      #   fh.readable = lambda: True
-      #   fh.writable = lambda: False
-      #   fh.seekable = lambda: False
-      #   fh.read1 = items_file.read
-      #   #io.BytesIO(fh.read())
 
 else:
   from ._Python2.Tools import isString, mapAsList
