@@ -39,6 +39,7 @@ except ImportError:
 else:
   setuptoolsPresent = True
 
+setup(setup_requires=['cython'])
 
 from Cython.Build import cythonize
 
