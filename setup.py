@@ -40,6 +40,9 @@ else:
   setuptoolsPresent = True
 
 
+from Cython.Build import cythonize
+
+
 def loadUTF8(path):
   if sys.version_info.major >= 3:
     return open(path, encoding='utf-8').read()
@@ -52,7 +55,9 @@ def loadTextFrom(path):
 
 __version__ = loadTextFrom('lib/pymice/data/__version__.txt')
 
-cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
+#cPymice = Extension('pymice._C', sources = ['pymice.cpp'])
+cPymice = Extension('pymice._cymice', sources = ['_cymice.pyx'])
+
 setup(name = 'PyMICE',
       version = __version__ + 'dev1',
       url = 'https://neuroinflab.wordpress.com/research/pymice/',
@@ -81,7 +86,7 @@ setup(name = 'PyMICE',
                      'Topic :: Software Development',
                      'Topic :: Software Development :: Libraries :: Python Modules'],
       keywords ='IntelliCage mice behavioural data loading analysis',
-      ext_modules = [cPymice],
+      ext_modules = cythonize([cPymice]),
       packages = ['pymice',
                   'pymice._Python{.major}'.format(sys.version_info),
                   ],

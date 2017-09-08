@@ -71,7 +71,7 @@ class PmCImportWarning(ImportWarning):
   pass
 
 try:
-  from pymice._C import emptyStringToNone
+  from pymice._cpymice import emptyStringToNone
 
 except Exception as e:
   warnings.warn('%s\t%s' % (type(e), e),

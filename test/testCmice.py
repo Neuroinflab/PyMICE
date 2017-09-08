@@ -26,7 +26,7 @@
 import unittest
 from sys import getrefcount
 
-from pymice._C import emptyStringToNone
+from pymice._cymice import emptyStringToNone
 
 class TestEmptyStringToNone(unittest.TestCase):
   def testEmptyList(self):
