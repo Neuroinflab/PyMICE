@@ -38,14 +38,14 @@ def loadTextFrom(path):
 
 SETUP_PARAMETERS = {
     'name': 'PyMICE',
-    'version': loadTextFrom('lib/pymice/data/__version__.txt'),
+    'version': loadTextFrom('lib/pymice/data/__version__.txt') + '.dev1',
     'url': 'https://neuroinflab.wordpress.com/research/pymice/',
     'description': 'PyMICE - a Python® library for mice behavioural data analysis',
     'long_description': loadTextFrom('README.rst'),
     'author': "Jakub M. Dzik a.k.a. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
     'author_email': "jakub.m.dzik+pymice@gmail.com, sz.leski+pymice@gmail.com",
     'license': 'GPL3',
-    'classifiers': ['Development Status :: 5 - Production/Stable',
+    'classifiers': ['Development Status :: 4 - Beta',
                     'Intended Audience :: Developers',
                     'Intended Audience :: Science/Research',
                     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
