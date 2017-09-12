@@ -45,7 +45,7 @@ SETUP_PARAMETERS = {
     'author': "Jakub M. Dzik a.k.a. Kowalski, S. Leski (Laboratory of Neuroinformatics; Nencki Institute of Experimental Biology)",
     'author_email': "jakub.m.dzik+pymice@gmail.com, sz.leski+pymice@gmail.com",
     'license': 'GPL3',
-    'classifiers': ['Development Status :: 4 - Beta',
+    'classifiers': ['Development Status :: 5 - Production/Stable',
                     'Intended Audience :: Developers',
                     'Intended Audience :: Science/Research',
                     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
