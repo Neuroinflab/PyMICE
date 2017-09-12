@@ -114,6 +114,7 @@ except ImportError:
 
 else:
     SETUP_PARAMETERS['install_requires'] = INSTALL_REQUIRES
+    SETUP_PARAMETERS['python_requires'] = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4'
 
 
 try:
