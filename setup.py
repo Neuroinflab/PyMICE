@@ -51,7 +51,7 @@ SETUP_PARAMETERS = {
                     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                     'Natural Language :: English',
                     'Operating System :: OS Independent',
-                    'Programming Language :: C',
+                    'Programming Language :: Cython',
                     'Programming Language :: Python',
                     'Programming Language :: Python :: 2',
                     'Programming Language :: Python :: 2.7',
