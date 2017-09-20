@@ -71,6 +71,30 @@ class Animal(BaseNode):
                           self.__Sex,
                           self.__Notes)
 
+  def __gt__(self, other):
+    if isString(other):
+      return other.__class__(self) > other
+
+    if self.__Name == other.__Name and self.__Sex is not None and other.__Sex is not None:
+      return self.__Sex > other.__Sex
+
+    return self.__Name > other.__Name
+
+  def __ge__(self, other):
+    return self > other or self == other
+
+  def __lt__(self, other):
+    if isString(other):
+      return other.__class__(self) < other
+
+    if self.__Name == other.__Name and self.__Sex is not None and other.__Sex is not None:
+      return self.__Sex < other.__Sex
+
+    return self.__Name < other.__Name
+
+  def __le__(self, other):
+    return self < other or self == other
+
   def __eq__(self, other):
     if isString(other):
       return other.__class__(self) == other
