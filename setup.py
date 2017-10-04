@@ -109,7 +109,7 @@ try:
     # XXX a fix for https://bugs.python.org/issue23246 bug
 
 except ImportError:
-    WARNINGS.append(NO_CYTHON_WARNING)
+    WARNINGS.append(NO_SETUPTOOLS_WARNING)
     from distutils.core import setup, Extension
 
 else:
