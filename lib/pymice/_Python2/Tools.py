@@ -25,8 +25,12 @@
 
 from itertools import imap
 
+# dependence tracking
 from .. import _dependencies
-__dependencies__ = _dependencies.moduleDependencies(_dependencies)
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 
 
 def isString(obj):

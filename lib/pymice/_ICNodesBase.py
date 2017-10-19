@@ -35,8 +35,12 @@ from operator import attrgetter
 
 from ._Tools import isString
 
+# dependence tracking
 from . import _dependencies, _Tools
-__dependencies__ = _dependencies.moduleDependencies(_dependencies, _Tools)
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 
 def makePrivateSlots(attributes, name):
   prefix = '_%s__' % name

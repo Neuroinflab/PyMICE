@@ -56,9 +56,12 @@ else:
 
   from ._Python2 import Tools
 
+# dependence tracking
 from . import _FixTimezones, _dependencies
-__dependencies__ = _dependencies.moduleDependencies(_FixTimezones, _dependencies, Tools,
-                                                    pytz)
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 
 
 def timeString(x, tz=None):

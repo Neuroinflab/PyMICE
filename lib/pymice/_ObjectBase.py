@@ -27,8 +27,10 @@ import numpy as np
 from operator import attrgetter
 from collections import Sequence
 
+# dependence tracking
 from . import _dependencies
-__dependencies__ = _dependencies.moduleDependencies(_dependencies, np)
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values() if isinstance(x, types.ModuleType)])
 
 
 class ObjectBase(object):

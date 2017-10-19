@@ -37,9 +37,12 @@ else:
   from ._Python2.ICNodes import BaseNode, Visit  # Visit imported to facilitate recursive import
   from ._Python2 import ICNodes
 
-
+# dependence tracking
 from . import _dependencies, _ICNodesBase, _Tools
-__dependencies__ = _dependencies.moduleDependencies(_dependencies, _ICNodesBase, _Tools, ICNodes)
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 
 class SideAware(object):
   __slots__ = ()
