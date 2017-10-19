@@ -24,6 +24,9 @@
 ###############################################################################
 import os
 
+from . import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies)
+
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = open(os.path.join(os.path.dirname(__file__),

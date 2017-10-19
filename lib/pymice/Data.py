@@ -45,6 +45,11 @@ from ._Tools import timeString, toTimestampUTC, warn, isString
 from ._ObjectBase import ObjectBase
 
 
+from . import _dependencies, ICNodes, _Tools, _ObjectBase
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, ICNodes, _Tools, _ObjectBase)
+
+
+
 class IdentityManager(object):
   def __getitem__(self, x):
     return x

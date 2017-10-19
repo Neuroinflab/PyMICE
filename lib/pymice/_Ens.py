@@ -25,6 +25,9 @@
 
 import collections
 
+from . import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies)
+
 class Ens(object):
   """
   A class of read-only data structures emulating the initializer notation

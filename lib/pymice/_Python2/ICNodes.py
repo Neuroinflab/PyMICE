@@ -26,6 +26,9 @@
 from .._ICNodesBase import (BaseNodeMetaclass, BaseNode_del_,
                             VisitMetaclass, DurationAware, getTimeString)
 
+from .. import _ICNodesBase, _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_ICNodesBase, _dependencies)
+
 
 class BaseNode(object):
   __slots__ = ()

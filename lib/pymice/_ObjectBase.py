@@ -27,6 +27,10 @@ import numpy as np
 from operator import attrgetter
 from collections import Sequence
 
+from . import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, np)
+
+
 class ObjectBase(object):
   """
   A base class for efficient object filtering.

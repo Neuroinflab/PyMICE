@@ -46,11 +46,19 @@ if sys.version_info.major >= 3:
     def open(self, *args, **kwargs):
       return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
 
+  from ._Python3 import Tools
+
 else:
   from ._Python2.Tools import isString, mapAsList
 
   class ArchiveZipFile(zipfile.ZipFile):
     pass
+
+  from ._Python2 import Tools
+
+from . import _FixTimezones, _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_FixTimezones, _dependencies, Tools,
+                                                    pytz)
 
 
 def timeString(x, tz=None):

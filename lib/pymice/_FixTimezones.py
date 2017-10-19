@@ -35,6 +35,9 @@ except ImportError:
 import numpy as np
 import heapq
 
+from . import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, np)
+
 def inferTimezones(timepoints, sessionStart, sessionEnd=None):
   return TimezonesInferrer(sessionStart, sessionEnd).infer(timepoints)
 

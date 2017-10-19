@@ -23,6 +23,9 @@
 #                                                                             #
 ###############################################################################
 
+from .. import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies)
+
 def isString(obj):
   return isinstance(obj, str)
 

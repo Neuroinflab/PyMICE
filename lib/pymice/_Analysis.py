@@ -27,6 +27,9 @@ from ._Ens import Ens
 from ._Tools import groupBy
 import sys
 
+from . import _dependencies, _Ens, _Tools
+__dependencies__ = _dependencies.moduleDependencies(_dependencies,  _Ens, _Tools)
+
 class Analyser(object):
   class Result(object):
     class CircularDependencyError(RuntimeError):

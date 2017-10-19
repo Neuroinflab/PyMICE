@@ -30,6 +30,9 @@ import sys
 
 import functools
 
+from . import _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_dependencies)
+
 if sys.version_info.major == 3:
     from functools import reduce
 

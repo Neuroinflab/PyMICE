@@ -67,6 +67,12 @@ from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy
 from ._FixTimezones import inferTimezones, LatticeOrderer
 from ._Analysis import Aggregator
 
+from . import _dependencies, Data as _Data, ICNodes, _Tools, _FixTimezones, _Analysis
+import dateutil
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, _Data, ICNodes, _Tools, _FixTimezones, _Analysis,
+                                                    pytz, np, dateutil)
+
+
 class PmCImportWarning(ImportWarning):
   pass
 

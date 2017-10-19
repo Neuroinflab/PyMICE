@@ -35,6 +35,9 @@ from operator import attrgetter
 
 from ._Tools import isString
 
+from . import _dependencies, _Tools
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, _Tools)
+
 def makePrivateSlots(attributes, name):
   prefix = '_%s__' % name
   return tuple(prefix + s for s in attributes)

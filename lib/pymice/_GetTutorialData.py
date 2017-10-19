@@ -29,6 +29,10 @@ import sys
 
 from ._Tools import isString
 
+from . import _dependencies, _Tools
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, _Tools)
+
+
 
 class FetchStdoutReporter(object):
   def warnUnknownDataset(self, dataset):

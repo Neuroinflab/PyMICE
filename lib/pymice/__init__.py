@@ -40,6 +40,31 @@ from ._Tools import hTime, convertTime, warn
 
 from ._Bibliography import Citation
 
+from . import (_dependencies, _Version, LogAnalyser, _GetTutorialData, _ICData,
+               _Metadata, _Results, _Tools, _Bibliography)
+__IMPORT_LIST = [_dependencies, _Version, LogAnalyser, _GetTutorialData,
+                 _ICData, _Metadata, _Results, _Tools, _Bibliography]
+# __IMPORT_NAMES = {m.__name__ for m in __IMPORT_LIST} | {'pymice._FixTimezones',
+#                                                         'pymice.Data',
+#                                                         'pymice.ICNodes',
+#                                                         'pymice._Analysis',
+#                                                         'pymice._Ens',
+#                                                         'pymice._ICNodesBase',
+#                                                         'pymice._ObjectBase',
+#                                                         'pymice._Python2.ICNodes',
+#                                                         'pymice._Python2.Tools',
+#                                                         'pymice._Python3.ICNodes',
+#                                                         'pymice._Python3.Tools'
+#                                                         }
+#
+# __dependencies__ = {k: v
+#                     for k, v in _dependencies.moduleDependencies(*__IMPORT_LIST).items()
+#                     if k not in __IMPORT_NAMES}
+__dependencies__ = {m: (v, d)
+                    for m, (v, d) in _dependencies.moduleDependencies(*__IMPORT_LIST).items()
+                    if (v is not None or d) and m not in ('pymice._Bibliography',
+                                                          'pymice._Version')}
+
 __all__ = []
 
 __welcomeMessage = u"""PyMICE library v. {version}

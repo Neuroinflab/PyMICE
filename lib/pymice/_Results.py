@@ -29,6 +29,9 @@ import csv
 
 from ._Tools import warn
 
+from . import _Tools, _dependencies
+__dependencies__ = _dependencies.moduleDependencies(_Tools, _dependencies)
+
 class ResultsCSV(object):
   def __init__(self, filename, fields=(), force=False):
     self.__fields = set(fields)

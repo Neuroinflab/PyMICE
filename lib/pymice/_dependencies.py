@@ -23,6 +23,8 @@
 #                                                                             #
 ###############################################################################
 
+__dependencies__ = {}
+
 class _ModuleDependencies(object):
   def __call__(self, *modules):
     dependencies = [self._dependencies(m) for m in modules]

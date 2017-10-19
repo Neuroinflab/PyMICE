@@ -40,6 +40,11 @@ import matplotlib.dates as mpd
 
 from ._Tools import convertTime, warn, isString, deprecatedAlias
 
+from . import _dependencies, _Tools
+import matplotlib
+
+__dependencies__ = _dependencies.moduleDependencies(_dependencies, _Tools,
+                                                    pytz, matplotlib)
 
 class MetadataNode(object):
   _labels = None

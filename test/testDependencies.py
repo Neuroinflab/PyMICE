@@ -23,7 +23,6 @@
 #                                                                             #
 ###############################################################################
 
-import sys
 import unittest
 
 from pymice._dependencies import moduleDependencies
