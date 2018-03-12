@@ -27,6 +27,13 @@ from ._Ens import Ens
 from ._Tools import groupBy
 import sys
 
+# dependence tracking
+from . import _dependencies, _Ens, _Tools
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
 class Analyser(object):
   class Result(object):
     class CircularDependencyError(RuntimeError):

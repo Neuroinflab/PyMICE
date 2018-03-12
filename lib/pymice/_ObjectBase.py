@@ -27,6 +27,12 @@ import numpy as np
 from operator import attrgetter
 from collections import Sequence
 
+# dependence tracking
+from . import _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values() if isinstance(x, types.ModuleType)])
+
+
 class ObjectBase(object):
   """
   A base class for efficient object filtering.

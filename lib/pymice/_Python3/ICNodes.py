@@ -26,6 +26,13 @@
 from .._ICNodesBase import (BaseNodeMetaclass, BaseNode_del_, \
                             VisitMetaclass, DurationAware, getTimeString)
 
+# dependence tracking
+from .. import _ICNodesBase, _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
 class BaseNode(object, metaclass=BaseNodeMetaclass):
   __slots__ = ()
   _del_ = BaseNode_del_

@@ -23,6 +23,7 @@
 #                                                                             #
 ###############################################################################
 import sys
+import numpy, pytz, dateutil, matplotlib
 
 import unittest
 from unittest import TestCase
@@ -52,6 +53,7 @@ class CaptureSTDERR(object):
     @property
     def CAPTURED(self):
         return self.__captured
+
 
 class TestPyMICE(TestCase, CaptureSTDERR):
     TERMILNAL_LINE_WIDTH = 80
@@ -117,6 +119,12 @@ for more information (given that the library is imported as `pm`).
         pm.__REFERENCING__)
         for line in pm.__REFERENCING__.split('\n'):
             self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
+
+    def testDependencies(self):
+        self.assertEqual({m.__name__: (m.__version__, {})
+                          for m in [numpy, pytz, dateutil, matplotlib]},
+                         pm.__dependencies__)
+
 
 if __name__ == '__main__':
     unittest.main()

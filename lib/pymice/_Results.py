@@ -29,6 +29,13 @@ import csv
 
 from ._Tools import warn
 
+# dependence tracking
+from . import _Tools, _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
 class ResultsCSV(object):
   def __init__(self, filename, fields=(), force=False):
     self.__fields = set(fields)

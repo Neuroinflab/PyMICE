@@ -4,9 +4,9 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2012-2017 Jakub M. Dzik a.k.a. Kowalski, S. Łęski          #
-#    (Laboratory of Neuroinformatics; Nencki Institute of Experimental        #
-#    Biology of Polish Academy of Sciences)                                   #
+#    Copyright (C) 2017 Jakub M. Dzik a.k.a. Kowalski (Laboratory of          #
+#    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
+#    Academy of Sciences)                                                     #
 #                                                                             #
 #    This software is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU General Public License as published by     #
@@ -23,18 +23,46 @@
 #                                                                             #
 ###############################################################################
 
-from itertools import imap
+__dependencies__ = {}
 
-# dependence tracking
-from .. import _dependencies
-import types
-__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
-                                                      if isinstance(x, types.ModuleType)])
+class _ModuleDependencies(object):
+  def __call__(self, *modules):
+    dependencies = [self._dependencies(m) for m in modules]
 
+    ambiguous = self._ambiguousVersions(dependencies)
 
+    result = {n: (v, {dn: dd for dn, dd in ds.items() if dn in ambiguous}) for n, v, ds in dependencies}
+    result.update((dn, dd)
+                  for n, v, ds in dependencies
+                  for dn, dd in ds.items() if dn not in ambiguous)
+    return result
 
-def isString(obj):
-  return isinstance(obj, basestring)
+  def _ambiguousVersions(self, dependencies):
+    return {k for k, v in self._versions(dependencies).items()
+            if len(v) > 1}
 
-def mapAsList(*args):
-  return list(imap(*args))
+  def _versions(self, dependencies):
+    versions = {n: {v} for n, v, _ in dependencies}
+    for _n, _v, d in dependencies:
+      for dn, (dv, _) in d.items():
+        try:
+          versions[dn].add(dv)
+        except KeyError:
+          versions[dn] = {dv}
+    return versions
+
+  def _dependencies(self, module):
+    return (self._getNameOrFail(module),
+            getattr(module, '__version__', None),
+            getattr(module, '__dependencies__', {}))
+
+  def _getNameOrFail(self, module):
+    try:
+      return module.__name__
+    except AttributeError:
+      raise self.UnnamedModuleException
+
+  class UnnamedModuleException(AttributeError):
+    pass
+
+moduleDependencies = _ModuleDependencies()

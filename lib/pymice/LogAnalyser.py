@@ -33,6 +33,13 @@ import matplotlib.mlab as mmlab
 
 from ._Tools import toTimestampUTC, warn
 
+# dependence tracking
+# import matplotlib, pytz
+from . import _Tools, _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 
 class DataValidator(object):
   """

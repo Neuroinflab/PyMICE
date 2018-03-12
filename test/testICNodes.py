@@ -151,6 +151,62 @@ class TestAnimal(ICNodeTest):
     self.assertFalse(animal != u'b\xf3br')
     self.assertTrue(animal != u'b\xc3\xb3br')
 
+  def testGt(self):
+    self.assertTrue(self.mickey > Animal.fromRow('Jerry', '2'))
+    self.assertFalse(Animal.fromRow('Jerry', '2') > self.mickey)
+    self.assertTrue(self.mickey > 'Jerry')
+    self.assertFalse(self.mickey > 'Minnie')
+
+    self.assertFalse(Animal.fromRow('Mickey', '2', Sex='Female') > self.mickey)
+    self.assertTrue(self.mickey > Animal.fromRow('Mickey', '2', Sex='Female'))
+
+    self.assertFalse(self.mickey > Animal.fromRow('Mickey', '2'))
+    self.assertFalse(Animal.fromRow('Mickey', '2') > self.mickey)
+    self.assertFalse(self.mickey > 'Mickey')
+    self.assertFalse(Animal(u'b\xf3br', '1') > u'b\xf3br')
+
+  def testGe(self):
+    self.assertTrue(self.mickey >= Animal.fromRow('Jerry', '2'))
+    self.assertFalse(Animal.fromRow('Jerry', '2') >= self.mickey)
+    self.assertTrue(self.mickey >= 'Jerry')
+    self.assertFalse(self.mickey >= 'Minnie')
+
+    self.assertFalse(Animal.fromRow('Mickey', '2', Sex='Female') >= self.mickey)
+    self.assertTrue(self.mickey >= Animal.fromRow('Mickey', '2', Sex='Female'))
+
+    self.assertTrue(self.mickey >= Animal.fromRow('Mickey', '2'))
+    self.assertTrue(Animal.fromRow('Mickey', '2') >= self.mickey)
+    self.assertTrue(self.mickey >= 'Mickey')
+    self.assertTrue(Animal(u'b\xf3br', '1') >= u'b\xf3br')
+
+  def testLt(self):
+    self.assertFalse(self.mickey < Animal.fromRow('Jerry', '2'))
+    self.assertTrue(Animal.fromRow('Jerry', '2') < self.mickey)
+    self.assertFalse(self.mickey < 'Jerry')
+    self.assertTrue(self.mickey < 'Minnie')
+
+    self.assertTrue(Animal.fromRow('Mickey', '2', Sex='Female') < self.mickey)
+    self.assertFalse(self.mickey < Animal.fromRow('Mickey', '2', Sex='Female'))
+
+    self.assertFalse(self.mickey < Animal.fromRow('Mickey', '2'))
+    self.assertFalse(Animal.fromRow('Mickey', '2') < self.mickey)
+    self.assertFalse(self.mickey < 'Mickey')
+    self.assertFalse(Animal(u'b\xf3br', '1') < u'b\xf3br')
+
+  def testLe(self):
+    self.assertFalse(self.mickey <= Animal.fromRow('Jerry', '2'))
+    self.assertTrue(Animal.fromRow('Jerry', '2') <= self.mickey)
+    self.assertFalse(self.mickey <= 'Jerry')
+    self.assertTrue(self.mickey <= 'Minnie')
+
+    self.assertTrue(Animal.fromRow('Mickey', '2', Sex='Female') <= self.mickey)
+    self.assertFalse(self.mickey <= Animal.fromRow('Mickey', '2', Sex='Female'))
+
+    self.assertTrue(self.mickey <= Animal.fromRow('Mickey', '2'))
+    self.assertTrue(Animal.fromRow('Mickey', '2') <= self.mickey)
+    self.assertTrue(self.mickey <= 'Mickey')
+    self.assertTrue(Animal(u'b\xf3br', '1') <= u'b\xf3br')
+
   def testHash(self):
     self.assertEqual(hash(self.mickey), hash('Mickey'))
 
