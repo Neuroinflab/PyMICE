@@ -1,3 +1,2 @@
 python setup.py install
-source python2/activate
-python setup.py install
+python2 setup.py install
