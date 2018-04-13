@@ -31,7 +31,6 @@ if sys.version_info >= (3, 0):
   unicode = str
 
 import os
-import zipfile
 import csv
 import warnings
 
@@ -63,8 +62,8 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import (timeToList, PathZipFile, warn, groupBy, isString,
-                     mapAsList)
+from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
+                     isString, mapAsList)
 from ._FixTimezones import inferTimezones, LatticeOrderer
 from ._Analysis import Aggregator
 
@@ -200,10 +199,10 @@ class Loader(Data):
 
     if fname.endswith('.zip') or os.path.isdir(fname):
       if isString(fname) and os.path.isdir(fname):
-        zf = PathZipFile(fname)
+        zf = DirectoryZipFile(fname)
 
       else:
-        zf = zipfile.ZipFile(fname)
+        zf = ArchiveZipFile(fname)
 
       self._loadZip(zf, source=fname)
 
@@ -349,8 +348,9 @@ class Loader(Data):
 
   def _extractSessions(self, zf):
     try:
-      fh = self._openZipFile(zf, 'Sessions.xml')
-      dom = minidom.parse(fh)
+      with self._findAndOpenZipFile(zf, 'Sessions.xml') as fh:
+        dom = minidom.parse(fh)
+
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
       ss = aos.getElementsByTagName('Session')
       sessions = []
@@ -416,8 +416,9 @@ class Loader(Data):
 
 
   def _checkVersion(self, zf):
-    fh = self._openZipFile(zf, 'DataDescriptor.xml')
-    dom = minidom.parse(fh)
+    with self._findAndOpenZipFile(zf, 'DataDescriptor.xml') as fh:
+      dom = minidom.parse(fh)
+
     dd = dom.getElementsByTagName('DataDescriptor')[0]
     version = dd.getElementsByTagName('Version')[0]
     versionStr = version.childNodes[0]
@@ -425,46 +426,29 @@ class Loader(Data):
     return versionStr.nodeValue.strip().lower()
 
   def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
-    return self._fromCSV(self._openZipFile(zf, path + '.txt'),
-                         source=source,
-                         convert=self._convertZip.get(path),
-                         oldLabels=oldLabels)
+    with self._findAndOpenZipFile(zf, path + '.txt') as fh:
+      return self._fromCSV(fh,
+                           source=source,
+                           convert=self._convertZip.get(path),
+                           oldLabels=oldLabels)
 
   @staticmethod
-  def _openZipFile(zf, path):
+  def _findAndOpenZipFile(zf, path):
     try:
-      fh = zf.open(path)
+      return zf.open(path)
 
     except KeyError:
-      fh = zf.open('IntelliCage/' + path)
+      return zf.open('IntelliCage/' + path)
 
-    if sys.version_info >= (3, 0):
-      # if sys.version_info < (3, 2):
-      #   # XXX: Python3 monkey-path
-      #   fh.readable = lambda: True
-      #   fh.writable = lambda: False
-      #   fh.seekable = lambda: False
-      #   fh.read1 = items_file.read
-      #   #io.BytesIO(fh.read())
-      return io.TextIOWrapper(fh)
+  def _fromCSV(self, fh, source=None, convert=None, oldLabels=None):
+    return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
+                          source,
+                          convert,
+                          oldLabels)
 
-    return fh
-
-  @staticmethod
-  def _fromCSV(fname, source=None, convert=None, oldLabels=None):
-    if isString(fname):
-      fname = open(fname, 'rb')
-
-    reader = csv.reader(fname, delimiter='\t')
-    data = list(reader)
-    fname.close()
-
-    return Loader.__fromCSV(data, source, convert, oldLabels)
-
-  @staticmethod
-  def __fromCSV(data, source, convert, oldLabels):
+  def __fromCSV(self, data, source, convert, oldLabels):
     if len(data) == 0:
-      return
+      return None
 
     labels = data.pop(0)
     if isinstance(oldLabels, set):
@@ -476,7 +460,7 @@ class Loader(Data):
       return dict((l, []) for l in labels)
 
     emptyStringToNone(data)
-    return Loader.__DictOfColumns(labels, data, source, convert)
+    return self.__DictOfColumns(labels, data, source, convert)
 
   class __DictOfColumns(dict):
     def __init__(self, labels, rows, source, conversions):
@@ -754,75 +738,6 @@ class Merger(Data):
       self.__topTime = max(self.__topTime, max(l.DateTime for l in log))
 
     self._buildCache()
-
-# # TO BE MOVED TO DEBUG MODULE
-# import matplotlib.pyplot as plt
-# import matplotlib.patches as patches
-# from matplotlib.path import Path
-# import matplotlib.ticker
-#   def _plotData(self):
-#     # FIXME: obsoleted
-#     #fig, ax = plt.subplots()
-#     ax = plt.gca()
-#     ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, y: hTime(x)))
-#     plt.xticks(rotation=10)
-#     labels = []
-#     yticks = []
-#     times = []
-#     for i, dataSource in enumerate(self._dataSources):
-#       labels.append(str(i))
-#       start = dataSource.getStart()
-#       end = dataSource.getEnd()
-#       #plt.broken_barh([(start, end - start)], [i - 0.4, 0.8])
-#       times.extend([start, end])
-#       dataSource.plotChannel(i + 0.6, i + 1.4)
-#       yticks.append(i)
-#
-#     plt.yticks(yticks, labels)
-#     start = min(times)
-#     end = max(times)
-#     span = end - start
-#     plt.xlim(start - 0.1 * span, end + 0.1 * span)
-#     plt.ylim(0, len(self._dataSources) + 1)
-#
-#   def _plotChannelR(self, top=1., bottom=0.):
-#     h = top - bottom
-#     l = len(self._dataSources)
-#     h2 = h / l
-#     starts, ends = [], []
-#
-#     for i, dataSource in enumerate(self._dataSources):
-#       start, end = dataSource._plotChannelR(bottom + i * h2, bottom + (i + 1) * h2)
-#       starts.append(start)
-#       ends.append(end)
-#
-#     if self.maskTimeStart is not None and self.maskTimeEnd is not None:
-#       left = self.maskTimeStart if self.maskTimeStart is not None else self.getStart()
-#       right = self.maskTimeEnd if self.maskTimeEnd is not None else self.getEnd()
-#       ax = plt.gca()
-#       codes = [Path.MOVETO, Path.LINETO]
-#       verts = [(left, top), (right, top)]
-#       if self.maskTimeEnd is not None:
-#         codes.append(Path.LINETO)
-#         ends.append(self.maskTimeEnd)
-#
-#       else:
-#         codes.append(Path.MOVETO)
-#
-#       verts.append((right, bottom))
-#       codes.append(Path.LINETO)
-#       verts.append((left, bottom))
-#       if self.maskTimeStart is not None:
-#         verts.append((left, top))
-#         codes.append(Path.CLOSEPOLY)
-#         starts.append(self.maskTimeStart)
-#
-#       path = Path(verts, codes)
-#       patch = patches.PathPatch(path, facecolor='none', edgecolor='red')
-#       ax.add_patch(patch)
-#
-#
-#     return min(starts), max(ends)
 
 
 class ICSide(int):

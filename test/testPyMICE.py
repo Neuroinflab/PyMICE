@@ -74,14 +74,25 @@ class TestPyMICE(TestCase, CaptureSTDERR):
 
 The library is available under GPL3 license; we ask that reference to our paper
 as well as to the library itself is provided in any published research making
-use of PyMICE.
+use of PyMICE. Please run:
 
-The recommended in-text citation format is:
+>>> print(pm.__REFERENCING__)
+
+for more information (given that the library is imported as `pm`).
+
+
+""".format(version=pm.__version__, rrid=pm.__RRID__),
+                            stderr.CAPTURED)
+            for line in stderr.CAPTURED.split('\n'):
+                self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
+
+    def testReferencingDescription(self):
+        self.assertEqual(u"""The recommended in-text citation format is:
 PyMICE\xa0(Dzik, Puścian, et\xa0al. 2017) v.\xa0{version}\xa0(Dzik, Łęski, &\xa0Puścian 2017)
 
 and the recommended bibliography entry format:
-Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (July\xa021,\xa02017) \"PyMICE\" computer software
-    (v.\xa0{version}; RRID:nlx_158570) doi:\xa010.5281/zenodo.832982
+Dzik\xa0J.\xa0M., Łęski\xa0S., Puścian\xa0A. (September\xa05,\xa02017) \"PyMICE\" computer software
+    (v.\xa0{version}; RRID:nlx_158570) doi:\xa010.5281/zenodo.884419
 
 Dzik\xa0J.\xa0M., Puścian\xa0A., Mijakowska\xa0Z., Radwanska\xa0K., Łęski\xa0S. (June\xa022,\xa02017)
     \"PyMICE: A Python library for analysis of IntelliCage data\" Behavior
@@ -95,19 +106,17 @@ PyMICE\xa0({rrid})\xa0[1] v.\xa0{version}\xa0[2]
     library for analysis of IntelliCage data. Behav Res Methods. 2017.
     DOI:\xa010.3758/s13428-017-0907-5
 2. Dzik\xa0JM, Łęski\xa0S, Puścian\xa0A. PyMICE [computer software]. Version {version}.
-    Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.832982
+    Warsaw: Nencki Institute - PAS; 2017. DOI:\xa010.5281/zenodo.884419
 
 We have provided a solution to facilitate referencing to the library. Please run
 
 >>> help(pm.Citation)
 
 for more information (given that the library is imported as `pm`).
-
-
 """.format(version=pm.__version__, rrid=pm.__RRID__),
-                            stderr.CAPTURED)
-            for line in stderr.CAPTURED.split('\n'):
-                self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
+        pm.__REFERENCING__)
+        for line in pm.__REFERENCING__.split('\n'):
+            self.assertLessEqual(len(line), self.TERMILNAL_LINE_WIDTH)
 
 if __name__ == '__main__':
     unittest.main()

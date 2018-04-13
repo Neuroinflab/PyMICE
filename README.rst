@@ -13,8 +13,8 @@ PyMICE Python library
     :target: https://www.gnu.org/licenses/gpl-3.0
     :alt: License: GPL v3 badge
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.832982.svg
-   :target: https://doi.org/10.5281/zenodo.832982
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.884419.svg
+   :target: https://doi.org/10.5281/zenodo.884419
    :alt: DOI badge
 
 PyMICE is a Python® library for mice behavioural data analysis.
@@ -38,12 +38,12 @@ We ask that  that reference to our paper as well as to the library itself is
 provided in any published research making use of PyMICE.
 
 The recommended in-text citation format is:
-``PyMICE (Dzik, Puścian, et al. 2017) v. 1.2.0 (Dzik, Łęski, & Puścian 2017)``
+``PyMICE (Dzik, Puścian, et al. 2017) v. 1.2.1 (Dzik, Łęski, & Puścian 2017)``
 
 and the recommended bibliography entry format:
 
-  Dzik J. M., Łęski S., Puścian A. (July 21, 2017) "PyMICE" computer software
-  (v. 1.2.0; RRID:nlx_158570) doi: 10.5281/zenodo.832982
+  Dzik J. M., Łęski S., Puścian A. (September 5, 2017) "PyMICE" computer
+  software (v. 1.2.1; RRID:nlx_158570) doi: 10.5281/zenodo.884419
 
   Dzik J. M., Puścian A., Mijakowska Z., Radwanska K., Łęski S. (June 22, 2017)
   "PyMICE: A Python library for analysis of IntelliCage data" Behavior Research
@@ -52,13 +52,13 @@ and the recommended bibliography entry format:
 If the journal does not allow for inclusion of the `resource identifier
 <http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0146300>`_
 (RRID:nlx_158570) in the bibliography, we ask to provide it in-text:
-``PyMICE (RRID:nlx_158570) [1] v. 1.2.0 [2]``
+``PyMICE (RRID:nlx_158570) [1] v. 1.2.1 [2]``
 
   1. Dzik JM, Puścian A, Mijakowska Z, Radwanska K, Łęski S. PyMICE: A Python
      library for analysis of IntelliCage data. Behav Res Methods. 2017.
      DOI: 10.3758/s13428-017-0907-5
-  2. Dzik JM, Łęski S, Puścian A. PyMICE [computer software]. Version 1.2.0.
-     Warsaw: Nencki Institute - PAS; 2017. DOI: 10.5281/zenodo.832982
+  2. Dzik JM, Łęski S, Puścian A. PyMICE [computer software]. Version 1.2.1.
+     Warsaw: Nencki Institute - PAS; 2017. DOI: 10.5281/zenodo.884419
 
 We have provided a solution to facilitate referencing to the library. Please
 run::
