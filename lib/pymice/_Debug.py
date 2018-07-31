@@ -324,7 +324,7 @@ def plotCumulativeVisits(md, tzone=None, **kwargs):
   fig = plt.figure()
   ax = fig.add_subplot(1, 1, 1)
   visits = md.getVisits(order='Start')
-  ax.plot(mpd.date2num(map(operator.attrgetter('Start'), visits)),
+  ax.plot(mpd.date2num([v.Start for v in visits]),
           range(len(visits)))
 
   locator = mpd.AutoDateLocator(tz=tzone)
