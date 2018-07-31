@@ -37,11 +37,12 @@ __dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().value
 
 
 class ResultsCSV(object):
-  def __init__(self, filename, fields=(), force=False):
+  def __init__(self, filename, fields=(), force=False, inOrder=False):
     self.__fields = set(fields)
     self.__fieldsOrder = list(fields)
     self.__rows = {}
     self.__rowOrder = []
+    self.__inOrder = inOrder
     self.__currentID = None
     self.__nextID = 0
     if os.path.exists(filename) and not force:
@@ -62,7 +63,10 @@ class ResultsCSV(object):
   def __del__(self):
     self.close()
 
-  def close(self, inOrder=False):
+  def close(self, inOrder=None):
+    if inOrder is None:
+      inOrder = self.__inOrder
+
     if self.__fh is None:
       return
 
