@@ -881,7 +881,7 @@ class ICCageManager(object):
       cage._del_()
 
 
-class ZipLoader(object):
+class _ZipLoaderBase(object):
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
     self._cageManager = cageManager
@@ -1031,7 +1031,7 @@ class ZipLoader(object):
     return cage, corner, corner[Side]
 
 
-class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
+class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
   DATETIME_KEY = 'DateTime'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1097,7 +1097,7 @@ class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
-class ZipLoader_v_Version2(ZipLoader):
+class ZipLoader_v_Version2(_ZipLoaderBase):
   DATETIME_KEY = 'Time'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1184,7 +1184,7 @@ class ZipLoader_v_Version2(ZipLoader):
                      columns['GroupName'])
 
 
-class ZipLoader_v_Version1(ZipLoader):
+class ZipLoader_v_Version1(_ZipLoaderBase):
   DATETIME_KEY = 'DateTime'
 
   def _getCageCornerSide(self, Cage, Corner, Side):
