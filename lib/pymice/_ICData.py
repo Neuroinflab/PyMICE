@@ -262,7 +262,7 @@ class Loader(Data):
       npVids = nosepokes['VisitID']
 
       if len(npVids) > 0: # disables annoying warning on comparison of empty array
-        vid2tag = dict(zip(vids, visits[loader.VISIT_TAG_FIELD]))
+        vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
 
         if sessions is not None:
           # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
@@ -472,7 +472,7 @@ class Loader(Data):
 
     n = len(data)
     if n == 0:
-      return dict((l, []) for l in labels)
+      return {l: [] for l in labels}
 
     emptyStringToNone(data)
     return self.__DictOfColumns(labels, data, source, convert)
@@ -950,7 +950,7 @@ class _ZipLoaderBase(object):
 
   def _assignNosepokesToVisits(self, nosepokesCollumns, vIDs):
     vNosepokes = [[] for _ in vIDs]
-    vidToNosepokes = dict((vId, nps) for vId, nps in izip(vIDs, vNosepokes))
+    vidToNosepokes = dict(izip(vIDs, vNosepokes))
 
     nColValues = [nosepokesCollumns.get(x, repeat(None)) \
                   for x in self.NOSEPOKE_FIELDS]
