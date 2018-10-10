@@ -430,9 +430,9 @@ class Loader(Data):
   def _getZipLoader(self, zf):
     version = self._checkVersion(zf)
     if version == 'version1':
-      return ZipLoader_v_Version1
+      return ZipLoader_v_version1
     if version == 'version_2_2':
-      return ZipLoader_v_Version2
+      return ZipLoader_v_version_2_2
     return ZipLoader_v_IntelliCage_Plus_3
 
 
@@ -1097,7 +1097,7 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
-class ZipLoader_v_Version2(_ZipLoaderBase):
+class ZipLoader_v_version_2_2(_ZipLoaderBase):
   DATETIME_KEY = 'Time'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1184,7 +1184,7 @@ class ZipLoader_v_Version2(_ZipLoaderBase):
                      columns['GroupName'])
 
 
-class ZipLoader_v_Version1(_ZipLoaderBase):
+class ZipLoader_v_version1(_ZipLoaderBase):
   DATETIME_KEY = 'DateTime'
 
   def _getCageCornerSide(self, Cage, Corner, Side):
