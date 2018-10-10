@@ -428,12 +428,11 @@ class Loader(Data):
     table[field] = [datetime(*x) for x in table[field]]
 
   def _getZipLoader(self, zf):
-    version = self._checkVersion(zf)
-    if version == 'version1':
-      return ZipLoader_v_version1
-    if version == 'version_2_2':
-      return ZipLoader_v_version_2_2
-    return ZipLoader_v_IntelliCage_Plus_3
+    try:
+      return ZIP_LOADERS[self._checkVersion(zf)]
+
+    except KeyError:
+      return ZipLoader_v_IntelliCage_Plus_3
 
 
   def _checkVersion(self, zf):
@@ -1263,3 +1262,9 @@ class ZipLoader_v_version1(_ZipLoaderBase):
   def loadGroups(cls, columns):
     return cls.group(columns['Name'],
                      columns['Group'])
+
+ZIP_LOADERS = {
+  'version1': ZipLoader_v_version1,
+  'version_2_2': ZipLoader_v_version_2_2,
+  'IntelliCage_Plus_3': ZipLoader_v_IntelliCage_Plus_3,
+}
