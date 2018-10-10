@@ -453,12 +453,11 @@ class Loader(Data):
     assert versionStr.nodeType == versionStr.TEXT_NODE
     return versionStr.nodeValue.strip().lower()
 
-  def _fromZipCSV(self, zf, path, source=None, oldLabels=None):
+  def _fromZipCSV(self, zf, path, source=None):
     with self._findAndOpenZipFile(zf, path + '.txt') as fh:
       return self._fromCSV(fh,
                            source=source,
-                           convert=self._convertZip.get(path),
-                           oldLabels=oldLabels)
+                           convert=self._convertZip.get(path))
 
   @staticmethod
   def _findAndOpenZipFile(zf, path):
@@ -468,20 +467,16 @@ class Loader(Data):
     except KeyError:
       return zf.open('IntelliCage/' + path)
 
-  def _fromCSV(self, fh, source=None, convert=None, oldLabels=None):
+  def _fromCSV(self, fh, source=None, convert=None):
     return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
                           source,
-                          convert,
-                          oldLabels)
+                          convert)
 
-  def __fromCSV(self, data, source, convert, oldLabels):
+  def __fromCSV(self, data, source, convert):
     if len(data) == 0:
       return None
 
     labels = data.pop(0)
-    if isinstance(oldLabels, set):
-      oldLabels.clear()
-      oldLabels.update(labels)
 
     n = len(data)
     if n == 0:
