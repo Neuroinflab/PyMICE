@@ -1423,11 +1423,14 @@ class MergerOnLoadedHw(MergerTest):
 class LoaderIntegrationTest(BaseTest, MockNodesProvider):
   LOADER_FLAGS = {}
 
+  class NoDataFilenameAttributeError(AttributeError):
+    pass
+
   def setUp(self):
     try:
       self.data = self.loadData()
 
-    except AttributeError as e:
+    except self.NoDataFilenameAttributeError as e:
       #print(e)
       self.skipTest("No data filename")
 
@@ -1442,8 +1445,15 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     return pm.Loader(self.dataPath(),
                      **self.LOADER_FLAGS)
 
+  def dataFilename(self):
+    try:
+      return self.DATA_FILE
+    except AttributeError:
+      raise self.NoDataFilenameAttributeError
+
   def dataPath(self):
-    return os.path.join(self.dataDir(), self.DATA_FILE)
+    return os.path.join(self.dataDir(),
+                        self.dataFilename())
 
   def dataDir(self):
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
