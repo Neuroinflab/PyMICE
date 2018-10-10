@@ -32,8 +32,8 @@ from pytz import utc, timezone
 
 import pymice as pm
 from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
-                            ZipLoader_v_Version1,
-                            ZipLoader_v_Version2,
+                            ZipLoader_v_version1,
+                            ZipLoader_v_version_2_2,
                             Merger, LogEntry, EnvironmentalConditions,
                             AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
                             UnknownHardwareEvent, ICCage, ICCageManager)
@@ -590,7 +590,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
 
 
 class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
-  loaderClass = ZipLoader_v_Version1
+  loaderClass = ZipLoader_v_version1
 
   INPUT_LOAD_ANIMALS = {'Name': ['Minie', 'Mickey', 'Jerry'],
                         'Tag': ['1337', '42', '69'],
@@ -883,7 +883,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                                                     'LED3State',]
 
 class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
-  loaderClass = ZipLoader_v_Version2
+  loaderClass = ZipLoader_v_version_2_2
 
   INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],
