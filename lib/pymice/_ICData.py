@@ -223,7 +223,7 @@ class Loader(Data):
 
     self._buildCache()
 
-  def _findEntry(self):
+  def _getDateTimeKey(self):
     if self.version == "version_2_2":
       return "Time"
     return "DateTime"
@@ -304,12 +304,12 @@ class Loader(Data):
     log = None
     if self._getLog:
       log = self._fromZipCSV(zf, 'Log', source=source)
-      entry = self._findEntry()
+      timeKey = self._getDateTimeKey()
       if sessions is not None:
 
-        timeOrderer.addOrderedSequence(log[entry])
+        timeOrderer.addOrderedSequence(log[timeKey])
       else: #XXX
-        timeToFix.extend(log[entry])
+        timeToFix.extend(log[timeKey])
 
     environment = None
     if self._getEnv:
@@ -320,16 +320,16 @@ class Loader(Data):
         pass
 
       else:
-        entry = self._findEntry()
+        timeKey = self._getDateTimeKey()
         if sessions is not None:
           # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
           #   ee._type = 'e.DateTime'
           #   ee._source = ss
           #   ee._line = ll
-          timeOrderer.addOrderedSequence(environment[entry])
+          timeOrderer.addOrderedSequence(environment[timeKey])
 
         else:
-          timeToFix.extend(environment[entry])
+          timeToFix.extend(environment[timeKey])
 
     hardware = None
     if self._getHw:
@@ -340,12 +340,12 @@ class Loader(Data):
         pass
 
       else:
-        entry = self._findEntry()
+        timeKey = self._getDateTimeKey()
         if sessions is not None:
-          timeOrderer.addOrderedSequence(hardware[entry])
+          timeOrderer.addOrderedSequence(hardware[timeKey])
 
         else: #XXX
-          timeToFix.extend(hardware[entry])
+          timeToFix.extend(hardware[timeKey])
 
     #XXX important only when timezone changes!
     if sessions is not None:
@@ -424,7 +424,7 @@ class Loader(Data):
       self.__convertTimeBoundsToDatetime(nosepokes)
     for table in [log, environment, hardware]:
       if table is not None:
-        entry = self._findEntry()
+        entry = self._getDateTimeKey()
         self.__convertFieldToDatetime(entry, table)
 
   def __convertTimeBoundsToDatetime(self, visits):
