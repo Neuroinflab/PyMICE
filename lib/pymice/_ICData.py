@@ -223,11 +223,6 @@ class Loader(Data):
 
     self._buildCache()
 
-  def _getDateTimeKey(self):
-    if self.version == "version_2_2":
-      return "Time"
-    return "DateTime"
-
   def _loadZip(self, zf, source=None):
     ZipLoader = self._getZipLoader(zf)
     self._loadAnimals(zf, ZipLoader)
@@ -304,12 +299,11 @@ class Loader(Data):
     log = None
     if self._getLog:
       log = self._fromZipCSV(zf, 'Log', source=source)
-      timeKey = self._getDateTimeKey()
       if sessions is not None:
 
-        timeOrderer.addOrderedSequence(log[timeKey])
+        timeOrderer.addOrderedSequence(log[ZipLoader.DATETIME_KEY])
       else: #XXX
-        timeToFix.extend(log[timeKey])
+        timeToFix.extend(log[ZipLoader.DATETIME_KEY])
 
     environment = None
     if self._getEnv:
@@ -320,16 +314,15 @@ class Loader(Data):
         pass
 
       else:
-        timeKey = self._getDateTimeKey()
         if sessions is not None:
           # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
           #   ee._type = 'e.DateTime'
           #   ee._source = ss
           #   ee._line = ll
-          timeOrderer.addOrderedSequence(environment[timeKey])
+          timeOrderer.addOrderedSequence(environment[ZipLoader.DATETIME_KEY])
 
         else:
-          timeToFix.extend(environment[timeKey])
+          timeToFix.extend(environment[ZipLoader.DATETIME_KEY])
 
     hardware = None
     if self._getHw:
@@ -340,12 +333,11 @@ class Loader(Data):
         pass
 
       else:
-        timeKey = self._getDateTimeKey()
         if sessions is not None:
-          timeOrderer.addOrderedSequence(hardware[timeKey])
+          timeOrderer.addOrderedSequence(hardware[ZipLoader.DATETIME_KEY])
 
         else: #XXX
-          timeToFix.extend(hardware[timeKey])
+          timeToFix.extend(hardware[ZipLoader.DATETIME_KEY])
 
     #XXX important only when timezone changes!
     if sessions is not None:
@@ -356,7 +348,8 @@ class Loader(Data):
         t.append(pytz.utc) # UTC assumed
 
     self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
-                                            log, environment, hardware)
+                                            log, environment, hardware,
+                                            ZipLoader=ZipLoader)
 
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
@@ -418,14 +411,14 @@ class Loader(Data):
     return sessions
 
   def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
-                                         log, environment, hardware):
+                                         log, environment, hardware,
+                                         ZipLoader=None):
     self.__convertTimeBoundsToDatetime(visits)
     if nosepokes is not None:
       self.__convertTimeBoundsToDatetime(nosepokes)
     for table in [log, environment, hardware]:
       if table is not None:
-        entry = self._getDateTimeKey()
-        self.__convertFieldToDatetime(entry, table)
+        self.__convertFieldToDatetime(ZipLoader.DATETIME_KEY, table)
 
   def __convertTimeBoundsToDatetime(self, visits):
     self.__convertFieldToDatetime('Start', visits)
@@ -435,10 +428,10 @@ class Loader(Data):
     table[field] = [datetime(*x) for x in table[field]]
 
   def _getZipLoader(self, zf):
-    self.version = self._checkVersion(zf)
-    if self.version == 'version1':
+    version = self._checkVersion(zf)
+    if version == 'version1':
       return ZipLoader_v_Version1
-    if self.version == 'version_2_2':
+    if version == 'version_2_2':
       return ZipLoader_v_Version2
     return ZipLoader_v_IntelliCage_Plus_3
 
@@ -1039,6 +1032,7 @@ class ZipLoader(object):
 
 
 class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
+  DATETIME_KEY = 'DateTime'
 
   VISIT_FIELDS = ['Cage', 'Corner',
                   'AnimalTag', 'Start', 'End', 'ModuleName',
@@ -1104,6 +1098,7 @@ class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
                      columns['GroupName'])
 
 class ZipLoader_v_Version2(ZipLoader):
+  DATETIME_KEY = 'Time'
 
   VISIT_FIELDS = ['Cage', 'Corner',
                   'AnimalTag', 'Start', 'End', 'ModuleName',
@@ -1190,6 +1185,8 @@ class ZipLoader_v_Version2(ZipLoader):
 
 
 class ZipLoader_v_Version1(ZipLoader):
+  DATETIME_KEY = 'DateTime'
+
   def _getCageCornerSide(self, Cage, Corner, Side):
     if Cage is None:
       return Cage, Corner, Side
