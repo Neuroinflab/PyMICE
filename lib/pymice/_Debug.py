@@ -320,11 +320,13 @@ def checkData(mds):
   for ((_, a), (b, _)) in zip(limits[:-1], limits[1:]):
     print('%s               %s' % (1, b - a))
 
-def plotCumulativeVisits(md, tzone=None, **kwargs):
-  fig = plt.figure()
-  ax = fig.add_subplot(1, 1, 1)
+def plotCumulativeVisits(md, tzone=None, ax=None, **kwargs):
+  if ax is None:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
   visits = md.getVisits(order='Start')
-  ax.plot(mpd.date2num(map(operator.attrgetter('Start'), visits)),
+  ax.plot(mpd.date2num([v.Start for v in visits]),
           range(len(visits)))
 
   locator = mpd.AutoDateLocator(tz=tzone)

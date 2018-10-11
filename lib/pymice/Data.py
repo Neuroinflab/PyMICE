@@ -45,6 +45,14 @@ from ._Tools import timeString, toTimestampUTC, warn, isString
 from ._ObjectBase import ObjectBase
 
 
+# dependence tracking
+from . import _dependencies, ICNodes, _Tools, _ObjectBase
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
+
 class IdentityManager(object):
   def __getitem__(self, x):
     return x

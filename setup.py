@@ -23,7 +23,7 @@
 #                                                                             #
 ###############################################################################
 
-import os, sys
+import os, sys, logging
 
 def loadUTF8(path):
     if sys.version_info.major >= 3:
@@ -88,7 +88,7 @@ INSTALL_REQUIRES = ['python-dateutil', 'matplotlib', 'numpy', 'pytz']
 
 WARNINGS = []
 
-NO_SETUPTOOLS_WARNING = """\
+NO_SETUPTOOLS_WARNING = """
  The setuptools package is not found - 'Unable to find vcvarsall.bat' error (and
  many others) might occur.
 
@@ -97,7 +97,7 @@ NO_SETUPTOOLS_WARNING = """\
 """.format(',\n'.join(['  - {}'.format(dependency)
                        for dependency in INSTALL_REQUIRES]))
 
-NO_CYTHON_WARNING = """\
+NO_CYTHON_WARNING = """
  No Cython detected - installing only pure Python routines.
 
  In order to install optimized Cython routines please install Cython and run
@@ -109,7 +109,7 @@ try:
     # XXX a fix for https://bugs.python.org/issue23246 bug
 
 except ImportError:
-    WARNINGS.append(NO_CYTHON_WARNING)
+    WARNINGS.append(NO_SETUPTOOLS_WARNING)
     from distutils.core import setup, Extension
 
 else:
@@ -132,9 +132,5 @@ setup(**SETUP_PARAMETERS)
 
 
 if WARNINGS:
-    print("")
     for message in WARNINGS:
-        print("WARNING!!!")
-        print("")
-        print(message)
-        print("")
+        logging.warning("\nWARNING!!!\n{}\n".format(message))

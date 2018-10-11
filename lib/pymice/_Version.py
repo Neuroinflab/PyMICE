@@ -24,6 +24,13 @@
 ###############################################################################
 import os
 
+# dependence tracking
+from . import _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
 __NeuroLexID__ = 'nlx_158570'
 __RRID__ = 'RRID:' + __NeuroLexID__
 __version__ = open(os.path.join(os.path.dirname(__file__),

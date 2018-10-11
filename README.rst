@@ -14,8 +14,12 @@ PyMICE Python library
     :alt: License: GPL v3 badge
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.884419.svg
-   :target: https://doi.org/10.5281/zenodo.884419
-   :alt: DOI badge
+    :target: https://doi.org/10.5281/zenodo.884419
+    :alt: DOI badge
+
+.. image:: https://mybinder.org/badge.svg
+    :target: https://mybinder.org/v2/gh/Neuroinflab/PyMICE/tutorials?filepath=tutorial
+    :alt: binder badge
 
 PyMICE is a Python® library for mice behavioural data analysis.
 

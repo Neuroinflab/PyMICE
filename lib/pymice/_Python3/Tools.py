@@ -23,6 +23,12 @@
 #                                                                             #
 ###############################################################################
 
+# dependence tracking
+from .. import _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
 def isString(obj):
   return isinstance(obj, str)
 

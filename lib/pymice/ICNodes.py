@@ -31,9 +31,17 @@ from ._Tools import toDt, isString
 if sys.version_info >= (3, 0):
   from ._Python3.ICNodes import BaseNode, Visit  # Visit imported to facilitate recursive import
   unicode = str
+  from ._Python3 import ICNodes
 
 else:
   from ._Python2.ICNodes import BaseNode, Visit  # Visit imported to facilitate recursive import
+  from ._Python2 import ICNodes
+
+# dependence tracking
+from . import _dependencies, _ICNodesBase, _Tools
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
 
 
 class SideAware(object):

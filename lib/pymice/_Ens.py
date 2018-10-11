@@ -25,6 +25,13 @@
 
 import collections
 
+# dependence tracking
+from . import _dependencies
+import types
+__dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
+                                                      if isinstance(x, types.ModuleType)])
+
+
 class Ens(object):
   """
   A class of read-only data structures emulating the initializer notation
