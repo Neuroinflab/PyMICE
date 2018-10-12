@@ -1118,9 +1118,6 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                      'LED1State', 'LED2State',
                      'LED3State']
 
-  def __changeKey(self, columns, one, other):
-     columns[other] = columns.pop(one)
-
   def _getCageCornerSide(self, Cage, Corner, Side):
     if Cage is None:
       return Cage, Corner, Side
@@ -1136,9 +1133,8 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
     return cage, corner, (corner[int(Side) + 1])
 
   def loadLog(self, columns):
-    self.__changeKey(columns, 'Time', 'DateTime')
     return self._columnsToObjects(columns,
-                                  ['DateTime',
+                                  ['Time',
                                    'LogCategory',
                                    'LogType',
                                    'Cage',
@@ -1155,17 +1151,15 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                    None,
                                    self._source, _line)
   def loadEnv(self, columns):
-    self.__changeKey(columns, 'Time', 'DateTime')
-    return self._columnsToObjects(columns,
-                                  ['DateTime', 'Temperature',
+     return self._columnsToObjects(columns,
+                                  ['Time', 'Temperature',
                                    'Illumination'],
                                   self._makeEnv)
 
   def loadHw(self, columns):
-    self.__changeKey(columns,  'Time', 'DateTime')
     return self._columnsToObjects(columns,
-                                  ['DateTime',
-                                   'Type',
+                                  ['Time',
+                                   'HardwareType',
                                    'Cage',
                                    'Corner',
                                    'Side',
