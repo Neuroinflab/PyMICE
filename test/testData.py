@@ -29,7 +29,7 @@ import unittest
 
 from datetime import datetime, timedelta
 from pytz import utc, timezone
-
+from dateutil.tz import tzoffset
 import pymice as pm
 from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
                             ZipLoader_v_version1,
@@ -896,7 +896,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
              datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc)],
-    'Type': ['0', '1', '2', '3'],
+    'HardwareType': ['0', '1', '2', '3'],
     'Cage': ['0', '1', '2', '3'],
     'Corner': ['0', '1', '2', '3'],
     'Side': [None, '2', '5', '6'],
@@ -1651,7 +1651,95 @@ class LoadAnalyserDataTest(LoaderIntegrationTest):
   DATA_FILE = 'analyzer_data.txt'
   LOADER_FLAGS = {'getNpokes': True}
 
+class LoadVersion2_2DataTest(LoaderIntegrationTest):
+  DATA_FILE = 'version2_2_data.zip'
 
+  def testGetStartOrderedVisits_fromDoctests(self):
+    self.assertEqual([3, 2, 4, 4, 4],
+                     [v.Corner for v in self.data.getVisits(order='Start')])
+
+  def testGetOneMouseVisits_fromDoctests(self):
+    self.assertEqual([ 4],
+                     [v.Corner for v in self.data.getVisits(mice='Animal 1')])
+
+  def testGetManyMiceOrderedVisits_fromDoctests(self):
+    self.assertEqual([3, 2, 4, 4],
+                     [v.Corner for v in self.data.getVisits(mice=['Animal 10',
+                                                                  'Animal 4'],
+                                                            order='Start')])
+    
+  def testGetManyMiceOrderedVisitsGivenAnimalsObject_fromDoctests(self):
+    mice = [self.data.getAnimal(m) for m in ['Animal 10', 'Animal 4']]
+    self.assertEqual([3, 2, 4, 4],
+                     [v.Corner for v in self.data.getVisits(mice=mice,
+                                                            order='Start')])
+
+  def testGetOneMouseVisitsStartTimezones_fromDoctests(self):
+    starts = [datetime(2008, 10, 20, 16, 13, 44, 780000,
+                       tzinfo=tzoffset(None, 3600))]
+    self.assertSameDT(starts,
+                      [v.Start for v in self.data.getVisits(mice='Animal 1')])
+
+  def testLickNumberNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickNumber',
+                              [0, 1, 2])
+
+  def testLickDurationNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickDuration',
+                              floatToTimedelta([0, 0.075, 0.15]))
+
+  def testLickContactTimeNosepokeAttribute(self):
+    self.checkAttrOfNosepokes('LickContactTime',
+                              [None, None, None])
+
+
+  def checkAttrOfNosepokes(self, attr, expected):
+    self.assertEqual(expected,
+                     [getattr(n, attr) for v in self.data.getVisits(order='Start') for n in v.Nosepokes])
+
+
+class GivenVersion2_2DataLoadedWithEnvData(LoadVersion2_2DataTest):
+  LOADER_FLAGS = {'getEnv': True}
+
+  def testCanBeMerged(self):
+    pm.Merger(self.data,
+              **self.LOADER_FLAGS)
+
+  def testTemperature(self):
+    self.assertEqual([23.6] * 13,
+                     [e.Temperature for e in self.data.getEnvironment()])
+
+
+  def testIllumination(self):
+    self.assertEqual(list(range(100, 113)),
+                     [e.Illumination for e in self.data.getEnvironment(order='DateTime')])
+
+
+class GivenVersion2_2DataLoadedWithHwData(LoadVersion2_2DataTest):
+  LOADER_FLAGS = {'getHw': True}
+
+  def testHwCageCornerSide(self):
+    self.assertEqual([(1, 1, 1),
+                      (1, 1, 2),
+                      (1, 2, 3),
+                      (1, 2, 4),
+                      (1, 3, 5),
+                      (1, 3, 6),
+                      (1, 4, 7),
+                      (1, 4, 8),
+                      ],
+                     [(h.Cage, h.Corner, h.Side) for h in self.data.getHardwareEvents(order='DateTime')])
+
+
+class GivenVersion2_2DataLoadedWithLogData(LoadVersion2_2DataTest):
+  LOADER_FLAGS = {'getLog': True}
+
+
+class LoadVersion2_2DataWithoutIntelliCageSubdirTest(LoadVersion2_2DataTest):
+  DATA_FILE = 'version2_2_data_nosubdir.zip'
+
+
+    
 class DataTest(BaseTest, MockNodesProvider):
   def setUp(self):
     self.data = Data()
