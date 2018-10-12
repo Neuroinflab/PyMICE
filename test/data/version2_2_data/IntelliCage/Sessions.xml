@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Session Id="0">
+    <TimeZoneOffset>01:00:00</TimeZoneOffset>
+    <Interval>
+      <Start>2008-10-20T16:04:05.5+01:00</Start>
+      <End>2008-10-21T15:24:06.875+01:00</End>
+    </Interval>
+    <StartLocalTimeString>2008-10-20 16:04:05.50</StartLocalTimeString>
+    <EndLocalTimeString>2008-10-21 15:24:06.87</EndLocalTimeString>
+    <ExperimentFileName>Dicer mice.experiment</ExperimentFileName>
+    <VisitMode>Mode2</VisitMode>
+    <VisitDurationLimit>10</VisitDurationLimit>
+    <DiagnosticMode>true</DiagnosticMode>
+    <SoftwareVersion>2.2.0.19486</SoftwareVersion>
+    <Hardware>
+      <TransponderType>DataMars</TransponderType>
+      <DoorSpeed>0</DoorSpeed>
+      <TimingMode>Autocalibration</TimingMode>
+      <SerialPort SerialPortName="COM5" BaudRate="115200" InputBufferSize="4096" OutputBufferSize="4096" />
+      <Cages>
+        <CageConfig Id="0" SerialNumber="0" Address="1">
+          <CornerVersion>
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+            <string xsi:nil="true" />
+          </CornerVersion>
+          <Notes />
+        </CageConfig>
+      </Cages>
+    </Hardware>
+  </Session>
+</ArrayOfSession>

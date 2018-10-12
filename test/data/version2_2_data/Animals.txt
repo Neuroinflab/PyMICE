@@ -1,0 +1,12 @@
+AnimalName	AnimalTag	Sex	GroupName	AnimalNotes
+Animal 1	98100181768	Female	Default	
+Animal 2	98100181856	Female	Default	
+Animal 3	98100181273	Female	Default	
+Animal 4	98100185286	Female	Default	
+Animal 5	98100182584	Female	Default	
+Animal 6	98100179538	Female	Default	
+Animal 7	98100181142	Female	Default	
+Animal 8	98100182095	Female	Default	
+Animal 9	98100184226	Female	Default	
+Animal 10	98100178699	Female	Default	
+Animal 11	98100179220	Female	Default	
