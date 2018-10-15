@@ -29,7 +29,6 @@ import unittest
 
 from datetime import datetime, timedelta
 from pytz import utc, timezone
-from dateutil.tz import tzoffset
 import pymice as pm
 from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
                             ZipLoader_v_version1,
@@ -1676,7 +1675,7 @@ class LoadVersion2_2DataTest(LoaderIntegrationTest):
 
   def testGetOneMouseVisitsStartTimezones_fromDoctests(self):
     starts = [datetime(2008, 10, 20, 16, 13, 44, 780000,
-                       tzinfo=tzoffset(None, 3600))]
+                       tzinfo=timezone('Etc/GMT-1'))]
     self.assertSameDT(starts,
                       [v.Start for v in self.data.getVisits(mice='Animal 1')])
 
