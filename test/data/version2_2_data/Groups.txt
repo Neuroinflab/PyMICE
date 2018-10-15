@@ -1,0 +1,2 @@
+GroupName	ModuleName	GroupNotes
+Default	Default	Default animals group

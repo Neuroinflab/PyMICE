@@ -1,0 +1,4 @@
+VisitID	Start	End	Side	SideCondition	SideError	TimeError	ConditionError	LicksNumber	LicksDuration	AirState	DoorState	LED1State	LED2State	LED3State
+4	2008-10-20 16:13:47.90	2008-10-20 16:13:48.81	7	1	0	0	0	0	0	0	1	0	0	0
+4	2008-10-20 16:13:49.32	2008-10-20 16:13:50.15	7	1	0	0	0	1	0.075	0	1	0	0	0
+4	2008-10-20 16:13:50.20	2008-10-20 16:13:50.62	7	1	0	0	0	2	0.15	0	1	0	0	0

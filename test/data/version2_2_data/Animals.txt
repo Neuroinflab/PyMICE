@@ -1,0 +1,4 @@
+AnimalName	AnimalTag	Sex	GroupName	AnimalNotes
+Animal 1	515	Female	Default	
+Animal 4	516	Female	Default	
+Animal 10	517	Female	Default	

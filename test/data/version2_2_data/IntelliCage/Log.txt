@@ -1,0 +1,5 @@
+Time	LogCategory	LogType	Cage	Corner	Side	LogNotes
+2008-10-20 16:04:06.87	Info	Application				Session is started
+2008-10-20 16:12:56.43	Warning	Presence	0	3		Presence signal without antenna registration.
+2008-10-20 16:36:21.70	Warning	Presence	0	2		Presence signal without antenna registration.
+2008-10-20 17:24:06.87	Info	Application				Session is stopped
