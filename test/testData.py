@@ -40,8 +40,13 @@ from pymice.Data import Data, IntIdentityManager
 
 import minimock
 
-from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
-                         isString)
+try:
+  from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                           isString)
+
+except SystemError:
+  from _TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                          isString)
 
 if sys.version_info >= (3, 0):
   unicode = str
