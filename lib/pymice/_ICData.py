@@ -64,11 +64,10 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
 
 from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
                      isString, mapAsList)
-from ._FixTimezones import inferTimezones, LatticeOrderer
 from ._Analysis import Aggregator
 
 # dependence tracking
-from . import _dependencies, Data as _Data, ICNodes, _Tools, _FixTimezones, _Analysis
+from . import _dependencies, Data as _Data, ICNodes, _Tools, _Analysis
 import dateutil
 import types
 __dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
@@ -100,10 +99,15 @@ convertFloat = methodcaller('replace', ',', '.')
 
 
 def fixSessions(sortedTimepoints, sessions=[]):
-  assert len(sessions) == 1
-  session = sessions[0]
-  sortedTimezones = inferTimezones(sortedTimepoints, session.Start, session.End)
-  for timepoint, timezone in zip(sortedTimepoints, sortedTimezones):
+  if sessions:
+    assert len(sessions) == 1
+    session = sessions[0]
+    timezone = session.Start.tzinfo
+
+  else:
+    timezone = pytz.utc
+
+  for timepoint in sortedTimepoints:
     timepoint.append(timezone)
 
 
@@ -231,29 +235,11 @@ class Loader(Data):
 
     sessions = self._extractSessions(zf)
 
-    timeOrderer = LatticeOrderer()
-
     visits = self._fromZipCSV(zf, 'Visits', source=source)
 
     vids = visits[loader.VISIT_ID_FIELD]
 
-    if sessions is not None:
-      # for es, ee, ss, ll in izip(visits['Start'], visits['End'], visits['_source'], visits['_line']):
-      #   ee._type = 'v.End'
-      #   ee._source = ss
-      #   ee._line = ll
-      #   es._type = 'v.Start'
-      #   es._source = ss
-      #   es._line = ll
-      vEnds = visits['End']
-      vStarts = visits['Start']
-
-      timeOrderer.coupleTuples(vStarts, vEnds)
-      timeOrderer.makeOrderedSequence(vEnds)
-      timeOrderer.addOrderedSequence(np.array(vStarts + [None], dtype=object)[np.argsort(mapAsList(int, vids))])
-
-    else: #XXX
-      timeToFix = visits['End'] + visits['Start']
+    timeToFix = visits['End'] + visits['Start']
 
     nosepokes = None
     if self._getNp:
@@ -264,33 +250,8 @@ class Loader(Data):
       if len(npVids) > 0: # disables annoying warning on comparison of empty array
         vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
 
-        if sessions is not None:
-          # for es, ee, ss, ll in izip(nosepokes['Start'], nosepokes['End'], nosepokes['_source'], nosepokes['_line']):
-          #   ee._type = 'n.End'
-          #   ee._source = ss
-          #   ee._line = ll
-          #   es._type = 'n.Start'
-          #   es._source = ss
-          #   es._line = ll
-
-          npEnds = nosepokes['End']
-          npStarts = nosepokes['Start']
-          timeOrderer.coupleTuples(npStarts, npEnds)
-          timeOrderer.makeOrderedSequence(npEnds)
-
-          npStarts = np.array(npStarts + [None], dtype=object)[:-1] # None is to force a creation of a 1D array of lists instead of a 2D array
-
-          npTags = np.array(mapAsList(vid2tag.__getitem__, npVids))
-          npSides = np.array(mapAsList(int, nosepokes['Side'])) % 2 # no bilocation assumed
-          # XXX                   ^ - ugly... possibly duplicated
-
-          for tag in tagToAnimal:
-            for side in (0, 1): # tailpokes correction
-              timeOrderer.addOrderedSequence(npStarts[(npTags == tag) * (npSides == side)])
-
-        else: #XXX
-          timeToFix.extend(nosepokes['End'])
-          timeToFix.extend(nosepokes['Start'])
+        timeToFix.extend(nosepokes['End'])
+        timeToFix.extend(nosepokes['Start'])
 
         for vid in npVids:
           if vid not in vid2tag:
@@ -299,11 +260,7 @@ class Loader(Data):
     log = None
     if self._getLog:
       log = self._fromZipCSV(zf, 'Log', source=source)
-      if sessions is not None:
-
-        timeOrderer.addOrderedSequence(log[ZipLoader.DATETIME_KEY])
-      else: #XXX
-        timeToFix.extend(log[ZipLoader.DATETIME_KEY])
+      timeToFix.extend(log[ZipLoader.DATETIME_KEY])
 
     environment = None
     if self._getEnv:
@@ -314,15 +271,7 @@ class Loader(Data):
         pass
 
       else:
-        if sessions is not None:
-          # for ee, ss, ll in izip(environment['DateTime'], environment['_source'], environment['_line']):
-          #   ee._type = 'e.DateTime'
-          #   ee._source = ss
-          #   ee._line = ll
-          timeOrderer.addOrderedSequence(environment[ZipLoader.DATETIME_KEY])
-
-        else:
-          timeToFix.extend(environment[ZipLoader.DATETIME_KEY])
+        timeToFix.extend(environment[ZipLoader.DATETIME_KEY])
 
     hardware = None
     if self._getHw:
@@ -333,19 +282,9 @@ class Loader(Data):
         pass
 
       else:
-        if sessions is not None:
-          timeOrderer.addOrderedSequence(hardware[ZipLoader.DATETIME_KEY])
+        timeToFix.extend(hardware[ZipLoader.DATETIME_KEY])
 
-        else: #XXX
-          timeToFix.extend(hardware[ZipLoader.DATETIME_KEY])
-
-    #XXX important only when timezone changes!
-    if sessions is not None:
-      fixSessions(timeOrderer.pullOrdered(), sessions)
-
-    else:
-      for t in timeToFix:
-        t.append(pytz.utc) # UTC assumed
+    fixSessions(timeToFix, sessions)
 
     self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
                                             log, environment, hardware,
