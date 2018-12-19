@@ -358,6 +358,7 @@ class Loader(Data):
     except:
       sessions = None
       pass
+
     return sessions
 
   def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
@@ -366,6 +367,7 @@ class Loader(Data):
     self.__convertTimeBoundsToDatetime(visits)
     if nosepokes is not None:
       self.__convertTimeBoundsToDatetime(nosepokes)
+
     for table in [log, environment, hardware]:
       if table is not None:
         self.__convertFieldToDatetime(ZipLoader.DATETIME_KEY, table)
