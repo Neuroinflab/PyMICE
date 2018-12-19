@@ -72,6 +72,35 @@ class IntIdentityManager(int):
     pass
 
 
+class ObjectBasePropertyManager(dict):
+  def __init__(self, attr):
+    super(ObjectBasePropertyManager, self).__init__()
+    self._attr = attr
+
+  def __call__(self, name, converters):
+    self[name] = converters
+
+    @property
+    def getter(host):
+      return getattr(host, self._attr)[name]
+
+    return getter
+
+  def dictionary(self):
+    @property
+    def getter(host):
+      try:
+        return host.__dict__[self._attr]
+
+      except KeyError:
+        dictionary = {name: ObjectBase(converters)
+                      for name, converters in self.items()}
+        host.__dict__[self._attr] = dictionary
+        return dictionary
+
+    return getter
+
+
 class Data(object):
   """
   A base class for objects containing behavioural data.
@@ -106,27 +135,28 @@ class Data(object):
 
     # change to
     self.__animalsByName = AnimalManager()
-
-    self.__visits = ObjectBase({
-      'Start': toTimestampUTC,
-      'End': toTimestampUTC})
-
-    self.__log = ObjectBase({'DateTime': toTimestampUTC})
-    self.__environment = ObjectBase({'DateTime': toTimestampUTC})
-    self.__hardware = ObjectBase({'DateTime': toTimestampUTC})
     self._initCache()
 
 #    self._setCageManager(CageManager())
     self._sourceManager = SourceManager()
 
+  _objectBaseProperty = ObjectBasePropertyManager('_objectBases')
+  __visits = _objectBaseProperty('Visits',
+                                 {'Start': toTimestampUTC,
+                                 'End': toTimestampUTC})
+  __log = _objectBaseProperty('Log',
+                              {'DateTime': toTimestampUTC})
+  __environment = _objectBaseProperty('Environment',
+                                      {'DateTime': toTimestampUTC})
+  __hardware = _objectBaseProperty('HardwareEvents',
+                                   {'DateTime': toTimestampUTC})
+  _objectBases = _objectBaseProperty.dictionary()
+
   def _setCageManager(self, cageManager):
     self._cageManager = cageManager
 
   def __del__(self):
-    for cache in [self.__visits,
-                  self.__log,
-                  self.__environment,
-                  self.__hardware]:
+    for cache in self._objectBases.values():
       for node in cache.get():
         if node:
           node._del_()
