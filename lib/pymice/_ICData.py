@@ -124,29 +124,23 @@ class Loader(Data):
                              }
             }
 
-  _convertZip = {'Animals': {#'Tag': int,
-                            },
-                 'Visits': {#'Tag': int,
-                            #'_vid': int,
-                            'CornerCondition': convertFloat,
+  _convertZip = {'Animals': {},
+                 'Visits': {'CornerCondition': convertFloat,
                             'PlaceError': convertFloat,
                             'AntennaDuration': convertFloat,
                             'PresenceDuration': convertFloat,
                             },
-                 'Nosepokes': {#'_vid': int,
-                               'LickContactTime': convertFloat,
+                 'Nosepokes': {'LickContactTime': convertFloat,
                                'LickDuration': convertFloat,
                                'SideCondition': convertFloat,
                                'SideError': convertFloat,
                                'TimeError': convertFloat,
                                'ConditionError': convertFloat,
                                },
-                 'Log': {
-                         },
+                 'Log': {},
                  'Environment': {'Temperature': convertFloat,
                                  },
-                 'HardwareEvents': {
-                                    },
+                 'HardwareEvents': {},
                 }
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
@@ -335,7 +329,6 @@ class Loader(Data):
 
     except KeyError:
       return ZipLoader_v_IntelliCage_Plus_3
-
 
   def _checkVersion(self, zf):
     with self._findAndOpenZipFile(zf, 'DataDescriptor.xml') as fh:
