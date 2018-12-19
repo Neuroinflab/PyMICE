@@ -63,7 +63,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
+from ._Tools import (TimeConverter, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
                      isString, mapAsList)
 from ._Analysis import Aggregator
 
@@ -99,19 +99,6 @@ except Exception as e:
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def fixSessions(sortedTimepoints, sessions=[]):
-  if sessions:
-    assert len(sessions) == 1
-    session = sessions[0]
-    timezone = session.Start.tzinfo
-
-  else:
-    timezone = pytz.utc
-
-  for timepoint in sortedTimepoints:
-    timepoint.append(timezone)
-
-
 class Loader(Data):
   _legacy = {'Animals': {'Name': 'AnimalName',
                          'Tag': 'AnimalTag',
@@ -141,16 +128,12 @@ class Loader(Data):
                             },
                  'Visits': {#'Tag': int,
                             #'_vid': int,
-                            'Start': timeToList,
-                            'End': timeToList,
                             'CornerCondition': convertFloat,
                             'PlaceError': convertFloat,
                             'AntennaDuration': convertFloat,
                             'PresenceDuration': convertFloat,
                             },
                  'Nosepokes': {#'_vid': int,
-                               'Start': timeToList,
-                               'End': timeToList,
                                'LickContactTime': convertFloat,
                                'LickDuration': convertFloat,
                                'SideCondition': convertFloat,
@@ -158,15 +141,11 @@ class Loader(Data):
                                'TimeError': convertFloat,
                                'ConditionError': convertFloat,
                                },
-                 'Log': {'DateTime': timeToList,
-                         'Time':timeToList,
+                 'Log': {
                          },
-                 'Environment': {'DateTime': timeToList,
-                                 'Temperature': convertFloat,
-                                 'Time':timeToList,
+                 'Environment': {'Temperature': convertFloat,
                                  },
-                 'HardwareEvents': {'DateTime': timeToList,
-                                    'Time':timeToList,
+                 'HardwareEvents': {
                                     },
                 }
 
@@ -232,15 +211,21 @@ class Loader(Data):
     ZipLoader = self._getZipLoader(zf)
     self._loadAnimals(zf, ZipLoader)
     tagToAnimal = self._makeTagToAnimalDict()
-    loader = ZipLoader(source, self._cageManager, tagToAnimal)
-
     sessions = self._extractSessions(zf)
+
+    if sessions:
+      assert len(sessions) == 1
+      session = sessions[0]
+      timezone = session.Offset
+
+    else:
+      timezone = pytz.utc
+
+    loader = ZipLoader(source, self._cageManager, tagToAnimal, TimeConverter(timezone))
 
     visits = self._fromZipCSV(zf, 'Visits', source=source)
 
     vids = visits[loader.VISIT_ID_FIELD]
-
-    timeToFix = visits['End'] + visits['Start']
 
     nosepokes = None
     if self._getNp:
@@ -251,9 +236,6 @@ class Loader(Data):
       if len(npVids) > 0: # disables annoying warning on comparison of empty array
         vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
 
-        timeToFix.extend(nosepokes['End'])
-        timeToFix.extend(nosepokes['Start'])
-
         for vid in npVids:
           if vid not in vid2tag:
             warn.warn('Unmatched nosepokes: %s' % vid)
@@ -261,7 +243,6 @@ class Loader(Data):
     log = None
     if self._getLog:
       log = self._fromZipCSV(zf, 'Log', source=source)
-      timeToFix.extend(log[ZipLoader.DATETIME_KEY])
 
     environment = None
     if self._getEnv:
@@ -271,9 +252,6 @@ class Loader(Data):
       except KeyError:
         pass
 
-      else:
-        timeToFix.extend(environment[ZipLoader.DATETIME_KEY])
-
     hardware = None
     if self._getHw:
       try:
@@ -281,16 +259,6 @@ class Loader(Data):
 
       except KeyError:
         pass
-
-      else:
-        timeToFix.extend(hardware[ZipLoader.DATETIME_KEY])
-
-    fixSessions(timeToFix, sessions)
-
-    self.__convertNecessaryFieldsToDatetime(visits, nosepokes,
-                                            log, environment, hardware,
-                                            ZipLoader=ZipLoader)
-
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
     if log is not None:
@@ -360,24 +328,6 @@ class Loader(Data):
       pass
 
     return sessions
-
-  def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
-                                         log, environment, hardware,
-                                         ZipLoader=None):
-    self.__convertTimeBoundsToDatetime(visits)
-    if nosepokes is not None:
-      self.__convertTimeBoundsToDatetime(nosepokes)
-
-    for table in [log, environment, hardware]:
-      if table is not None:
-        self.__convertFieldToDatetime(ZipLoader.DATETIME_KEY, table)
-
-  def __convertTimeBoundsToDatetime(self, visits):
-    self.__convertFieldToDatetime('Start', visits)
-    self.__convertFieldToDatetime('End', visits)
-
-  def __convertFieldToDatetime(self, field, table):
-    table[field] = [datetime(*x) for x in table[field]]
 
   def _getZipLoader(self, zf):
     try:
@@ -833,10 +783,11 @@ class ICCageManager(object):
 
 
 class _ZipLoaderBase(object):
-  def __init__(self, source, cageManager, animalManager):
+  def __init__(self, source, cageManager, animalManager, toDatetime):
     self.__animalManager = animalManager
     self._cageManager = cageManager
     self._source = source
+    self._toDatetime = toDatetime
 
   def _makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
                  CornerCondition, PlaceError,
@@ -851,7 +802,10 @@ class _ZipLoaderBase(object):
       Nosepokes = tuple(self._makeNosepoke(corner, row)\
                         for row in sorted(nosepokeRows))
 
-    return Visit(Start, corner, animal, End,
+    return Visit(self._toDatetime(Start),
+                 corner,
+                 animal,
+                 self._toDatetime(End) if End is not None else None,
                  unicode(ModuleName) if ModuleName is not None else None,
                  cage,
                  int(CornerCondition) if CornerCondition is not None else None,
@@ -861,7 +815,8 @@ class _ZipLoaderBase(object):
                  int(PresenceNumber) if PresenceNumber is not None else None,
                  timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None,
                  int(VisitSolution) if VisitSolution is not None else None,
-                 self._source, _line,
+                 self._source,
+                 _line,
                  Nosepokes)
 
   def _makeNosepoke(self, sideManager, nosepokeTuple):
@@ -870,7 +825,8 @@ class _ZipLoaderBase(object):
      LickNumber, LickContactTime, LickDuration,
      AirState, DoorState, LED1State, LED2State, LED3State,
      _line) = nosepokeTuple
-    return Nosepoke(Start, End,
+    return Nosepoke(self._toDatetime(Start),
+                    self._toDatetime(End) if End is not None else None,
                     sideManager[Side] if Side is not None else None,
                     int(LickNumber) if LickNumber is not None else None,
                     timedelta(seconds=float(LickContactTime)) if LickContactTime is not None else None,
@@ -884,7 +840,9 @@ class _ZipLoaderBase(object):
                     int(LED1State) if LED1State is not None else None,
                     int(LED2State) if LED2State is not None else None,
                     int(LED3State) if LED3State is not None else None,
-                    self._source, _line)
+                    self._source,
+                    _line)
+
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
@@ -925,7 +883,9 @@ class _ZipLoaderBase(object):
                Cage, Corner, Side, Notes, _line):
     cage, corner, side = self._getLogCageCornerSide(Cage, Corner, Side)
 
-    return LogEntry(DateTime, unicode(Category), unicode(Type),
+    return LogEntry(self._toDatetime(DateTime),
+                    unicode(Category),
+                    unicode(Type),
                     cage, corner, side,
                     unicode(Notes) if Notes is not None else None,
                     self._source,
@@ -952,12 +912,23 @@ class _ZipLoaderBase(object):
     cage, corner, side = self._getHwCageCornerSide(Cage, Corner, Side)
 
     try:
-      return self._hwClass[Type](DateTime, cage, corner, side,
-                                 int(State), self._source, _line)
+      return self._hwClass[Type](self._toDatetime(DateTime),
+                                 cage,
+                                 corner,
+                                 side,
+                                 int(State),
+                                 self._source,
+                                 _line)
 
     except KeyError:
-      return UnknownHardwareEvent(DateTime, int(Type), cage, corner, side,
-                                  int(State), self._source, _line)
+      return UnknownHardwareEvent(self._toDatetime(DateTime),
+                                  int(Type),
+                                  cage,
+                                  corner,
+                                  side,
+                                  int(State),
+                                  self._source,
+                                  _line)
 
   def _getHwCageCornerSide(self, Cage, Corner, Side):
     return self._getCageCornerSide(Cage, Corner, Side)
@@ -1016,7 +987,7 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
 
   def _makeEnv(self, DateTime, Temperature, Illumination, Cage,
                _line):
-    return EnvironmentalConditions(DateTime,
+    return EnvironmentalConditions(self._toDatetime(DateTime),
                                    float(Temperature),
                                    int(Illumination),
                                    self._cageManager[Cage] if Cage is not None else None,
@@ -1097,7 +1068,7 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
 
   def _makeEnv(self, DateTime, Temperature, Illumination,
                _line):
-    return EnvironmentalConditions(DateTime,
+    return EnvironmentalConditions(self._toDatetime(DateTime),
                                    float(Temperature),
                                    int(Illumination),
                                    None,
@@ -1148,7 +1119,7 @@ class ZipLoader_v_version1(_ZipLoaderBase):
 
   def _makeEnv(self, DateTime, Temperature, Illumination,
                _line):
-    return EnvironmentalConditions(DateTime,
+    return EnvironmentalConditions(self._toDatetime(DateTime),
                                    float(Temperature),
                                    int(Illumination),
                                    None,

@@ -167,15 +167,23 @@ def convertTime(tStr, tzinfo=None):
   args.extend((secs // 1000000, secs % 1000000, tzinfo))
   return datetime(*args)
 
-def timeToList(tStr):
-  date, time = tStr.split()
-  tokens = date.split('-') + time.split(':')
 
-  if len(tokens) == 5:
-    return list(map(int, tokens)) + [0, 0]
+class TimeConverter(object):
+  def __init__(self, tzinfo):
+    self.tzinfo = tzinfo
 
-  decimal, seconds = modf(float(tokens[5]))
-  return list(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
+  def __call__(self, tStr):
+    date, time = tStr.split()
+    return datetime(*self._tokensToDateTimeArguments(date.split('-') + time.split(':')))
+
+  def _tokensToDateTimeArguments(self, tokens):
+    if len(tokens) == 5:
+      return tuple(map(int, tokens)) + (0, 0, self.tzinfo)
+
+    decimal, seconds = modf(float(tokens[5]))
+    return tuple(map(int,
+                     tokens[:5] + [seconds,
+                                   round(decimal * 1000000)])) + (self.tzinfo,)
 
 
 class timeListList(list):
