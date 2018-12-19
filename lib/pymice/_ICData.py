@@ -54,7 +54,8 @@ except ImportError:
   from itertools import repeat, count
   izip = zip
 
-from datetime import datetime, timedelta, MINYEAR 
+from datetime import datetime, timedelta, MINYEAR
+from dateutil.tz import tzoffset
 
 from .Data import Data
 from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
@@ -310,11 +311,6 @@ class Loader(Data):
       ss = aos.getElementsByTagName('Session')
       sessions = []
       for session in ss:
-        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
-        # offset = offset.childNodes[0]
-        # assert offset.nodeType == offset.TEXT_NODE
-        # offset = offset.nodeValue
-
         interval = session.getElementsByTagName('Interval')[0]
         start = interval.getElementsByTagName('Start')[0]
         start = start.childNodes[0]
@@ -340,7 +336,22 @@ class Loader(Data):
                   (end is not None and sessionStart <= start and end <= sessionEnd):
             warn.warn(UserWarning('Temporal overlap of sessions!'))
 
-        sessions.append(Session(Start=start, End=end))
+        offset = session.getElementsByTagName('TimeZoneOffset')
+        if offset:
+          offset = offset[0].childNodes[0]
+          assert offset.nodeType == offset.TEXT_NODE
+          offset = offset.nodeValue.strip()
+          hours, minutes, seconds = map(int, offset.split(':'))
+          if hours < 0:
+            minutes, seconds = -minutes, -seconds
+
+          offset = tzoffset(offset,
+                            (hours * 60 + minutes) * 60 + seconds)
+
+        else:
+          offset = start.tzinfo
+
+        sessions.append(Session(Start=start, End=end, Offset=offset))
 
       sessions = sorted(sessions, key=attrgetter('Start'))
 

@@ -489,13 +489,14 @@ class DataNode(object):
 
 
 class Session(DataNode):
-  _baseAttrs = ['Start', 'End']
+  _baseAttrs = ['Start', 'End', 'Offset']
 
-  def __init__(self, Start, End, **kwargs):
+  def __init__(self, Start, End, Offset,
+               **kwargs):
     DataNode.__init__(self, **kwargs)
     self.Start = toDt(Start)
     self.End = toDt(End)
-
+    self.Offset = Offset
 
 # TODO
 class Group(DataNode):
