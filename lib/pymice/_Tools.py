@@ -61,7 +61,6 @@ class ArchiveZipFile(zipfile.ZipFile):
       return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
 
 
-
 def timeString(x, tz=None):
   return datetime.fromtimestamp(x, tz).strftime('%Y-%m-%d %H:%M:%S.%f%z')
 

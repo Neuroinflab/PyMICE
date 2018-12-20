@@ -111,6 +111,7 @@ class MockCloneable(Mock):
 
 class BaseTest(TestCase):
   longMessage = True
+
   def checkAttribute(self, obj, name, value=None, cls=None):
     # try:
       attr = getattr(obj, name)
