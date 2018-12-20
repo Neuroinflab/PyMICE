@@ -30,7 +30,8 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc, timezone
 import pymice as pm
-from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
+from pymice._ICData import (ZipLoader,
+                            ZipLoader_v_IntelliCage_Plus_3,
                             ZipLoader_v_version1,
                             ZipLoader_v_version_2_2,
                             Merger, LogEntry, EnvironmentalConditions,
@@ -1788,17 +1789,16 @@ class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
       self.data.insertHw(self.getMockNodeList('HardwareEvent', 2))
 
 
-def getGlobals():
-  dataDir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-  return {
-    #XXX: ml_l1 - not sure if data format is valid
-    'ml_l1': pm.Loader(os.path.join(dataDir, 'legacy_data.zip')),
-    #'ml_a1': pm.Loader(os.path.join(dataDir, 'analyzer_data.txt'), getNpokes=True),
-    'ml_icp3': pm.Loader(os.path.join(dataDir, 'icp3_data.zip'),
-                      getLog=True, getEnv=True),
-    'ml_empty': pm.Loader(os.path.join(dataDir, 'empty_data.zip')),
-    'ml_retagged': pm.Loader(os.path.join(dataDir, 'retagged_data.zip')),
-  }
+### Tests for refactoring of December 2018 ###
+class TestZipLoader(BaseTest):
+  def testGetSubclassReturnsProperLoaderOrNoneIfVersionUnknown(self):
+    for version, cls in [('version1', ZipLoader_v_version1),
+                         ('version_2_2', ZipLoader_v_version_2_2),
+                         ('IntelliCage_Plus_3', ZipLoader_v_IntelliCage_Plus_3),
+                         ('__unknown__', None)]:
+      self.assertIs(ZipLoader.getSubclass(version),
+                    cls)
+
 
 if __name__ == '__main__':
   unittest.main()

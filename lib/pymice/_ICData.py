@@ -329,11 +329,8 @@ class Loader(Data):
     return sessions
 
   def _getZipLoader(self, zf):
-    try:
-      return ZIP_LOADERS[self._checkVersion(zf)]
-
-    except KeyError:
-      return ZipLoader_v_IntelliCage_Plus_3
+    cls = ZipLoader.getSubclass(self._checkVersion(zf))
+    return cls if cls else ZipLoader_v_IntelliCage_Plus_3
 
   def _checkVersion(self, zf):
     with self._findAndOpenZipFile(zf, 'DataDescriptor.xml') as fh:
@@ -780,12 +777,20 @@ class ICCageManager(object):
       cage._del_()
 
 
-class _ZipLoaderBase(object):
+class ZipLoader(object):
   def __init__(self, source, cageManager, animalManager, toDatetime):
     self.__animalManager = animalManager
     self._cageManager = cageManager
     self._source = source
     self._toDatetime = toDatetime
+
+  @classmethod
+  def getSubclass(cls, version):
+    for subclass in cls.__subclasses__():
+      if subclass.__name__ == 'ZipLoader_v_' + version:
+        return subclass
+
+    return None
 
   def _makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
                  CornerCondition, PlaceError,
@@ -951,7 +956,7 @@ class _ZipLoaderBase(object):
     return cage, corner, corner[Side]
 
 
-class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
+class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
   DATETIME_KEY = 'DateTime'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1017,7 +1022,7 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
-class ZipLoader_v_version_2_2(_ZipLoaderBase):
+class ZipLoader_v_version_2_2(ZipLoader):
   DATETIME_KEY = 'Time'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1098,7 +1103,7 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                      columns['GroupName'])
 
 
-class ZipLoader_v_version1(_ZipLoaderBase):
+class ZipLoader_v_version1(ZipLoader):
   DATETIME_KEY = 'DateTime'
 
   def _getCageCornerSide(self, Cage, Corner, Side):
@@ -1177,9 +1182,3 @@ class ZipLoader_v_version1(_ZipLoaderBase):
   def loadGroups(cls, columns):
     return cls.group(columns['Name'],
                      columns['Group'])
-
-ZIP_LOADERS = {
-  'version1': ZipLoader_v_version1,
-  'version_2_2': ZipLoader_v_version_2_2,
-  'IntelliCage_Plus_3': ZipLoader_v_IntelliCage_Plus_3,
-}
