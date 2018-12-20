@@ -1294,7 +1294,7 @@ class ICCageManagerTest(unittest.TestCase):
     self.assertRaises(AttributeError, lambda: setattr(self.cageManager, 'Nonexistingattr', None))
 
 
-class DataTest(unittest.TestCase):
+class DataTestDel(unittest.TestCase):
   def testDel(self):
     ICCage = pm._ICData.ICCage
 
