@@ -1354,17 +1354,18 @@ class MockNodesProvider:
 
 class MergerTest(BaseTest, MockNodesProvider):
   def setUp(self):
+    super(MergerTest, self).setUp()
     self.d1 = pm.Data.Data()
     self.d1._setCageManager(IntIdentityManager())
     self.d2 = pm.Data.Data()
     self.d2._setCageManager(IntIdentityManager())
     self.time1 = datetime(1970, 1, 1, 0, tzinfo=utc)
     self.time2 = datetime(1970, 1, 1, 1, tzinfo=utc)
-    self.runSetUpChain()
 
 
 class MergerOnLoadedLog(MergerTest):
-  def _setUp(self):
+  def setUp(self):
+    super(MergerOnLoadedLog, self).setUp()
     self.d1.insertLog([LogEntry(self.time1,
                                 u'Test', u'D1',
                                 1, 2, 3,
@@ -1388,7 +1389,8 @@ class MergerOnLoadedLog(MergerTest):
 
 
 class MergerOnLoadedEnv(MergerTest):
-  def _setUp(self):
+  def setUp(self):
+    super(MergerOnLoadedEnv, self).setUp()
     self.d1.insertEnv([EnvironmentalConditions(self.time1,
                                                12.5, 255, 1, u'D1', 1)])
     self.d2.insertEnv([EnvironmentalConditions(self.time2,
@@ -1406,7 +1408,8 @@ class MergerOnLoadedEnv(MergerTest):
 
 
 class MergerOnLoadedHw(MergerTest):
-  def _setUp(self):
+  def setUp(self):
+    super(MergerOnLoadedHw, self).setUp()
     self.d1.insertHw([UnknownHardwareEvent(self.time2, 42, 1, 2, 3, 44, u'D1', 1)])
     self.d2.insertHw([AirHardwareEvent(self.time1, 1, 2, 3, 1, u'D2', 1)])
 
@@ -1428,6 +1431,7 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     pass
 
   def setUp(self):
+    super(LoaderIntegrationTest, self).setUp()
     try:
       self.data = self.loadData()
 
@@ -1438,9 +1442,6 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
     except:
       print(self.dataPath())
       raise
-
-    else:
-      self.runSetUpChain()
 
   def loadData(self):
     return pm.Loader(self.dataPath(),
@@ -1743,33 +1744,38 @@ class LoadVersion2_2DataWithoutIntelliCageSubdirTest(LoadVersion2_2DataTest):
     
 class DataTest(BaseTest, MockNodesProvider):
   def setUp(self):
+    super(DataTest, self).setUp()
     self.data = Data()
     self.data._setCageManager(IntIdentityManager())
-    self.runSetUpChain()
 
 
 class OnVisitsLoaded(DataTest):
-  def _setUp(self):
+  def setUp(self):
+    super(OnVisitsLoaded, self).setUp()
     self.visits = self.getMockNodeList('Visit', 2)
     self.data.insertVisits(self.visits)
 
 class OnLogLoaded(DataTest):
-  def _setUp(self):
+  def setUp(self):
+    super(OnLogLoaded, self).setUp()
     self.log = self.getMockNodeList('LogEntry', 3)
     self.data.insertLog(self.log)
 
 class OnEnvLoaded(DataTest):
-  def _setUp(self):
+  def setUp(self):
+    super(OnEnvLoaded, self).setUp()
     self.env = self.getMockNodeList('EnvironmentalConditions', 4)
     self.data.insertEnv(self.env)
 
 class OnHwLoaded(DataTest):
   def _setUp(self):
+    super(OnHwLoaded, self).setUp()
     self.hw = self.getMockNodeList('HardwareEvent', 5)
     self.data.insertHw(self.hw)
 
 class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
-  def _setUp(self):
+  def setUp(self):
+    super(OnFrozen, self).setUp()
     self.data.freeze()
 
   def testInsertVisitRaisesUnableToInsertIntoFrozen(self):

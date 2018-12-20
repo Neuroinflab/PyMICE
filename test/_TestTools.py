@@ -163,12 +163,9 @@ class BaseTest(TestCase):
       #   print(attr)
       #   raise
 
-  def runSetUpChain(self):
-    for cls in reversed(self.__class__.__mro__):
-      if hasattr(cls, '_setUp'):
-        cls._setUp(self)
-
-
   def checkIsSubclass(self, subclass, superclass):
     self.assertTrue(issubclass(subclass,
                                superclass))
+
+  def setUp(self):
+    super(BaseTest, self).setUp()
