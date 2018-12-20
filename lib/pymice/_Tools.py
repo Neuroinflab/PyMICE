@@ -149,7 +149,7 @@ def toDt(tmp):
   if isinstance(tmp, dict):
     return datetime(**tmp)
 
-  tmp = datetime.fromtimestamp(float(tmp)) # FIXME: seems to be broken
+  return datetime.fromtimestamp(float(tmp))
 
 
 
