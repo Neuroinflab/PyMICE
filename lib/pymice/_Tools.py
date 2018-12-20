@@ -37,21 +37,11 @@ import zipfile
 # XXX: imported objects are imported from elsewhere
 if sys.version_info.major >= 3:
   from ._Python3.Tools import isString, mapAsList
-
   import io
-
-  class ArchiveZipFile(zipfile.ZipFile):
-    def open(self, *args, **kwargs):
-      return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
-
   from ._Python3 import Tools
 
 else:
   from ._Python2.Tools import isString, mapAsList
-
-  class ArchiveZipFile(zipfile.ZipFile):
-    pass
-
   from ._Python2 import Tools
 
 # dependence tracking
@@ -59,6 +49,16 @@ from . import _dependencies
 import types
 __dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
                                                       if isinstance(x, types.ModuleType)])
+
+
+class ArchiveZipFile(zipfile.ZipFile):
+  def __init__(self, file, *args, **kwargs):
+    super(ArchiveZipFile, self).__init__(file, *args, **kwargs)
+    self.source = file
+
+  if sys.version_info.major >= 3:
+    def open(self, *args, **kwargs):
+      return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
 
 
 
@@ -211,10 +211,10 @@ class DirectoryZipFile(object):
   A class emulating zipfile.ZipFile behaviour with filesystem directories.
   """
   def __init__(self, path):
-    self.__path = path
+    self.source = path
 
   def open(self, name, mode='r'):
-    fn = os.path.join(self.__path, name)
+    fn = os.path.join(self.source, name)
     try:
       return open(fn, mode)
 

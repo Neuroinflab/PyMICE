@@ -197,29 +197,29 @@ class Loader(Data):
       else:
         zf = ArchiveZipFile(fname)
 
-      self._loadZip(zf, source=fname)
+      self._loadZip(zf)
 
     self._buildCache()
 
-  def _loadZip(self, zf, source=None):
+  def _loadZip(self, zf):
     ZipLoader = self._getZipLoader(zf)
     self._loadAnimals(zf, ZipLoader)
     tagToAnimal = self._makeTagToAnimalDict()
 
     timezone = self._getDataTimezone(zf)
 
-    loader = ZipLoader(source, self._cageManager, tagToAnimal, TimeConverter(timezone))
+    loader = ZipLoader(zf.source, self._cageManager, tagToAnimal, TimeConverter(timezone))
 
-    self._loadVisits(loader, zf, source)
+    self._loadVisits(loader, zf)
 
     if self._getLog:
-      self._tryToLoadLog(loader, zf, source)
+      self._tryToLoadLog(loader, zf)
 
     if self._getEnv:
-      self._tryToLoadEnv(loader, zf, source)
+      self._tryToLoadEnv(loader, zf)
 
     if self._getHw:
-      self._tryToLoadHw(loader, zf, source)
+      self._tryToLoadHw(loader, zf)
 
   def _getDataTimezone(self, zf):
     sessions = self._extractSessions(zf)
@@ -230,13 +230,13 @@ class Loader(Data):
 
     return pytz.utc
 
-  def _loadVisits(self, loader, zf, source):
-    visits = self._fromZipCSV(zf, 'Visits', source=source)
+  def _loadVisits(self, loader, zf):
+    visits = self._fromZipCSV(zf, 'Visits')
     vids = visits[loader.VISIT_ID_FIELD]
 
     nosepokes = None
     if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'Nosepokes', source=source)
+      nosepokes = self._fromZipCSV(zf, 'Nosepokes')
 
       npVids = nosepokes['VisitID']
 
@@ -249,18 +249,18 @@ class Loader(Data):
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
 
-  def _tryToLoadHw(self, loader, zf, source):
-    self._tryToLoad(loader, 'HardwareEvents', zf, source)
+  def _tryToLoadHw(self, loader, zf):
+    self._tryToLoad(loader, 'HardwareEvents', zf)
 
-  def _tryToLoadEnv(self, loader, zf, source):
-    self._tryToLoad(loader, 'Environment', zf, source)
+  def _tryToLoadEnv(self, loader, zf):
+    self._tryToLoad(loader, 'Environment', zf)
 
-  def _tryToLoadLog(self, loader, zf, source):
-    self._tryToLoad(loader, 'Log', zf, source)
+  def _tryToLoadLog(self, loader, zf):
+    self._tryToLoad(loader, 'Log', zf)
 
-  def _tryToLoad(self, loader, table, zf, source):
+  def _tryToLoad(self, loader, table, zf):
     try:
-      loaded = self._fromZipCSV(zf, table, source=source)
+      loaded = self._fromZipCSV(zf, table)
 
     except KeyError:
       pass
@@ -342,10 +342,9 @@ class Loader(Data):
     assert versionStr.nodeType == versionStr.TEXT_NODE
     return versionStr.nodeValue.strip().lower()
 
-  def _fromZipCSV(self, zf, path, source=None):
+  def _fromZipCSV(self, zf, path):
     with self._findAndOpenZipFile(zf, path + '.txt') as fh:
       return self._fromCSV(fh,
-                           source=source,
                            convert=self._convertZip.get(path))
 
   @staticmethod
@@ -356,41 +355,29 @@ class Loader(Data):
     except KeyError:
       return zf.open('IntelliCage/' + path)
 
-  def _fromCSV(self, fh, source=None, convert=None):
+  def _fromCSV(self, fh, convert=None):
     return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
-                          source,
                           convert)
 
-  def __fromCSV(self, data, source, convert):
-    if len(data) == 0:
+  def __fromCSV(self, data, convert):
+    if not data:
       return None
 
     labels = data.pop(0)
 
-    n = len(data)
-    if n == 0:
+    if not data:
       return {l: [] for l in labels}
 
     emptyStringToNone(data)
-    return self.__DictOfColumns(labels, data, source, convert)
+    return self.__DictOfColumns(labels, data, convert)
 
   class __DictOfColumns(dict):
-    def __init__(self, labels, rows, source, conversions):
+    def __init__(self, labels, rows, conversions):
       dict.__init__(self, zip(labels, zip(*rows)))
       self.__rowCount = len(rows)
 
-      if source is not None:
-        self.__appendDebugInformation(source)
-
       if conversions is not None:
         self.__convertCollumns(conversions)
-
-    def __appendDebugInformation(self, source):
-      assert '_source' not in self
-      self['_source'] = [source] * self.__rowCount
-
-      assert '_line' not in self
-      self['_line'] = range(1, self.__rowCount + 1)
 
     def __convertCollumns(self, conversions):
       for label, f in conversions.items():
