@@ -432,30 +432,21 @@ class Data(object):
 # data management
   def insertLog(self, log):
     self._raiseIfFrozen()
-
-    newLog = self.__cloneObjectsWithSourceCageManagers(log)
-    self._insertNewLog(newLog)
-
-  def _insertNewLog(self, lNodes):
-    self.__log.put(lNodes)
+    self._insertNew('Log',
+                    self.__cloneObjectsWithSourceCageManagers(log))
 
   def insertEnv(self, env):
     self._raiseIfFrozen()
-
-    newEnv = self.__cloneObjectsWithSourceCageManagers(env)
-    self._insertNewEnv(newEnv)
-
-  def _insertNewEnv(self, eNodes):
-    self.__environment.put(eNodes)
+    self._insertNew('Environment',
+                    self.__cloneObjectsWithSourceCageManagers(env))
 
   def insertHw(self, hardwareEvents):
     self._raiseIfFrozen()
+    self._insertNew('HardwareEvents',
+                    self.__cloneObjectsWithSourceCageManagers(hardwareEvents))
 
-    newHw = self.__cloneObjectsWithSourceCageManagers(hardwareEvents)
-    self._insertNewHw(newHw)
-
-  def _insertNewHw(self, hNodes):
-    self.__hardware.put(hNodes)
+  def _insertNew(self, objectBaseName, objects):
+    self._objectBases[objectBaseName].put(objects)
 
   def freeze(self):
     self.__frozen = True

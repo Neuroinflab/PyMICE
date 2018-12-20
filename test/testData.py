@@ -503,7 +503,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
             self.assertIs(entry.Side, entry.Corner.items[side])
 
   def testLoadEmptyEnv(self):
-    self.checkMethodWithEmptyData(self.loader.loadEnv,
+    self.checkMethodWithEmptyData(self.loader.loadEnvironment,
                                   self.INPUT_LOAD_ENV)
 
   def checkMethodWithEmptyData(self, method, keys):
@@ -532,14 +532,14 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
       self.assertIs(e.Cage, self.cageManager.items[e.Cage])
 
   def _testLoadEnv(self):
-    envs = self.loader.loadEnv(self.INPUT_LOAD_ENV)
+    envs = self.loader.loadEnvironment(self.INPUT_LOAD_ENV)
 
     self.basicNodeCheck(self.OUTPUT_LOAD_ENV, envs)
 
     return envs
 
   def testLoadEmptyHw(self):
-    self.checkMethodWithEmptyData(self.loader.loadHw,
+    self.checkMethodWithEmptyData(self.loader.loadHardwareEvents,
                                   self.INPUT_LOAD_HW)
 
   INPUT_LOAD_HW = {
@@ -571,7 +571,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                          UnknownHardwareEvent]
 
   def testLoadHw(self):
-    hws = self.loader.loadHw(self.INPUT_LOAD_HW)
+    hws = self.loader.loadHardwareEvents(self.INPUT_LOAD_HW)
 
     expected = self.OUTPUT_LOAD_HW
     self.basicNodeCheck(expected, hws)

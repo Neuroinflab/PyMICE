@@ -205,20 +205,33 @@ class Loader(Data):
     ZipLoader = self._getZipLoader(zf)
     self._loadAnimals(zf, ZipLoader)
     tagToAnimal = self._makeTagToAnimalDict()
-    sessions = self._extractSessions(zf)
 
-    if sessions:
-      assert len(sessions) == 1
-      session = sessions[0]
-      timezone = session.Offset
-
-    else:
-      timezone = pytz.utc
+    timezone = self._getDataTimezone(zf)
 
     loader = ZipLoader(source, self._cageManager, tagToAnimal, TimeConverter(timezone))
 
-    visits = self._fromZipCSV(zf, 'Visits', source=source)
+    self._loadVisits(loader, zf, source)
 
+    if self._getLog:
+      self._tryToLoadLog(loader, zf, source)
+
+    if self._getEnv:
+      self._tryToLoadEnv(loader, zf, source)
+
+    if self._getHw:
+      self._tryToLoadHw(loader, zf, source)
+
+  def _getDataTimezone(self, zf):
+    sessions = self._extractSessions(zf)
+    if sessions:
+      assert len(sessions) == 1
+      session = sessions[0]
+      return session.Offset
+
+    return pytz.utc
+
+  def _loadVisits(self, loader, zf, source):
+    visits = self._fromZipCSV(zf, 'Visits', source=source)
     vids = visits[loader.VISIT_ID_FIELD]
 
     nosepokes = None
@@ -227,42 +240,34 @@ class Loader(Data):
 
       npVids = nosepokes['VisitID']
 
-      if len(npVids) > 0: # disables annoying warning on comparison of empty array
+      if len(npVids) > 0:  # disables annoying warning on comparison of empty array
         vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
 
         for vid in npVids:
           if vid not in vid2tag:
             warn.warn('Unmatched nosepokes: %s' % vid)
 
-    log = None
-    if self._getLog:
-      log = self._fromZipCSV(zf, 'Log', source=source)
-
-    environment = None
-    if self._getEnv:
-      try:
-        environment = self._fromZipCSV(zf, 'Environment', source=source)
-
-      except KeyError:
-        pass
-
-    hardware = None
-    if self._getHw:
-      try:
-        hardware = self._fromZipCSV(zf, 'HardwareEvents', source=source)
-
-      except KeyError:
-        pass
-
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
-    if log is not None:
-      self._insertNewLog(loader.loadLog(log))
 
-    if environment is not None:
-      self._insertNewEnv(loader.loadEnv(environment))
+  def _tryToLoadHw(self, loader, zf, source):
+    self._tryToLoad(loader, 'HardwareEvents', zf, source)
 
-    if hardware is not None:
-      self._insertNewHw(loader.loadHw(hardware))
+  def _tryToLoadEnv(self, loader, zf, source):
+    self._tryToLoad(loader, 'Environment', zf, source)
+
+  def _tryToLoadLog(self, loader, zf, source):
+    self._tryToLoad(loader, 'Log', zf, source)
+
+  def _tryToLoad(self, loader, table, zf, source):
+    try:
+      loaded = self._fromZipCSV(zf, table, source=source)
+
+    except KeyError:
+      pass
+
+    else:
+      self._insertNew(table,
+                      getattr(loader, 'load' + table)(loaded))
 
   def _extractSessions(self, zf):
     try:
@@ -986,13 +991,13 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                                    self._cageManager[Cage] if Cage is not None else None,
                                    self._source, _line)
 
-  def loadEnv(self, columns):
+  def loadEnvironment(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime', 'Temperature',
                                    'Illumination', 'Cage'],
                                   self._makeEnv)
 
-  def loadHw(self, columns):
+  def loadHardwareEvents(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'HardwareType',
@@ -1066,13 +1071,13 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                    int(Illumination),
                                    None,
                                    self._source, _line)
-  def loadEnv(self, columns):
+  def loadEnvironment(self, columns):
      return self._columnsToObjects(columns,
                                   ['Time', 'Temperature',
                                    'Illumination'],
                                   self._makeEnv)
 
-  def loadHw(self, columns):
+  def loadHardwareEvents(self, columns):
     return self._columnsToObjects(columns,
                                   ['Time',
                                    'HardwareType',
@@ -1118,7 +1123,7 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                                    None,
                                    self._source, _line)
 
-  def loadEnv(self, columns):
+  def loadEnvironment(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime', 'Temperature', 'Illumination'],
                                   self._makeEnv)
@@ -1134,7 +1139,7 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                                    'Notes'],
                                   self._makeLog)
 
-  def loadHw(self, columns):
+  def loadHardwareEvents(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'Type',
