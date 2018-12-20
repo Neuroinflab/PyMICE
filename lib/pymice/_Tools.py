@@ -51,14 +51,14 @@ __dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().value
                                                       if isinstance(x, types.ModuleType)])
 
 
-class ArchiveZipFile(zipfile.ZipFile):
+class ZipFileCollection(zipfile.ZipFile):
   def __init__(self, file, *args, **kwargs):
-    super(ArchiveZipFile, self).__init__(file, *args, **kwargs)
+    super(ZipFileCollection, self).__init__(file, *args, **kwargs)
     self.source = file
 
   if sys.version_info.major >= 3:
     def open(self, *args, **kwargs):
-      return io.TextIOWrapper(super(ArchiveZipFile, self).open(*args, **kwargs))
+      return io.TextIOWrapper(super(ZipFileCollection, self).open(*args, **kwargs))
 
 
 def timeString(x, tz=None):
@@ -205,7 +205,7 @@ class timeListList(list):
     return self[0] > x[0]
 
 
-class DirectoryZipFile(object):
+class DirectoryFileCollection(object):
   """
   A class emulating zipfile.ZipFile behaviour with filesystem directories.
   """

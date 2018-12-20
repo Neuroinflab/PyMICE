@@ -30,10 +30,10 @@ import unittest
 from datetime import datetime, timedelta
 from pytz import utc, timezone
 import pymice as pm
-from pymice._ICData import (ZipLoader,
-                            ZipLoader_v_IntelliCage_Plus_3,
-                            ZipLoader_v_version1,
-                            ZipLoader_v_version_2_2,
+from pymice._ICData import (FileCollectionLoader,
+                            FileCollectionLoader_v_IntelliCage_Plus_3,
+                            FileCollectionLoader_v_version1,
+                            FileCollectionLoader_v_version_2_2,
                             Merger, LogEntry, EnvironmentalConditions,
                             AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
                             UnknownHardwareEvent, ICCage, ICCageManager)
@@ -68,8 +68,8 @@ def floatToTimedelta(seq):
 
 
 
-class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
-  loaderClass = ZipLoader_v_IntelliCage_Plus_3
+class TestFileCollectionLoader_v_IntelliCage_Plus_3(BaseTest):
+  loaderClass = FileCollectionLoader_v_IntelliCage_Plus_3
 
   def setUp(self):
     self.cageManager = MockIntDictManager()
@@ -594,8 +594,8 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
       self.checkAttributeSeq(nodes, name, tests)
 
 
-class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
-  loaderClass = ZipLoader_v_version1
+class TestFileCollectionLoader_v_Version1(TestFileCollectionLoader_v_IntelliCage_Plus_3):
+  loaderClass = FileCollectionLoader_v_version1
 
   INPUT_LOAD_ANIMALS = {'Name': ['Minie', 'Mickey', 'Jerry'],
                         'Tag': ['1337', '42', '69'],
@@ -885,8 +885,8 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                                                     'LED2State',
                                                     'LED3State',]
 
-class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
-  loaderClass = ZipLoader_v_version_2_2
+class TestFileCollectionLoader_v_Version2(TestFileCollectionLoader_v_IntelliCage_Plus_3):
+  loaderClass = FileCollectionLoader_v_version_2_2
 
   INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],
@@ -1796,13 +1796,13 @@ class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
 
 
 ### Tests for refactoring of December 2018 ###
-class TestZipLoader(BaseTest):
+class TestFileCollectionLoader(BaseTest):
   def testGetSubclassReturnsProperLoaderOrNoneIfVersionUnknown(self):
-    for version, cls in [('version1', ZipLoader_v_version1),
-                         ('version_2_2', ZipLoader_v_version_2_2),
-                         ('IntelliCage_Plus_3', ZipLoader_v_IntelliCage_Plus_3),
+    for version, cls in [('version1', FileCollectionLoader_v_version1),
+                         ('version_2_2', FileCollectionLoader_v_version_2_2),
+                         ('IntelliCage_Plus_3', FileCollectionLoader_v_IntelliCage_Plus_3),
                          ('__unknown__', None)]:
-      self.assertIs(ZipLoader.getSubclass(version),
+      self.assertIs(FileCollectionLoader.getSubclass(version),
                     cls)
 
 

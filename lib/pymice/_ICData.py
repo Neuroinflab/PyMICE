@@ -63,7 +63,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       DoorHardwareEvent, LedHardwareEvent,
                       UnknownHardwareEvent, Session)
 
-from ._Tools import (TimeConverter, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
+from ._Tools import (TimeConverter, ZipFileCollection, DirectoryFileCollection, warn, groupBy,
                      isString, mapAsList)
 from ._Analysis import Aggregator
 
@@ -179,50 +179,50 @@ class Loader(Data):
     self.freeze()
 
 
-  def _appendData(self, fname):
+  def _appendData(self, source):
     """
     Process one input file and append data to self.data
     """
     if self.__verbose:
-      if isinstance(fname, str): #XXX: Python3
-        print('loading data from {}'.format(fname))
+      if isinstance(source, str): #XXX: Python3
+        print('loading data from {}'.format(source))
 
       else:
-        print('loading data from {}'.format(fname.encode('utf-8')))
+        print('loading data from {}'.format(source.encode('utf-8')))
 
-    if fname.endswith('.zip') or os.path.isdir(fname):
-      if isString(fname) and os.path.isdir(fname):
-        zf = DirectoryZipFile(fname)
+    if source.endswith('.zip') or os.path.isdir(source):
+      FileCollection = DirectoryFileCollection if self._isDir(source) else ZipFileCollection
 
-      else:
-        zf = ArchiveZipFile(fname)
-
-      self._loadZip(zf)
+      self._load(FileCollection(source))
 
     self._buildCache()
 
-  def _loadZip(self, zf):
-    ZipLoader = self._getZipLoader(zf)
-    self._loadAnimals(zf, ZipLoader)
+  @staticmethod
+  def _isDir(source):
+    return isString(source) and os.path.isdir(source)
+
+  def _load(self, fileCollection):
+    FileCollectionLoader = self._getFileCollectionLoader(fileCollection)
+    self._loadAnimals(fileCollection, FileCollectionLoader)
     tagToAnimal = self._makeTagToAnimalDict()
 
-    timezone = self._getDataTimezone(zf)
+    timezone = self._getDataTimezone(fileCollection)
 
-    loader = ZipLoader(zf.source, self._cageManager, tagToAnimal, TimeConverter(timezone))
+    loader = FileCollectionLoader(fileCollection.source, self._cageManager, tagToAnimal, TimeConverter(timezone))
 
-    self._loadVisits(loader, zf)
+    self._loadVisits(loader, fileCollection)
 
     if self._getLog:
-      self._tryToLoadLog(loader, zf)
+      self._tryToLoadLog(loader, fileCollection)
 
     if self._getEnv:
-      self._tryToLoadEnv(loader, zf)
+      self._tryToLoadEnv(loader, fileCollection)
 
     if self._getHw:
-      self._tryToLoadHw(loader, zf)
+      self._tryToLoadHw(loader, fileCollection)
 
-  def _getDataTimezone(self, zf):
-    sessions = self._extractSessions(zf)
+  def _getDataTimezone(self, fileCollection):
+    sessions = self._extractSessions(fileCollection)
     if sessions:
       assert len(sessions) == 1
       session = sessions[0]
@@ -230,13 +230,13 @@ class Loader(Data):
 
     return pytz.utc
 
-  def _loadVisits(self, loader, zf):
-    visits = self._fromZipCSV(zf, 'Visits')
+  def _loadVisits(self, loader, fileCollection):
+    visits = self._fromZipCSV(fileCollection, 'Visits')
     vids = visits[loader.VISIT_ID_FIELD]
 
     nosepokes = None
     if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'Nosepokes')
+      nosepokes = self._fromZipCSV(fileCollection, 'Nosepokes')
 
       npVids = nosepokes['VisitID']
 
@@ -249,18 +249,18 @@ class Loader(Data):
 
     self._insertNewVisits(loader.loadVisits(visits, nosepokes))
 
-  def _tryToLoadHw(self, loader, zf):
-    self._tryToLoad(loader, 'HardwareEvents', zf)
+  def _tryToLoadHw(self, loader, fileCollection):
+    self._tryToLoad(loader, 'HardwareEvents', fileCollection)
 
-  def _tryToLoadEnv(self, loader, zf):
-    self._tryToLoad(loader, 'Environment', zf)
+  def _tryToLoadEnv(self, loader, fileCollection):
+    self._tryToLoad(loader, 'Environment', fileCollection)
 
-  def _tryToLoadLog(self, loader, zf):
-    self._tryToLoad(loader, 'Log', zf)
+  def _tryToLoadLog(self, loader, fileCollection):
+    self._tryToLoad(loader, 'Log', fileCollection)
 
-  def _tryToLoad(self, loader, table, zf):
+  def _tryToLoad(self, loader, table, fileCollection):
     try:
-      loaded = self._fromZipCSV(zf, table)
+      loaded = self._fromZipCSV(fileCollection, table)
 
     except KeyError:
       pass
@@ -269,9 +269,9 @@ class Loader(Data):
       self._insertNew(table,
                       getattr(loader, 'load' + table)(loaded))
 
-  def _extractSessions(self, zf):
+  def _extractSessions(self, fileCollection):
     try:
-      with self._findAndOpenZipFile(zf, 'Sessions.xml') as fh:
+      with self._findAndOpenZipFile(fileCollection, 'Sessions.xml') as fh:
         dom = minidom.parse(fh)
 
       aos = dom.getElementsByTagName('ArrayOfSession')[0]
@@ -328,12 +328,12 @@ class Loader(Data):
 
     return sessions
 
-  def _getZipLoader(self, zf):
-    cls = ZipLoader.getSubclass(self._checkVersion(zf))
-    return cls if cls else ZipLoader_v_IntelliCage_Plus_3
+  def _getFileCollectionLoader(self, fileCollection):
+    cls = FileCollectionLoader.getSubclass(self._checkVersion(fileCollection))
+    return cls if cls else FileCollectionLoader_v_IntelliCage_Plus_3
 
-  def _checkVersion(self, zf):
-    with self._findAndOpenZipFile(zf, 'DataDescriptor.xml') as fh:
+  def _checkVersion(self, fileCollection):
+    with self._findAndOpenZipFile(fileCollection, 'DataDescriptor.xml') as fh:
       dom = minidom.parse(fh)
 
     dd = dom.getElementsByTagName('DataDescriptor')[0]
@@ -342,18 +342,18 @@ class Loader(Data):
     assert versionStr.nodeType == versionStr.TEXT_NODE
     return versionStr.nodeValue.strip().lower()
 
-  def _fromZipCSV(self, zf, path):
-    with self._findAndOpenZipFile(zf, path + '.txt') as fh:
+  def _fromZipCSV(self, fileCollection, path):
+    with self._findAndOpenZipFile(fileCollection, path + '.txt') as fh:
       return self._fromCSV(fh,
                            convert=self._convertZip.get(path))
 
   @staticmethod
-  def _findAndOpenZipFile(zf, path):
+  def _findAndOpenZipFile(fileCollection, path):
     try:
-      return zf.open(path)
+      return fileCollection.open(path)
 
     except KeyError:
-      return zf.open('IntelliCage/' + path)
+      return fileCollection.open('IntelliCage/' + path)
 
   def _fromCSV(self, fh, convert=None):
     return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
@@ -407,8 +407,8 @@ class Loader(Data):
                self._fnames.__str__()
     return mystring
 
-  def _loadAnimals(self, zf, loader):
-    animalData = self._fromZipCSV(zf, 'Animals')
+  def _loadAnimals(self, fileCollection, loader):
+    animalData = self._fromZipCSV(fileCollection, 'Animals')
 
     animals = loader.loadAnimals(animalData)
 
@@ -764,7 +764,7 @@ class ICCageManager(object):
       cage._del_()
 
 
-class ZipLoader(object):
+class FileCollectionLoader(object):
   def __init__(self, source, cageManager, animalManager, toDatetime):
     self.__animalManager = animalManager
     self._cageManager = cageManager
@@ -774,7 +774,7 @@ class ZipLoader(object):
   @classmethod
   def getSubclass(cls, version):
     for subclass in cls.__subclasses__():
-      if subclass.__name__ == 'ZipLoader_v_' + version:
+      if subclass.__name__ == 'FileCollectionLoader_v_' + version:
         return subclass
 
     return None
@@ -943,7 +943,7 @@ class ZipLoader(object):
     return cage, corner, corner[Side]
 
 
-class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
+class FileCollectionLoader_v_IntelliCage_Plus_3(FileCollectionLoader):
   DATETIME_KEY = 'DateTime'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1009,7 +1009,7 @@ class ZipLoader_v_IntelliCage_Plus_3(ZipLoader):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
-class ZipLoader_v_version_2_2(ZipLoader):
+class FileCollectionLoader_v_version_2_2(FileCollectionLoader):
   DATETIME_KEY = 'Time'
 
   VISIT_FIELDS = ['Cage', 'Corner',
@@ -1090,7 +1090,7 @@ class ZipLoader_v_version_2_2(ZipLoader):
                      columns['GroupName'])
 
 
-class ZipLoader_v_version1(ZipLoader):
+class FileCollectionLoader_v_version1(FileCollectionLoader):
   DATETIME_KEY = 'DateTime'
 
   def _getCageCornerSide(self, Cage, Corner, Side):
