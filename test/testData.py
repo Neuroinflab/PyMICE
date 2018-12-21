@@ -27,6 +27,7 @@ import sys
 import os
 import unittest
 
+from collections import namedtuple
 from datetime import datetime, timedelta
 from pytz import utc, timezone
 import pymice as pm
@@ -34,6 +35,10 @@ from pymice._ICData import (FileCollectionLoader,
                             FileCollectionLoader_v_IntelliCage_Plus_3,
                             FileCollectionLoader_v_version1,
                             FileCollectionLoader_v_version_2_2,
+                            _FileCollectionLoader,
+                            _FileCollectionLoader_v_Version1,
+                            _FileCollectionLoader_v_IntelliCage_Plus_3,
+                            _FileCollectionLoader_v_Version_2_2,
                             Merger, LogEntry, EnvironmentalConditions,
                             AirHardwareEvent, DoorHardwareEvent, LedHardwareEvent,
                             UnknownHardwareEvent, ICCage, ICCageManager)
@@ -51,6 +56,10 @@ except SystemError:
 
 if sys.version_info >= (3, 0):
   unicode = str
+  from io import StringIO
+
+else:
+  from cStringIO import StringIO
 
 
 def toStrings(seq):
@@ -1450,6 +1459,7 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
   def dataFilename(self):
     try:
       return self.DATA_FILE
+
     except AttributeError:
       raise self.NoDataFilenameAttributeError
 
@@ -1805,6 +1815,148 @@ class TestFileCollectionLoader(BaseTest):
       self.assertIs(FileCollectionLoader.getSubclass(version),
                     cls)
 
+_Animal = namedtuple('_Animal', ('Name', 'Tag', 'Sex', 'Notes'))
+
+class Test_FileCollectionLoaderBase(BaseTest):
+  DATA_DESCRIPTOR_PATH = 'DataDescriptor.xml'
+
+  class DictionaryFileCollection(dict):
+    class StringWrapper(object):
+      def __init__(self, data):
+        self._data = StringIO(data)
+
+      def __enter__(self):
+        try:
+          return self._data.__enter__()
+
+        except AttributeError:
+          return self._data
+
+      def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+          return self._data.__exit__(exc_type, exc_val, exc_tb)
+
+        except AttributeError:
+          pass
+
+    def open(self, path, mode='r'):
+      return self.StringWrapper(self[path])
+
+  def setUp(self):
+    super(Test_FileCollectionLoaderBase, self).setUp()
+    if self._isAbstractClassObject():
+      self.skipTest('Tests declared in abstract class')
+      return # False
+
+    self._setUpFileCollection()
+    self._loader = _FileCollectionLoader.getLoader(self._fileCollection)
+    # return True
+
+  def _isAbstractClassObject(self):
+    if not hasattr(self, 'CLASS'):
+      return True
+
+    return not self._canSetUpFileCollection()
+
+  def _canSetUpFileCollection(self):
+    for attrName in ['DATA_DESCRIPTOR',
+                     'ANIMALS',
+                     ]:
+      for attrSuffix in ['', '_PATH']:
+        if not hasattr(self, attrName + attrSuffix):
+          return False
+
+    return True
+
+  def _setUpFileCollection(self):
+    self._fileCollection = self.DictionaryFileCollection(
+      {
+        self.DATA_DESCRIPTOR_PATH: self.DATA_DESCRIPTOR,
+        self.ANIMALS_PATH: self._getAnimalsFile(),
+      })
+
+  def _getAnimalsFile(self):
+    return '\t'.join(self.ANIMALS_FIELDS) + '\n'
+
+  def testClassIsSubclassOfNewFileCollectionLoader(self):
+    self.assertTrue(issubclass(self.CLASS, _FileCollectionLoader))
+
+  def testGetLoaderReturnsClassInstance(self):
+    self.assertIsInstance(self._loader, self.CLASS)
+
+  def testLoaderHasProperVersionAttribute(self):
+    self.assertEqual(self.VERSION,
+                     self._loader.version)
+
+  def testGetAnimals(self):
+    self.assertEqual(self.ANIMALS,
+                     self._loader.getAnimals())
+
+
+class Test_FileCollectionLoader_v_Version1(Test_FileCollectionLoaderBase):
+  CLASS = _FileCollectionLoader_v_Version1
+  VERSION = 'Version1'
+
+  DATA_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
+<DataDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Version>Version1</Version>
+</DataDescriptor>"""
+
+  ANIMALS_PATH = 'Animals.txt'
+  ANIMALS_FIELDS = ['Name',
+                    'Tag',
+                    'Sex',
+                    'Group',
+                    'Notes']
+
+
+class Test_FileCollectionLoader_v_Version_2_2(Test_FileCollectionLoaderBase):
+  CLASS = _FileCollectionLoader_v_Version_2_2
+  VERSION = 'Version_2_2'
+
+  DATA_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
+<DataDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Version>Version_2_2</Version>
+</DataDescriptor>"""
+
+  ANIMALS_PATH = 'Animals.txt'
+  ANIMALS_FIELDS = ['AnimalName',
+                    'AnimalTag',
+                    'Sex',
+                    'GroupName',
+                    'AnimalNotes']
+
+
+class Test_FileCollectionLoader_v_IntelliCage_Plus_3(Test_FileCollectionLoaderBase):
+  CLASS = _FileCollectionLoader_v_IntelliCage_Plus_3
+  VERSION = 'IntelliCage_Plus_3'
+
+  DATA_DESCRIPTOR = """<?xml version="1.0" encoding="utf-8"?>
+<DataDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Version>IntelliCage_Plus_3</Version>
+</DataDescriptor>"""
+
+  ANIMALS_PATH = 'Animals.txt'
+  ANIMALS_FIELDS = ['AnimalName',
+                    'AnimalTag',
+                    'Sex',
+                    'GroupName',
+                    'AnimalNotes']
+
+class TestNewFileCollectionLoader_givenNoAnimals(Test_FileCollectionLoaderBase):
+  ANIMALS = []
+
+
+def load_tests(loader, standard_tests, pattern):
+  for cls in [Test_FileCollectionLoader_v_Version1,
+              Test_FileCollectionLoader_v_Version_2_2,
+              Test_FileCollectionLoader_v_IntelliCage_Plus_3,
+              ]:
+    standard_tests.addTest(loader.loadTestsFromTestCase(
+      type(cls.__name__ + '_DD',
+           (cls, TestNewFileCollectionLoader_givenNoAnimals),
+           {})))
+  return standard_tests
 
 if __name__ == '__main__':
   unittest.main()

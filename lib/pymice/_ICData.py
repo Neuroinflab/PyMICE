@@ -764,6 +764,50 @@ class ICCageManager(object):
       cage._del_()
 
 
+class _FileCollectionLoader(object):
+  DATA_DESCRIPTOR_PATH = 'DataDescriptor.xml'
+
+  @classmethod
+  def canLoad(cls, fileCollection):
+    return cls.version == cls._getVersion(fileCollection)
+
+  @classmethod
+  def _getVersion(cls, fileCollection):
+    try:
+      with fileCollection.open(cls.DATA_DESCRIPTOR_PATH) as fh:
+        dom = minidom.parse(fh)
+
+    except KeyError:
+      return None
+
+    dd = dom.getElementsByTagName('DataDescriptor')[0]
+    versionNode = dd.getElementsByTagName('Version')[0]
+    versionStr = versionNode.childNodes[0]
+    assert versionStr.nodeType == versionStr.TEXT_NODE
+    return versionStr.nodeValue.strip()
+
+  @classmethod
+  def getLoader(cls, fileCollection):
+    for subclass in cls.__subclasses__():
+      if subclass.canLoad(fileCollection):
+        return subclass()
+
+  def getAnimals(self):
+    return []
+
+
+class _FileCollectionLoader_v_Version1(_FileCollectionLoader):
+  version = 'Version1'
+
+
+class _FileCollectionLoader_v_Version_2_2(_FileCollectionLoader):
+  version = 'Version_2_2'
+
+
+class _FileCollectionLoader_v_IntelliCage_Plus_3(_FileCollectionLoader):
+  version = 'IntelliCage_Plus_3'
+
+
 class FileCollectionLoader(object):
   def __init__(self, source, cageManager, animalManager, toDatetime):
     self.__animalManager = animalManager
