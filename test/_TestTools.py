@@ -150,8 +150,8 @@ class BaseTest(TestCase):
       else:
         self.checkAttribute(obj, name, test)
 
-  def checkObjectsEquals(self, a, b, skip=()):
-    for attr in self.attributes:
+  def checkObjectsEquals(self, a, b, skip=(), attributes=None):
+    for attr in self.attributes if attributes is None else attributes:
       if attr in skip:
         continue
 
@@ -162,6 +162,13 @@ class BaseTest(TestCase):
       # except AssertionError:
       #   print(attr)
       #   raise
+
+  def checkObjectSequenceEquals(self, expected, observed,
+                                skip=(),
+                                attributes=None):
+    for e, o in zip(expected, observed):
+      self.checkObjectsEquals(e, o, skip,
+                              self.attributes if attributes is None else attributes)
 
   def checkIsSubclass(self, subclass, superclass):
     self.assertTrue(issubclass(subclass,
