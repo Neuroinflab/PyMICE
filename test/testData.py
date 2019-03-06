@@ -50,7 +50,7 @@ try:
   from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
                            isString)
 
-except SystemError:
+except (SystemError, ValueError):
   from _TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
                           isString)
 
