@@ -1,10 +1,10 @@
 language: python
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+#  - "3.3"
+#  - "3.4"
+#  - "3.5"
+#  - "3.6"
 #  - "3.5-dev"
 #  - "nightly"
 #  - "pypy"
@@ -12,6 +12,14 @@ python:
 os:
   - linux
 #  - osx
+
+env:
+  matrix:
+    - PYTHON_VERSION="2.7"
+    - PYTHON_VERSION="3.3"
+    - PYTHON_VERSION="3.4"
+    - PYTHON_VERSION="3.5"
+    - PYTHON_VERSION="3.6"
 
 before_install:
 #  - pip install --upgrade pip
@@ -31,7 +39,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy pytz python-dateutil cython
+  - conda create -q -n test-environment python=$PYTHON_VERSION matplotlib numpy pytz python-dateutil cython
   - source activate test-environment
   - python setup.py install
   - make
