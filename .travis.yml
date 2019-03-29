@@ -15,12 +15,18 @@ os:
 
 env:
   matrix:
-    - PYTHON_VERSION="2.7"
-    - PYTHON_VERSION="3.3"
-    - PYTHON_VERSION="3.4"
-    - PYTHON_VERSION="3.5"
-    - PYTHON_VERSION="3.6"
-    - PYTHON_VERSION="3.7"
+    - PYTHON_VERSION="2.7" CYTHON=""
+    - PYTHON_VERSION="3.3" CYTHON=""
+    - PYTHON_VERSION="3.4" CYTHON=""
+    - PYTHON_VERSION="3.5" CYTHON=""
+    - PYTHON_VERSION="3.6" CYTHON=""
+    - PYTHON_VERSION="3.7" CYTHON=""
+    - PYTHON_VERSION="2.7" CYTHON="cython"
+    - PYTHON_VERSION="3.3" CYTHON="cython"
+    - PYTHON_VERSION="3.4" CYTHON="cython"
+    - PYTHON_VERSION="3.5" CYTHON="cython"
+    - PYTHON_VERSION="3.6" CYTHON="cython"
+    - PYTHON_VERSION="3.7" CYTHON="cython"
 
 before_install:
 #  - pip install --upgrade pip
@@ -40,7 +46,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test-environment python=$PYTHON_VERSION matplotlib numpy pytz python-dateutil cython
+  - conda create -q -n test-environment python=$PYTHON_VERSION matplotlib numpy pytz python-dateutil $CYTHON
   - source activate test-environment
   - python setup.py install
   - make
