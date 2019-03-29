@@ -26,8 +26,16 @@
 import unittest
 from sys import getrefcount
 
-from pymice._cymice import emptyStringToNone
+try:
+  import pymice._cymice
 
+except ImportError:
+  emptyStringToNone = None
+
+else:
+  from pymice._cymice import emptyStringToNone
+
+@unittest.skipIf(emptyStringToNone is None, 'unable to import pymice._cymice')
 class TestEmptyStringToNone(unittest.TestCase):
   def testEmptyList(self):
     self._checkList([], [])
