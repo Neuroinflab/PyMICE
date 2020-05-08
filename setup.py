@@ -25,6 +25,7 @@
 
 import os, sys, logging
 
+
 def loadUTF8(path):
     if sys.version_info.major >= 3:
         return open(path, encoding='utf-8').read()
@@ -85,7 +86,7 @@ SETUP_PARAMETERS = {
                                 ]},
 }
 
-INSTALL_REQUIRES = ['python-dateutil', 'matplotlib', 'numpy', 'pytz']
+INSTALL_REQUIRES = loadTextFrom('requirements.txt').split()
 
 WARNINGS = []
 
