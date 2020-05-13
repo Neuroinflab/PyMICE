@@ -77,7 +77,6 @@ def floatToTimedelta(seq):
   return [timedelta(seconds=x) if x is not None else None for x in seq]
 
 
-
 class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
   loaderClass = ZipLoader_v_IntelliCage_Plus_3
 
@@ -1826,20 +1825,24 @@ class OnVisitsLoaded(DataTest):
     self.visits = self.getMockNodeList('Visit', 2)
     self.data.insertVisits(self.visits)
 
+
 class OnLogLoaded(DataTest):
   def _setUp(self):
     self.log = self.getMockNodeList('LogEntry', 3)
     self.data.insertLog(self.log)
+
 
 class OnEnvLoaded(DataTest):
   def _setUp(self):
     self.env = self.getMockNodeList('EnvironmentalConditions', 4)
     self.data.insertEnv(self.env)
 
+
 class OnHwLoaded(DataTest):
   def _setUp(self):
     self.hw = self.getMockNodeList('HardwareEvent', 5)
     self.data.insertHw(self.hw)
+
 
 class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
   def _setUp(self):

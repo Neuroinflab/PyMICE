@@ -881,6 +881,7 @@ class _ZipLoaderBase(object):
                     int(LED2State) if LED2State is not None else None,
                     int(LED3State) if LED3State is not None else None,
                     self._source, _line)
+
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
@@ -1090,12 +1091,14 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                                    'Side',
                                    'State'],
                                   self._makeHw)
+
   @classmethod
   def loadAnimals(cls, columns):
     return cls._columnsToObjects(columns,
                                  ['AnimalName', 'AnimalTag','Sex',
                                   'AnimalNotes'],
                                  cls._makeAnimal)
+
   @classmethod
   def loadGroups(cls, columns):
     return cls.group(columns['AnimalName'],
@@ -1155,6 +1158,7 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                    int(Illumination),
                                    None,
                                    self._source, _line)
+
   def loadEnv(self, columns):
      return self._columnsToObjects(columns,
                                   ['Time', 'Temperature',
@@ -1170,12 +1174,14 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                    'Side',
                                    'State'],
                                   self._makeHw)
+
   @classmethod
   def loadAnimals(cls, columns):
     return cls._columnsToObjects(columns,
                                  ['AnimalName', 'AnimalTag','Sex',
                                   'AnimalNotes'],
                                  cls._makeAnimal)
+
   @classmethod
   def loadGroups(cls, columns):
     return cls.group(columns['AnimalName'],
