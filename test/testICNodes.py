@@ -34,10 +34,17 @@ from pymice.ICNodes import (Animal, Visit, Nosepoke,
                             AirHardwareEvent, DoorHardwareEvent,
                             LedHardwareEvent, UnknownHardwareEvent,
                             NamedInt)
-from ._TestTools import (allInstances, Mock, MockIntDictManager,
-                         MockStrDictManager, MockCloneable,
-                         BaseTest)
-
+try:
+    from ._TestTools import (allInstances, Mock, MockIntDictManager,
+                             MockStrDictManager, MockCloneable,
+                             BaseTest)
+except (ImportError, SystemError):
+    # When run as script raises:
+    #  - `ModuleNotFoundError(ImportError)` (Python 3.6-7), or
+    #  - `SystemError` (Python 3.3-5).
+    from _TestTools import (allInstances, Mock, MockIntDictManager,
+                             MockStrDictManager, MockCloneable,
+                             BaseTest)
 
 if sys.version_info >= (3, 0):
   unicode = str

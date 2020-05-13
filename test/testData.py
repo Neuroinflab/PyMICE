@@ -41,8 +41,15 @@ from pymice.Data import Data, IntIdentityManager
 
 import minimock
 
-from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
-                         isString)
+try:
+  from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                           isString)
+except (ImportError, SystemError):
+  # When run as script raises:
+  #  - `ModuleNotFoundError(ImportError)` (Python 3.6-7), or
+  #  - `SystemError` (Python 3.3-5).
+  from _TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                          isString)
 
 if sys.version_info >= (3, 0):
   unicode = str
