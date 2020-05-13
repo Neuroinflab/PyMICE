@@ -26,8 +26,9 @@
 import sys
 import os
 import unittest
+import io
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from pytz import utc, timezone
 import pymice as pm
 from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
@@ -45,6 +46,14 @@ from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
 
 if sys.version_info >= (3, 0):
   unicode = str
+
+
+class MockZipFile(object):
+    def __init__(self, files):
+        self._files = files
+
+    def open(self, name):
+        return io.BytesIO(self._files[name])
 
 
 def toStrings(seq):
@@ -72,6 +81,65 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     self.loader = self.loaderClass(self.source,
                                    self.cageManager,
                                    self.animalManager)
+
+  SESSION_OFFSET = dt_timezone(timedelta(hours=1))
+  SESSION_START = datetime(year=2012,
+                           month=12,
+                           day=18,
+                           hour=12,
+                           minute=13,
+                           second=1,
+                           microsecond=109375,
+                           tzinfo=SESSION_OFFSET)
+  SESSION_END = datetime(year=2012,
+                         month=12,
+                         day=18,
+                         hour=12,
+                         minute=20,
+                         second=37,
+                         microsecond=718750,
+                         tzinfo=SESSION_OFFSET)
+  SESSIONS_XML = """<?xml version="1.0" encoding="utf-8"?>
+  <ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <Session Id="0">
+      <TimeZoneOffset>01:00:00</TimeZoneOffset>
+      <Interval>
+        <Start>2012-12-18T12:13:01.109375+01:00</Start>
+        <End>2012-12-18T12:20:37.71875+01:00</End>
+      </Interval>
+      <StartLocalTimeString>2012-12-18 12:13:01.109</StartLocalTimeString>
+      <EndLocalTimeString>2012-12-18 12:20:37.718</EndLocalTimeString>
+      <ExperimentFileName>Fake data.experiment</ExperimentFileName>
+      <VisitMode>Mode2</VisitMode>
+      <VisitDurationLimit>10</VisitDurationLimit>
+      <DiagnosticMode>false</DiagnosticMode>
+      <SoftwareVersion>2.14.1.0</SoftwareVersion>
+      <Hardware>
+        <SerialPort>
+          <PortName>COM3</PortName>
+          <BaudRate>115200</BaudRate>
+          <ReadBufferSize>4096</ReadBufferSize>
+          <WriteBufferSize>4096</WriteBufferSize>
+        </SerialPort>
+        <CanDevice>
+          <VciObjectId>2</VciObjectId>
+          <Manufacturer>IXXAT Automation GmbH</Manufacturer>
+          <HardwareVersion>1.5</HardwareVersion>
+          <DriverVersion>1.3</DriverVersion>
+          <DeviceClass>853857b3-0b08-454c-93fb-2d166b72a5aa</DeviceClass>
+          <Description>USB-to-CAN compact</Description>
+        </CanDevice>
+      </Hardware>
+    </Session>
+  </ArrayOfSession>
+  """
+
+  def testExtractSessions(self):
+    zf = MockZipFile({'Sessions.xml': self.SESSIONS_XML.encode('utf-8')})
+    sessions = self.loader.extractSessions(zf)
+    self.assertEqual(1, len(sessions))
+    self.assertEqual(self.SESSION_START, sessions[0].Start)
+    self.assertEqual(self.SESSION_END, sessions[0].End)
 
   INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],

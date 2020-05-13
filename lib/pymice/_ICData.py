@@ -229,7 +229,7 @@ class Loader(Data):
     tagToAnimal = self._makeTagToAnimalDict()
     loader = ZipLoader(source, self._cageManager, tagToAnimal)
 
-    sessions = self._extractSessions(zf)
+    sessions = loader.extractSessions(zf)
 
     timeOrderer = LatticeOrderer()
 
@@ -362,54 +362,6 @@ class Loader(Data):
     if hardware is not None:
       self._insertNewHw(loader.loadHw(hardware))
 
-  def _extractSessions(self, zf):
-    try:
-      with self._findAndOpenZipFile(zf, 'Sessions.xml') as fh:
-        dom = minidom.parse(fh)
-
-      aos = dom.getElementsByTagName('ArrayOfSession')[0]
-      ss = aos.getElementsByTagName('Session')
-      sessions = []
-      for session in ss:
-        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
-        # offset = offset.childNodes[0]
-        # assert offset.nodeType == offset.TEXT_NODE
-        # offset = offset.nodeValue
-
-        interval = session.getElementsByTagName('Interval')[0]
-        start = interval.getElementsByTagName('Start')[0]
-        start = start.childNodes[0]
-        assert start.nodeType == start.TEXT_NODE
-        start = dateutil.parser.parse(start.nodeValue)
-
-        end = interval.getElementsByTagName('End')[0]
-        end = end.childNodes[0]
-        assert end.nodeType == end.TEXT_NODE
-        end = end.nodeValue
-        end = None if end.startswith('0001') else dateutil.parser.parse(end)
-
-        if end is not None and start.tzinfo != end.tzinfo:
-          warn.warn(UserWarning('Timezone changed!'))
-
-        for sessionStart, sessionEnd in sessions:
-          if sessionEnd is None:
-            continue
-
-          if sessionStart < start < sessionEnd or \
-                                  end is not None and sessionStart < end < sessionEnd or \
-                  (end is not None and start <= sessionStart and sessionEnd <= end) or \
-                  (end is not None and sessionStart <= start and end <= sessionEnd):
-            warn.warn(UserWarning('Temporal overlap of sessions!'))
-
-        sessions.append(Session(Start=start, End=end))
-
-      sessions = sorted(sessions, key=attrgetter('Start'))
-
-    except:
-      sessions = None
-      pass
-    return sessions
-
   def __convertNecessaryFieldsToDatetime(self, visits, nosepokes,
                                          log, environment, hardware,
                                          ZipLoader=None):
@@ -453,11 +405,7 @@ class Loader(Data):
 
   @staticmethod
   def _findAndOpenZipFile(zf, path):
-    try:
-      return zf.open(path)
-
-    except KeyError:
-      return zf.open('IntelliCage/' + path)
+    return _ZipLoaderBase._findAndOpenZipFile(zf, path)
 
   def _fromCSV(self, fh, source=None, convert=None):
     return self.__fromCSV(list(csv.reader(fh, delimiter='\t')),
@@ -1028,6 +976,63 @@ class _ZipLoaderBase(object):
       return cage, corner, Side
 
     return cage, corner, corner[Side]
+
+  @staticmethod
+  def _findAndOpenZipFile(zf, path):
+    try:
+      return zf.open(path)
+
+    except KeyError:
+      return zf.open('IntelliCage/' + path)
+
+  def extractSessions(self, zf):
+    try:
+      with self._findAndOpenZipFile(zf, 'Sessions.xml') as fh:
+        dom = minidom.parse(fh)
+
+      aos = dom.getElementsByTagName('ArrayOfSession')[0]
+      ss = aos.getElementsByTagName('Session')
+      sessions = []
+      for session in ss:
+        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
+        # offset = offset.childNodes[0]
+        # assert offset.nodeType == offset.TEXT_NODE
+        # offset = offset.nodeValue
+
+        interval = session.getElementsByTagName('Interval')[0]
+        start = interval.getElementsByTagName('Start')[0]
+        start = start.childNodes[0]
+        assert start.nodeType == start.TEXT_NODE
+        start = dateutil.parser.parse(start.nodeValue)
+
+        end = interval.getElementsByTagName('End')[0]
+        end = end.childNodes[0]
+        assert end.nodeType == end.TEXT_NODE
+        end = end.nodeValue
+        end = None if end.startswith('0001') else dateutil.parser.parse(end)
+
+        if end is not None and start.tzinfo != end.tzinfo:
+          warn.warn(UserWarning('Timezone changed!'))
+
+        for sessionStart, sessionEnd in sessions:
+          if sessionEnd is None:
+            continue
+
+          if sessionStart < start < sessionEnd or \
+                  end is not None and sessionStart < end < sessionEnd or \
+                  (end is not None and start <= sessionStart and sessionEnd <= end) or \
+                  (end is not None and sessionStart <= start and end <= sessionEnd):
+            warn.warn(UserWarning('Temporal overlap of sessions!'))
+
+        sessions.append(Session(Start=start, End=end))
+
+      sessions = sorted(sessions, key=attrgetter('Start'))
+
+    except:
+      sessions = None
+      pass
+
+    return sessions
 
 
 class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
