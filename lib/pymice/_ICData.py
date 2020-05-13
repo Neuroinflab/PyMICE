@@ -54,7 +54,7 @@ except ImportError:
   from itertools import repeat, count
   izip = zip
 
-from datetime import datetime, timedelta, MINYEAR 
+from datetime import datetime, timedelta, timezone, MINYEAR
 
 from .Data import Data
 from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
@@ -152,6 +152,7 @@ class Loader(Data):
                                'SideError': convertFloat,
                                'TimeError': convertFloat,
                                'ConditionError': convertFloat,
+                               'LickStartTime': timeToList,
                                },
                  'Log': {'DateTime': timeToList,
                          'Time':timeToList,
@@ -865,6 +866,7 @@ class _ZipLoaderBase(object):
      SideCondition, SideError, TimeError, ConditionError,
      LickNumber, LickContactTime, LickDuration,
      AirState, DoorState, LED1State, LED2State, LED3State,
+     LickStartTime,
      _line) = nosepokeTuple
     return Nosepoke(Start, End,
                     sideManager[Side] if Side is not None else None,
@@ -880,6 +882,7 @@ class _ZipLoaderBase(object):
                     int(LED1State) if LED1State is not None else None,
                     int(LED2State) if LED2State is not None else None,
                     int(LED3State) if LED3State is not None else None,
+                    LickStartTime if LickStartTime is not None else None,
                     self._source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
@@ -995,22 +998,7 @@ class _ZipLoaderBase(object):
       ss = aos.getElementsByTagName('Session')
       sessions = []
       for session in ss:
-        # offset = session.getElementsByTagName('TimeZoneOffset')[0]
-        # offset = offset.childNodes[0]
-        # assert offset.nodeType == offset.TEXT_NODE
-        # offset = offset.nodeValue
-
-        interval = session.getElementsByTagName('Interval')[0]
-        start = interval.getElementsByTagName('Start')[0]
-        start = start.childNodes[0]
-        assert start.nodeType == start.TEXT_NODE
-        start = dateutil.parser.parse(start.nodeValue)
-
-        end = interval.getElementsByTagName('End')[0]
-        end = end.childNodes[0]
-        assert end.nodeType == end.TEXT_NODE
-        end = end.nodeValue
-        end = None if end.startswith('0001') else dateutil.parser.parse(end)
+        start, end = self._extract_session_time_bounds(session)
 
         if end is not None and start.tzinfo != end.tzinfo:
           warn.warn(UserWarning('Timezone changed!'))
@@ -1035,6 +1023,20 @@ class _ZipLoaderBase(object):
 
     return sessions
 
+  def _extract_session_time_bounds(self, session):
+    interval = session.getElementsByTagName('Interval')[0]
+    start = interval.getElementsByTagName('Start')[0]
+    start = start.childNodes[0]
+    assert start.nodeType == start.TEXT_NODE
+    start = dateutil.parser.parse(start.nodeValue)
+
+    end = interval.getElementsByTagName('End')[0]
+    end = end.childNodes[0]
+    assert end.nodeType == end.TEXT_NODE
+    end = end.nodeValue
+    end = None if end.startswith('0001') else dateutil.parser.parse(end)
+    return start, end
+
 
 class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
   DATETIME_KEY = 'DateTime'
@@ -1044,7 +1046,8 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                   'CornerCondition', 'PlaceError',
                   'AntennaNumber', 'AntennaDuration',
                   'PresenceNumber', 'PresenceDuration',
-                  'VisitSolution',]
+                  'VisitSolution',
+                  ]
   VISIT_ID_FIELD = 'VisitID'
   VISIT_TAG_FIELD = 'AnimalTag'
 
@@ -1055,7 +1058,9 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                      'LickDuration',
                      'AirState', 'DoorState',
                      'LED1State', 'LED2State',
-                     'LED3State']
+                     'LED3State',
+                     'LickStartTime',  # Only IC+ v. 3.1
+                     ]
 
   def loadLog(self, columns):
     return self._columnsToObjects(columns,
@@ -1104,6 +1109,32 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
+
+class ZipLoader_v_IntelliCage_Plus_3_1(ZipLoader_v_IntelliCage_Plus_3):
+  NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
+                     'SideCondition', 'SideError',
+                     'TimeError', 'ConditionError',
+                     'LickNumber', 'LickContactTime',
+                     'LickDuration',
+                     'AirState', 'DoorState',
+                     'LED1State', 'LED2State',
+                     'LED3State',
+                     'LickStartTime',
+                     ]
+  def _extract_session_time_bounds(self, session):
+    start, end = super(ZipLoader_v_IntelliCage_Plus_3_1,
+                       self)._extract_session_time_bounds(session)
+    offset = session.getElementsByTagName('TimeZoneOffset')[0]
+    offset = offset.childNodes[0]
+    assert offset.nodeType == offset.TEXT_NODE
+    offset = offset.nodeValue
+    hours, minutes, seconds = map(int, offset.split(':'))
+    tz = timezone(timedelta(hours=hours,
+                            minutes=minutes,
+                            seconds=seconds))
+    return start.astimezone(tz), end.astimezone(tz) if end is not None else None
+
+
 class ZipLoader_v_version_2_2(_ZipLoaderBase):
   DATETIME_KEY = 'Time'
 
@@ -1112,7 +1143,8 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                   'CornerCondition', 'PlaceError',
                   'AntennaNumber', 'AntennaDuration',
                   'PresenceNumber', 'PresenceDuration',
-                  'VisitSolution',]
+                  'VisitSolution',
+                  ]
   VISIT_ID_FIELD = 'VisitID'
   VISIT_TAG_FIELD = 'AnimalTag'
 
@@ -1124,7 +1156,9 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                      'LicksDuration',
                      'AirState', 'DoorState',
                      'LED1State', 'LED2State',
-                     'LED3State']
+                     'LED3State',
+                     'LickStartTime',  # Only IC+ v. 3.1
+                     ]
 
   def _getCageCornerSide(self, Cage, Corner, Side):
     if Cage is None:
@@ -1244,7 +1278,8 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                   'CornerCondition', 'PlaceError',
                   'AntennaNumber', 'AntennaDuration',
                   'PresenceNumber', 'PresenceDuration',
-                  'VisitSolution',]
+                  'VisitSolution',
+                  ]
   VISIT_ID_FIELD = 'ID'
   VISIT_TAG_FIELD = 'Animal'
 
@@ -1255,7 +1290,9 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                      'LicksDuration',
                      'AirState', 'DoorState',
                      'LED1State', 'LED2State',
-                     'LED3State']
+                     'LED3State',
+                     'LickStartTime',  # Only IC+ v. 3.1
+                     ]
 
   @classmethod
   def loadAnimals(cls, columns):
@@ -1272,4 +1309,5 @@ ZIP_LOADERS = {
   'version1': ZipLoader_v_version1,
   'version_2_2': ZipLoader_v_version_2_2,
   'IntelliCage_Plus_3': ZipLoader_v_IntelliCage_Plus_3,
+  'IntelliCage_Plus_3_1': ZipLoader_v_IntelliCage_Plus_3_1,
 }

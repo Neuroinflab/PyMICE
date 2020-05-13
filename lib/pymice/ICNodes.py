@@ -170,6 +170,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
                 'LickNumber', 'LickContactTime', 'LickDuration',
                 'SideCondition', 'SideError', 'TimeError', 'ConditionError',
                 'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',
+                'LickStartTime',
                 '_source', '_line',
                 'Visit',
                 )
@@ -178,6 +179,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
                LickNumber, LickContactTime, LickDuration,
                SideCondition, SideError, TimeError, ConditionError,
                AirState, DoorState, LED1State, LED2State, LED3State,
+               LickStartTime,
                _source, _line):
     self.__Start = Start
     self.__End = End
@@ -194,6 +196,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
     self.__LED1State = LED1State
     self.__LED2State = LED2State
     self.__LED3State = LED3State
+    self.__LickStartTime = LickStartTime
     self.___source = _source
     self.___line = _line
 
@@ -204,6 +207,7 @@ class Nosepoke(BaseNode, SideAware, DurationAware):
                           self.__LickNumber, self.__LickContactTime, self.__LickDuration,
                           self.__SideCondition, self.__SideError, self.__TimeError, self.__ConditionError,
                           self.__AirState, self.__DoorState, self.__LED1State, self.__LED2State, self.__LED3State,
+                          self.__LickStartTime,
                           source, self.___line)
 
   def _bindToVisit(self, Visit):

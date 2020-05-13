@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2015-2017 Jakub M. Dzik a.k.a. Kowalski, S. Łęski          #
+#    Copyright (C) 2015-2020 Jakub M. Dzik a.k.a. Kowalski, S. Łęski          #
 #    (Laboratory of Neuroinformatics; Nencki Institute of Experimental        #
 #    Biology of Polish Academy of Sciences)                                   #
 #                                                                             #
@@ -415,6 +415,7 @@ class TestNosepoke(ICNodeTest):
                 'LickNumber', 'LickContactTime', 'LickDuration',
                 'SideCondition', 'SideError', 'TimeError', 'ConditionError',
                 'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State',
+                'LickStartTime',
                 '_source', '_line',
                 'Visit',
                 )
@@ -422,10 +423,12 @@ class TestNosepoke(ICNodeTest):
   def setUp(self):
     self.start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)
     self.end = datetime(1970, 1, 1, 0, 5, 15, tzinfo=utc)
+    self.lick_start_time = self.start + timedelta(seconds=2)
     self.nosepoke = Nosepoke(self.start, self.end, 2,
                              2, timedelta(seconds=0.125), timedelta(seconds=0.5),
                              -1, 1, 0, 1,
                              0, 1, 0, 1, 0,
+                             self.lick_start_time,
                              'src', 11)
 
   def testCreate(self):
@@ -445,6 +448,7 @@ class TestNosepoke(ICNodeTest):
                           ('LED1State', 0),
                           ('LED2State', 1),
                           ('LED3State', 0),
+                          ('LickStartTime', self.lick_start_time, datetime),
                           ('_source', 'src'),
                           ('_line', 11),
                          ])
@@ -467,7 +471,7 @@ class TestNosepoke(ICNodeTest):
 
     sideManager = MockIntDictManager()
     sourceManager = MockStrDictManager()
-    noSideNosepoke = Nosepoke(self.start, *[None]*14 + ['src', 123])
+    noSideNosepoke = Nosepoke(self.start, *[None]*15 + ['src', 123])
     nosepoke = noSideNosepoke.clone(sourceManager, sideManager)
     self.checkAttributes(nosepoke, [('Start', self.start),
                                     'End', 'Side',
