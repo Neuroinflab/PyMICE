@@ -1136,9 +1136,9 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                      'SideError': ['0', '0', '1', '0', '0', '1'],
                      'TimeError': ['1', '-1', '0', '1', '-1', '0'],
                      'ConditionError': ['-1', '0', '1', '-1', '0', '1'],
-                     'LickNumber': ['2', '6', '9', '16', '20', '24'],
-                     'LickContactTime': ['0.25', '0.75', '1.125', '2.0', '2.5', '3.0'],
-                     'LickDuration': ['0.75', '2.25', '3.375', '6.0', '7.5', '9.0'],
+                     'LickNumber': ['2', '6', '9', '16', '0', '24'],
+                     'LickContactTime': ['0.25', '0.75', '1.125', '2.0', '0', '3.0'],
+                     'LickDuration': ['0.75', '2.25', '3.375', '6.0', '0', '9.0'],
                      'AirState': ['1', '0', '1', '0', '1', '0'],
                      'DoorState': ['0', '1', '0', '1', '0', '1'],
                      'LED1State': ['0', '1', '1', '0', '0', '1'],
@@ -1148,7 +1148,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                                        datetime(1970, 1, 1, 0, 33, 4, tzinfo=utc),
                                        datetime(1970, 1, 1, 0, 32, 55, tzinfo=utc),
                                        datetime(1970, 1, 1, 0, 32, 46, tzinfo=utc),
-                                       datetime(1970, 1, 1, 0, 32, 33, tzinfo=utc),
+                                       None,
                                        datetime(1970, 1, 1, 0, 32, 25, tzinfo=utc)],
                      }
   }
@@ -1172,9 +1172,9 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
           'SideError': [0, 1, 0, 1, 0, 0],
           'TimeError': [1, 0, -1, 0, -1, 1],
           'ConditionError': [-1, 1, 0, 1, 0, -1],
-          'LickNumber': [2, 9, 6, 24, 20, 16],
-          'LickContactTime': floatToTimedelta([0.25, 1.125, 0.75, 3.0, 2.5, 2.0])  ,
-          'LickDuration': floatToTimedelta([0.75, 3.375, 2.25, 9.0, 7.5, 6.0]),
+          'LickNumber': [2, 9, 6, 24, 0, 16],
+          'LickContactTime': floatToTimedelta([0.25, 1.125, 0.75, 3.0, 0, 2.0]),
+          'LickDuration': floatToTimedelta([0.75, 3.375, 2.25, 9.0, 0, 6.0]),
           'AirState': [1, 1, 0, 0, 1, 0],
           'DoorState': [0, 0, 1, 1, 0, 1],
           'LED1State': [0, 1, 1, 1, 0, 0],
@@ -1184,7 +1184,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                             datetime(1970, 1, 1, 0, 32, 55, tzinfo=utc),
                             datetime(1970, 1, 1, 0, 33, 4, tzinfo=utc),
                             datetime(1970, 1, 1, 0, 32, 25, tzinfo=utc),
-                            datetime(1970, 1, 1, 0, 32, 33, tzinfo=utc),
+                            None,
                             datetime(1970, 1, 1, 0, 32, 46, tzinfo=utc)],
           '_line': [1, 3, 2, 6, 5, 4],
         },
@@ -1990,6 +1990,10 @@ class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegration
   def testGetHardwareEventsReturnsEmptyList(self):
     self.assertEqual([],
                      self.data.getHardwareEvents())
+
+
+class LoadIntelliCagePlus31DataTest(LoaderIntegrationTest):
+  DATA_FILE = 'icp31_data.zip'
 
 
 class LoadRetaggedDataTest(LoaderIntegrationTest):

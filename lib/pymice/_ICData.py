@@ -1019,7 +1019,6 @@ class _ZipLoaderBase(object):
 
     except:
       sessions = None
-      pass
 
     return sessions
 
@@ -1132,7 +1131,7 @@ class ZipLoader_v_IntelliCage_Plus_3_1(ZipLoader_v_IntelliCage_Plus_3):
     tz = timezone(timedelta(hours=hours,
                             minutes=minutes,
                             seconds=seconds))
-    return start.astimezone(tz), end.astimezone(tz) if end is not None else None
+    return start.replace(tzinfo=tz), (end.replace(tzinfo=tz) if end is not None else None)
 
 
 class ZipLoader_v_version_2_2(_ZipLoaderBase):

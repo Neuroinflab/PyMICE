@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Session Id="0">
+    <TimeZoneOffset>01:00:00</TimeZoneOffset>
+    <Interval>
+      <Start>2012-12-18T12:13:01.109375</Start>
+      <End>2012-12-18T12:20:37.71875</End>
+    </Interval>
+    <StartLocalTimeString>2012-12-18 12:13:01.109</StartLocalTimeString>
+    <EndLocalTimeString>2012-12-18 12:20:37.718</EndLocalTimeString>
+    <ExperimentFileName>Fake data.experiment</ExperimentFileName>
+    <VisitMode>Mode2</VisitMode>
+    <VisitDurationLimit>10</VisitDurationLimit>
+    <DiagnosticMode>true</DiagnosticMode>
+    <SoftwareVersion>3.3.7.0</SoftwareVersion>
+    <Hardware>
+      <SerialPort>
+        <PortName>COM4</PortName>
+        <BaudRate>115200</BaudRate>
+        <ReadBufferSize>102400</ReadBufferSize>
+        <WriteBufferSize>102400</WriteBufferSize>
+      </SerialPort>
+      <CanDevice>
+        <VciObjectId>0</VciObjectId>
+        <Manufacturer />
+        <HardwareVersion />
+        <DriverVersion />
+        <DeviceClass>00000000-0000-0000-0000-000000000000</DeviceClass>
+        <Description>No Device</Description>
+      </CanDevice>
+    </Hardware>
+  </Session>
+</ArrayOfSession>

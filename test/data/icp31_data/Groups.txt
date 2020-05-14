@@ -1,0 +1,4 @@
+GroupName	ModuleName	GroupNotes
+Default	Default	Default animals group
+Disney	Test	
+HannaBarbera	Test	

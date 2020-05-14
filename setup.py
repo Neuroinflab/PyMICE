@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2014-2017 Jakub M. Dzik aka Kowalski (Laboratory of        #
+#    Copyright (C) 2014-2020 Jakub M. Dzik aka Kowalski (Laboratory of        #
 #    Neuroinformatics; Nencki Institute of Experimental Biology of Polish     #
 #    Academy of Sciences)                                                     #
 #                                                                             #
@@ -27,10 +27,7 @@ import os, sys, logging
 
 
 def loadUTF8(path):
-    if sys.version_info.major >= 3:
-        return open(path, encoding='utf-8').read()
-
-    return open(path).read().decode('utf-8')
+    return open(path, encoding='utf-8').read()
 
 def loadTextFrom(path):
     return loadUTF8(os.path.join(os.path.dirname(__file__),
@@ -55,11 +52,10 @@ SETUP_PARAMETERS = {
                     'Programming Language :: Cython',
                     'Programming Language :: Python',
                     'Programming Language :: Python :: 3',
-                    'Programming Language :: Python :: 3.3',
-                    'Programming Language :: Python :: 3.4',
                     'Programming Language :: Python :: 3.5',
                     'Programming Language :: Python :: 3.6',
                     'Programming Language :: Python :: 3.7',
+                    'Programming Language :: Python :: 3.8',
                     'Topic :: Scientific/Engineering',
                     'Topic :: Scientific/Engineering :: Bio-Informatics',
                     'Topic :: Software Development',

@@ -1,13 +1,13 @@
 #!/bin/bash
-source activate py27
+conda activate pymice35
 python -m unittest discover
-source deactivate
-source activate py33
+conda deactivate
+conda activate pymice36
 python -m unittest discover
-source deactivate
-source activate py34
+conda deactivate
+conda activate pymice37
 python -m unittest discover
-source deactivate
-source activate py35
+conda deactivate
+conda activate pymice38
 python -m unittest discover
-source deactivate
+conda deactivate
