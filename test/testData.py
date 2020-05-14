@@ -4,7 +4,7 @@
 #                                                                             #
 #    PyMICE library                                                           #
 #                                                                             #
-#    Copyright (C) 2015-2017 Jakub M. Dzik a.k.a. Kowalski, S. Łęski          #
+#    Copyright (C) 2015-2020 Jakub M. Dzik a.k.a. Kowalski, S. Łęski          #
 #    (Laboratory of Neuroinformatics; Nencki Institute of Experimental        #
 #    Biology of Polish Academy of Sciences)                                   #
 #                                                                             #
@@ -26,11 +26,13 @@
 import sys
 import os
 import unittest
+import io
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from pytz import utc, timezone
 import pymice as pm
 from pymice._ICData import (ZipLoader_v_IntelliCage_Plus_3,
+                            ZipLoader_v_IntelliCage_Plus_3_1,
                             ZipLoader_v_version1,
                             ZipLoader_v_version_2_2,
                             Merger, LogEntry, EnvironmentalConditions,
@@ -40,11 +42,26 @@ from pymice.Data import Data, IntIdentityManager
 
 import minimock
 
-from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
-                         isString)
+try:
+  from ._TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                           isString)
+except (ImportError, SystemError):
+  # When run as script raises:
+  #  - `ModuleNotFoundError(ImportError)` (Python 3.6-7), or
+  #  - `SystemError` (Python 3.3-5).
+  from _TestTools import (Mock, MockIntDictManager, MockStrDictManager, BaseTest,
+                          isString)
 
 if sys.version_info >= (3, 0):
   unicode = str
+
+
+class MockZipFile(object):
+    def __init__(self, files):
+        self._files = files
+
+    def open(self, name):
+        return io.BytesIO(self._files[name])
 
 
 def toStrings(seq):
@@ -61,7 +78,6 @@ def floatToTimedelta(seq):
   return [timedelta(seconds=x) if x is not None else None for x in seq]
 
 
-
 class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
   loaderClass = ZipLoader_v_IntelliCage_Plus_3
 
@@ -72,6 +88,65 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     self.loader = self.loaderClass(self.source,
                                    self.cageManager,
                                    self.animalManager)
+
+  SESSION_OFFSET = dt_timezone(timedelta(hours=1))
+  SESSION_START = datetime(year=2012,
+                           month=12,
+                           day=18,
+                           hour=12,
+                           minute=13,
+                           second=1,
+                           microsecond=109375,
+                           tzinfo=SESSION_OFFSET)
+  SESSION_END = datetime(year=2012,
+                         month=12,
+                         day=18,
+                         hour=12,
+                         minute=20,
+                         second=37,
+                         microsecond=718750,
+                         tzinfo=SESSION_OFFSET)
+  SESSIONS_XML = """<?xml version="1.0" encoding="utf-8"?>
+  <ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <Session Id="0">
+      <TimeZoneOffset>01:00:00</TimeZoneOffset>
+      <Interval>
+        <Start>2012-12-18T12:13:01.109375+01:00</Start>
+        <End>2012-12-18T12:20:37.71875+01:00</End>
+      </Interval>
+      <StartLocalTimeString>2012-12-18 12:13:01.109</StartLocalTimeString>
+      <EndLocalTimeString>2012-12-18 12:20:37.718</EndLocalTimeString>
+      <ExperimentFileName>Fake data.experiment</ExperimentFileName>
+      <VisitMode>Mode2</VisitMode>
+      <VisitDurationLimit>10</VisitDurationLimit>
+      <DiagnosticMode>false</DiagnosticMode>
+      <SoftwareVersion>2.14.1.0</SoftwareVersion>
+      <Hardware>
+        <SerialPort>
+          <PortName>COM3</PortName>
+          <BaudRate>115200</BaudRate>
+          <ReadBufferSize>4096</ReadBufferSize>
+          <WriteBufferSize>4096</WriteBufferSize>
+        </SerialPort>
+        <CanDevice>
+          <VciObjectId>2</VciObjectId>
+          <Manufacturer>IXXAT Automation GmbH</Manufacturer>
+          <HardwareVersion>1.5</HardwareVersion>
+          <DriverVersion>1.3</DriverVersion>
+          <DeviceClass>853857b3-0b08-454c-93fb-2d166b72a5aa</DeviceClass>
+          <Description>USB-to-CAN compact</Description>
+        </CanDevice>
+      </Hardware>
+    </Session>
+  </ArrayOfSession>
+  """
+
+  def testExtractSessions(self):
+    zf = MockZipFile({'Sessions.xml': self.SESSIONS_XML.encode('utf-8')})
+    sessions = self.loader.extractSessions(zf)
+    self.assertEqual(1, len(sessions))
+    self.assertEqual(self.SESSION_START, sessions[0].Start)
+    self.assertEqual(self.SESSION_END, sessions[0].End)
 
   INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],
@@ -880,6 +955,282 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                                                     'LED1State',
                                                     'LED2State',
                                                     'LED3State',]
+
+
+class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
+  loaderClass = ZipLoader_v_IntelliCage_Plus_3_1
+
+  SESSION_OFFSET = dt_timezone(timedelta(hours=1))
+  SESSION_START = datetime(year=2012,
+                           month=12,
+                           day=18,
+                           hour=12,
+                           minute=13,
+                           second=1,
+                           microsecond=109375,
+                           tzinfo=SESSION_OFFSET)
+  SESSION_END = datetime(year=2012,
+                         month=12,
+                         day=18,
+                         hour=12,
+                         minute=20,
+                         second=37,
+                         microsecond=718750,
+                         tzinfo=SESSION_OFFSET)
+  SESSIONS_XML = """<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSession xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Session Id="0">
+    <TimeZoneOffset>01:00:00</TimeZoneOffset>
+    <Interval>
+      <Start>2012-12-18T12:13:01.109375</Start>
+      <End>2012-12-18T12:20:37.71875</End>
+    </Interval>
+    <StartLocalTimeString>2012-12-18 12:13:01.109</StartLocalTimeString>
+    <EndLocalTimeString>2012-12-18 12:20:37.718</EndLocalTimeString>
+    <ExperimentFileName>Fake data.experiment</ExperimentFileName>
+    <VisitMode>Mode2</VisitMode>
+    <VisitDurationLimit>10</VisitDurationLimit>
+    <DiagnosticMode>true</DiagnosticMode>
+    <SoftwareVersion>3.3.7.0</SoftwareVersion>
+    <Hardware>
+      <SerialPort>
+        <PortName>COM4</PortName>
+        <BaudRate>115200</BaudRate>
+        <ReadBufferSize>102400</ReadBufferSize>
+        <WriteBufferSize>102400</WriteBufferSize>
+      </SerialPort>
+      <CanDevice>
+        <VciObjectId>0</VciObjectId>
+        <Manufacturer />
+        <HardwareVersion />
+        <DriverVersion />
+        <DeviceClass>00000000-0000-0000-0000-000000000000</DeviceClass>
+        <Description>No Device</Description>
+      </CanDevice>
+    </Hardware>
+  </Session>
+</ArrayOfSession>"""
+
+  def testExtractSessions(self):
+    zf = MockZipFile({'Sessions.xml': self.SESSIONS_XML.encode('utf-8')})
+    sessions = self.loader.extractSessions(zf)
+    self.assertEqual(1, len(sessions))
+    self.assertEqual(self.SESSION_START, sessions[0].Start)
+    self.assertEqual(self.SESSION_END, sessions[0].End)
+
+  INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
+                          'AnimalTag': ['10'],
+                          'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                          'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+                          'ModuleName': ['Default'],
+                          'Cage': ['1'],
+                          'Corner': ['2'],
+                          'CornerCondition': ['1'],
+                          'PlaceError': ['0'],
+                          'AntennaNumber': ['1'],
+                          'AntennaDuration': ['1.125'],
+                          'PresenceNumber': ['2'],
+                          'PresenceDuration': ['2.250'],
+                          'VisitSolution': ['0'],
+                          }
+  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
+                           'Module': [u'Default'],
+                           'Cage': [1],
+                           'Corner': [2],
+                           'CornerCondition': [1],
+                           'PlaceError': [0],
+                           'AntennaNumber': [1],
+                           'AntennaDuration': [timedelta(seconds=1.125)],
+                           'PresenceNumber': [2],
+                           'PresenceDuration': [timedelta(seconds=2.25)],
+                           'VisitSolution': [0],
+                           '_line': [1],
+                           'Nosepokes': [None],
+                           }
+
+  def checkNosepokeAttributeTypes(self, nosepoke, cage, corner):
+    self.checkAttrsAreInt(nosepoke,
+                          'SideCondition', 'SideError', 'TimeError', 'ConditionError',
+                          'LickNumber',
+                          'AirState', 'DoorState', 'LED1State', 'LED2State', 'LED3State')
+    self.assertIsInstance(nosepoke.Side, self.cageManager.items[cage].items[corner].Cls,
+                          'Attribute: Side')
+
+  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+                             'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                             'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+                             'Side': ['4'],
+                             'SideCondition': ['1'],
+                             'SideError': ['0'],
+                             'TimeError': ['1'],
+                             'ConditionError': ['1'],
+                             'LickNumber': ['0'],
+                             'LickContactTime': ['0.500'],
+                             'LickDuration': ['1.5'],
+                             'AirState': ['0'],
+                             'DoorState': ['1'],
+                             'LED1State': ['0'],
+                             'LED2State': ['1'],
+                             'LED3State': ['0'],
+                             'LickStartTime': [None],
+                             }
+  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
+                              'Side': [4],
+                              'SideCondition': [1],
+                              'SideError': [0],
+                              'TimeError': [1],
+                              'ConditionError': [1],
+                              'LickNumber': [0],
+                              'LickContactTime': [timedelta(seconds=0.5)],
+                              'LickDuration': [timedelta(seconds=1.5)],
+                              'AirState': [0],
+                              'DoorState': [1],
+                              'LED1State': [0],
+                              'LED2State': [1],
+                              'LED3State': [0],
+                              'LickStartTime': [None],
+                              '_line': [1],
+                              }
+
+  def testLoadOneVisitOneNosepoke(self):
+    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
+                                    self.INPUT_LOAD_ONE_NOSEPOKE)
+    visit = visits[0]
+    self.basicNodeCheck(self.OUTPUT_LOAD_ONE_NOSEPOKE, visit.Nosepokes)
+    self.checkNosepokeAttributeTypes(visit.Nosepokes[0], 1, 2)
+    self.assertEqual(self.cageManager.items[1].items[2].sequence, [('__getitem__', '4')])
+
+  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+    'Visits': {'VisitID': ['1', '2', '3', '4'],
+               'AnimalTag': ['1', '2', '3', '4'],
+               'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
+                         ],
+               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc),
+                       ],
+               'Cage': ['1', '1', '4', '4'],
+               'Corner': ['1', '2', '1', '2']},
+    'Nosepokes': {'VisitID': ['2', '3', '3', '4', '4', '4'],
+                  'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc)],
+                     'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc)],
+                     'Side': ['3', '6', '5', '8', '7', '8'],
+                     'SideCondition': ['0', '1', '-1', '0', '1', '-1'],
+                     'SideError': ['0', '0', '1', '0', '0', '1'],
+                     'TimeError': ['1', '-1', '0', '1', '-1', '0'],
+                     'ConditionError': ['-1', '0', '1', '-1', '0', '1'],
+                     'LickNumber': ['2', '6', '9', '16', '20', '24'],
+                     'LickContactTime': ['0.25', '0.75', '1.125', '2.0', '2.5', '3.0'],
+                     'LickDuration': ['0.75', '2.25', '3.375', '6.0', '7.5', '9.0'],
+                     'AirState': ['1', '0', '1', '0', '1', '0'],
+                     'DoorState': ['0', '1', '0', '1', '0', '1'],
+                     'LED1State': ['0', '1', '1', '0', '0', '1'],
+                     'LED2State': ['1', '0', '0', '1', '1', '0'],
+                     'LED3State': ['0', '0', '1', '1', '1', '0'],
+                     'LickStartTime': [datetime(1970, 1, 1, 0, 33, 13, tzinfo=utc),
+                                       datetime(1970, 1, 1, 0, 33, 4, tzinfo=utc),
+                                       datetime(1970, 1, 1, 0, 32, 55, tzinfo=utc),
+                                       datetime(1970, 1, 1, 0, 32, 46, tzinfo=utc),
+                                       datetime(1970, 1, 1, 0, 32, 33, tzinfo=utc),
+                                       datetime(1970, 1, 1, 0, 32, 25, tzinfo=utc)],
+                     }
+  }
+  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+    'Nosepokes':
+        {
+          'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 52, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 33, 2, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 22, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 32, tzinfo=utc),
+                    datetime(1970, 1, 1, 0, 32, 42, tzinfo=utc)],
+          'End': [datetime(1970, 1, 1, 0, 33, 17, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 57, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 33, 7, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 27, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 37, tzinfo=utc),
+                  datetime(1970, 1, 1, 0, 32, 47, tzinfo=utc)],
+          'Side': [3, 5, 6, 8, 7, 8],
+          'SideCondition': [0, -1, 1, -1, 1, 0],
+          'SideError': [0, 1, 0, 1, 0, 0],
+          'TimeError': [1, 0, -1, 0, -1, 1],
+          'ConditionError': [-1, 1, 0, 1, 0, -1],
+          'LickNumber': [2, 9, 6, 24, 20, 16],
+          'LickContactTime': floatToTimedelta([0.25, 1.125, 0.75, 3.0, 2.5, 2.0])  ,
+          'LickDuration': floatToTimedelta([0.75, 3.375, 2.25, 9.0, 7.5, 6.0]),
+          'AirState': [1, 1, 0, 0, 1, 0],
+          'DoorState': [0, 0, 1, 1, 0, 1],
+          'LED1State': [0, 1, 1, 1, 0, 0],
+          'LED2State': [1, 0, 0, 0, 1, 1],
+          'LED3State': [0, 1, 0, 0, 1, 1],
+          'LickStartTime': [datetime(1970, 1, 1, 0, 33, 13, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 55, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 33, 4, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 25, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 33, tzinfo=utc),
+                            datetime(1970, 1, 1, 0, 32, 46, tzinfo=utc)],
+          '_line': [1, 3, 2, 6, 5, 4],
+        },
+    'NosepokeLen': [0, 1, 2, 3],
+  }
+  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+                                                    'End',
+                                                    'Side',
+                                                    'SideCondition',
+                                                    'SideError',
+                                                    'TimeError',
+                                                    'ConditionError',
+                                                    'LickNumber',
+                                                    'LickContactTime',
+                                                    'LickDuration',
+                                                    'AirState',
+                                                    'DoorState',
+                                                    'LED1State',
+                                                    'LED2State',
+                                                    'LED3State',
+                                                    'LickStartTime',
+                                                    ]
+  def testManyVisitsManyNosepokes(self):
+    inputVColumns = self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Visits']
+
+    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES:
+      inCols = dict(self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      if descCol is not None:
+        if isinstance(descCol, str):
+          inCol, outCol = descCol, descCol
+        else:
+          inCol, outCol = descCol
+        inCols.pop(inCol)
+        outCols.pop(outCol)
+
+      visits = self.loader.loadVisits(inputVColumns, inCols)
+      self.assertEqual([len(v.Nosepokes) for v in visits],
+                       self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
+
+      nosepokes = [n for v in visits for n in v.Nosepokes]
+      self.basicNodeCheck(outCols, nosepokes)
+
+      # self.assertEqual([n._line for v in visits for n in v.Nosepokes],
+      #                  self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
+
 
 class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
   loaderClass = ZipLoader_v_version_2_2
@@ -1751,20 +2102,24 @@ class OnVisitsLoaded(DataTest):
     self.visits = self.getMockNodeList('Visit', 2)
     self.data.insertVisits(self.visits)
 
+
 class OnLogLoaded(DataTest):
   def _setUp(self):
     self.log = self.getMockNodeList('LogEntry', 3)
     self.data.insertLog(self.log)
+
 
 class OnEnvLoaded(DataTest):
   def _setUp(self):
     self.env = self.getMockNodeList('EnvironmentalConditions', 4)
     self.data.insertEnv(self.env)
 
+
 class OnHwLoaded(DataTest):
   def _setUp(self):
     self.hw = self.getMockNodeList('HardwareEvent', 5)
     self.data.insertHw(self.hw)
+
 
 class OnFrozen(OnVisitsLoaded, OnLogLoaded, OnEnvLoaded, OnHwLoaded):
   def _setUp(self):

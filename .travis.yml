@@ -15,13 +15,11 @@ os:
 
 env:
   matrix:
-    - PYTHON_VERSION="2.7" CYTHON=""
     - PYTHON_VERSION="3.3" CYTHON=""
     - PYTHON_VERSION="3.4" CYTHON=""
     - PYTHON_VERSION="3.5" CYTHON=""
     - PYTHON_VERSION="3.6" CYTHON=""
     - PYTHON_VERSION="3.7" CYTHON=""
-    - PYTHON_VERSION="2.7" CYTHON="cython"
     - PYTHON_VERSION="3.3" CYTHON="cython"
     - PYTHON_VERSION="3.4" CYTHON="cython"
     - PYTHON_VERSION="3.5" CYTHON="cython"
