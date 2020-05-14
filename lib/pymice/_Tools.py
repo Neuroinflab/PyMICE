@@ -170,6 +170,9 @@ def convertTime(tStr, tzinfo=None):
   return datetime(*args)
 
 def timeToList(tStr):
+  if tStr is None:
+    return None
+
   date, time = tStr.split()
   tokens = date.split('-') + time.split(':')
 
