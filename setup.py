@@ -27,10 +27,7 @@ import os, sys, logging
 
 
 def loadUTF8(path):
-    if sys.version_info.major >= 3:
-        return open(path, encoding='utf-8').read()
-
-    return open(path).read().decode('utf-8')
+    return open(path, encoding='utf-8').read()
 
 def loadTextFrom(path):
     return loadUTF8(os.path.join(os.path.dirname(__file__),
