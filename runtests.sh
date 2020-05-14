@@ -1,13 +1,13 @@
 #!/bin/bash
-conda activate py35
+conda activate pymice35
 python -m unittest discover
 conda deactivate
-conda activate py36
+conda activate pymice36
 python -m unittest discover
 conda deactivate
-conda activate py37
+conda activate pymice37
 python -m unittest discover
 conda deactivate
-conda activate py38
+conda activate pymice38
 python -m unittest discover
 conda deactivate
