@@ -5,6 +5,7 @@ do
   name=pymice${python_version/./}
   conda create --name $name --no-default-packages --file requirements.txt --yes python=$python_version cython ipython
   conda activate $name
+  pip install minimock
   python setup.py develop
   conda deactivate
 done
