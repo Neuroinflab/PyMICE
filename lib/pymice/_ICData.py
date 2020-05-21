@@ -33,6 +33,7 @@ if sys.version_info >= (3, 0):
 import os
 import csv
 import warnings
+import logging
 
 try:
   import cStringIO as io
@@ -94,6 +95,9 @@ except Exception as e:
         l[i] = None
 
     return l
+
+
+logger = logging.getLogger(__name__)
 
 
 convertFloat = methodcaller('replace', ',', '.')
@@ -382,9 +386,17 @@ class Loader(Data):
 
   def _getZipLoader(self, zf):
     try:
-      return ZIP_LOADERS[self._checkVersion(zf)]
+      version = self._checkVersion(zf)
+
+    except Exception as e:
+      logger.warning('{} occured when checking version.  Assuming IC+ v. 3'.format(e))
+      return ZipLoader_v_IntelliCage_Plus_3
+
+    try:
+      return ZIP_LOADERS[version]
 
     except KeyError:
+      logger.warning('Unknown version: {}.  Using loader for IC+ v. 3'.format(version))
       return ZipLoader_v_IntelliCage_Plus_3
 
 
