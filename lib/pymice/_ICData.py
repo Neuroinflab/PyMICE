@@ -1307,6 +1307,6 @@ class ZipLoader_v_version1(_ZipLoaderBase):
 ZIP_LOADERS = {
   'version1': ZipLoader_v_version1,
   'version_2_2': ZipLoader_v_version_2_2,
-  'IntelliCage_Plus_3': ZipLoader_v_IntelliCage_Plus_3,
-  'IntelliCage_Plus_3_1': ZipLoader_v_IntelliCage_Plus_3_1,
+  'intellicage_plus_3': ZipLoader_v_IntelliCage_Plus_3,
+  'intellicage_plus_3_1': ZipLoader_v_IntelliCage_Plus_3_1,
 }
