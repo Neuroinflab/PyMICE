@@ -23,6 +23,7 @@
 #                                                                             #
 ###############################################################################
 import sys
+import logging
 import numpy, pytz, dateutil, matplotlib
 
 import unittest
@@ -122,7 +123,7 @@ for more information (given that the library is imported as `pm`).
 
     def testDependencies(self):
         self.assertEqual({m.__name__: (m.__version__, {})
-                          for m in [numpy, pytz, dateutil, matplotlib]},
+                          for m in [numpy, pytz, dateutil, matplotlib, logging]},
                          pm.__dependencies__)
 
 
