@@ -910,7 +910,7 @@ class _ZipLoaderBase(object):
                   for x in self.VISIT_FIELDS]
     vLines = count(1)
     vColValues.append(vLines)
-    vColValues.append(vIDs)
+    vColValues.append(map(int, vIDs))
     vColValues.append(vNosepokes)
     return mapAsList(self._makeVisit, *vColValues)
 

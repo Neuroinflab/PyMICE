@@ -214,6 +214,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                            'PresenceDuration': [timedelta(seconds=2.25)],
                            'VisitSolution': [0],
                            '_line': [1],
+                           '_id': [1],
                            'Nosepokes': [None],
                            }
 
@@ -330,6 +331,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     'PresenceDuration': floatToTimedelta([0.125, 0.25, 0.375, 0.0, 0.125, 0.250, 0.375, None, 0.125, 0.250]),
     'VisitSolution': [1, 2, 3, 0, 1, 2, 3, 0, None, 2],
     '_line': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
   MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
@@ -752,6 +754,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                            'PresenceDuration': [timedelta(seconds=2.25)],
                            'VisitSolution': [None],
                            '_line': [1],
+                           '_id': [1],
                            'Nosepokes': [None],
                            }
 
@@ -821,6 +824,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
     'PresenceDuration': floatToTimedelta([0.125, 0.25, 0.375, 0.0, 0.125, 0.250, 0.375, None, 0.125, 0.250]),
     'VisitSolution': [None, None, None, None, None, None, None, None, None, None],
     '_line': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
   MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
@@ -1047,6 +1051,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                            'PresenceDuration': [timedelta(seconds=2.25)],
                            'VisitSolution': [0],
                            '_line': [1],
+                           '_id': [1],
                            'Nosepokes': [None],
                            }
 
@@ -1321,6 +1326,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                            'PresenceDuration': [timedelta(seconds=2.25)],
                            'VisitSolution': [None],
                            '_line': [1],
+                           '_id': [1],
                            'Nosepokes': [None],
                            }
 
@@ -1390,6 +1396,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
     'PresenceDuration': floatToTimedelta([0.125, 0.25, 0.375, 0.0, 0.125, 0.250, 0.375, None, 0.125, 0.250]),
     'VisitSolution': [None, None, None, None, None, None, None, None, None, None],
     '_line': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
   MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
