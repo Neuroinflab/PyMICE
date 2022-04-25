@@ -276,7 +276,7 @@ class TestVisit(ICNodeTest):
                 'AntennaNumber', 'AntennaDuration',
                 'PresenceNumber', 'PresenceDuration',
                 'VisitSolution',
-                '_source', '_line',
+                '_source', '_line', '_id',
                 'Nosepokes')
 
   def setUp(self):
@@ -291,14 +291,14 @@ class TestVisit(ICNodeTest):
                        1, 0,
                        2, timedelta(seconds=12.125), 7, timedelta(seconds=8.5),
                        0,
-                       'source', 1,
+                       'source', 1, 2,
                        self.nosepokes,
                        )
     self.minimalVisit = Visit(self.start, 2, 'animal', None, None, -1,
                               None, None,
                               None, None, None, None,
                               None,
-                              None, None,
+                              None, None, None,
                               None)
 
   def testCreate(self):
@@ -311,7 +311,7 @@ class TestVisit(ICNodeTest):
                                              'AntennaNumber', 'AntennaDuration',
                                              'PresenceNumber', 'PresenceDuration',
                                              'VisitSolution',
-                                             '_source', '_line',
+                                             '_source', '_line', '_id',
                                              'Nosepokes',
                                              ])
 
@@ -330,6 +330,7 @@ class TestVisit(ICNodeTest):
                                       ('VisitSolution', 0),
                                       ('_source', 'source'),
                                       ('_line', 1),
+                                      ('_id', 2),
                                       ('Nosepokes', self.nosepokes),
                                       ])
 
