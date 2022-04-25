@@ -44,7 +44,7 @@ class Visit(BaseNode, DurationAware):
                'AntennaNumber', 'AntennaDuration',
                'PresenceNumber', 'PresenceDuration',
                'VisitSolution',
-               '_source', '_line',
+               '_source', '_line', '_id',
                'Nosepokes')
 
   __metaclass__ = VisitMetaclass
@@ -53,7 +53,7 @@ class Visit(BaseNode, DurationAware):
                CornerCondition, PlaceError,
                AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
                VisitSolution,
-               _source, _line,
+               _source, _line, _id,
                Nosepokes):
     self.__Start = Start
     self.__Corner = Corner
@@ -70,6 +70,7 @@ class Visit(BaseNode, DurationAware):
     self.__VisitSolution = VisitSolution
     self.___source = _source
     self.___line = _line
+    self.___id = _id
     self.__Nosepokes = Nosepokes
     if Nosepokes is not None:
       for nosepoke in Nosepokes:
@@ -87,7 +88,7 @@ class Visit(BaseNode, DurationAware):
                           self.__AntennaNumber, self.__AntennaDuration,
                           self.__PresenceNumber, self.__PresenceDuration,
                           self.__VisitSolution, source,
-                          self.___line, nosepokes)
+                          self.___line, self.___id, nosepokes)
 
   def _del_(self):
     if self.__Nosepokes:

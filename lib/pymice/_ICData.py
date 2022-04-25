@@ -850,7 +850,7 @@ class _ZipLoaderBase(object):
   def _makeVisit(self, Cage, Corner, AnimalTag, Start, End, ModuleName,
                  CornerCondition, PlaceError,
                  AntennaNumber, AntennaDuration, PresenceNumber, PresenceDuration,
-                 VisitSolution, _line, nosepokeRows):
+                 VisitSolution, _line, _id, nosepokeRows):
     animal = self.__animalManager[AnimalTag]
     cage = self._cageManager[Cage]
     corner = cage[Corner]
@@ -870,7 +870,7 @@ class _ZipLoaderBase(object):
                  int(PresenceNumber) if PresenceNumber is not None else None,
                  timedelta(seconds=float(PresenceDuration)) if PresenceDuration is not None else None,
                  int(VisitSolution) if VisitSolution is not None else None,
-                 self._source, _line,
+                 self._source, _line, _id,
                  Nosepokes)
 
   def _makeNosepoke(self, sideManager, nosepokeTuple):
@@ -898,9 +898,10 @@ class _ZipLoaderBase(object):
                     self._source, _line)
 
   def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
+    vIDs = visitsCollumns[self.VISIT_ID_FIELD]
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
-                                                 visitsCollumns[self.VISIT_ID_FIELD])
+                                                 vIDs)
 
     else:
       vNosepokes = repeat(None)
@@ -909,6 +910,7 @@ class _ZipLoaderBase(object):
                   for x in self.VISIT_FIELDS]
     vLines = count(1)
     vColValues.append(vLines)
+    vColValues.append(vIDs)
     vColValues.append(vNosepokes)
     return mapAsList(self._makeVisit, *vColValues)
 
