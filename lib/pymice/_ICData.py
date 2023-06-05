@@ -397,7 +397,7 @@ class Loader(Data):
 
     except KeyError:
       logger.warning('Unknown version: {}.  Using loader for IC+ v. 3'.format(version))
-      return ZipLoader_v_IntelliCage_Plus_3
+      return ZipLoader_v_IntelliCage_Plus_3_1
 
 
   def _checkVersion(self, zf):
