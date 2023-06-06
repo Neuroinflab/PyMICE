@@ -300,7 +300,8 @@ class Loader(Data):
   def __makeDatetimeFieldsTimezoneAware(self, tables, loader, zf):
     tzinfo = self.__get_timezone(loader, zf)
     for t in self.__extractDatetimeFields(tables, loader):
-      t.append(tzinfo)
+      if t is not None:
+        t.append(tzinfo)
     self.__convertNecessaryFieldsToDatetime(tables, loader)
 
   def __extractDatetimeFields(self, tables, loader):
@@ -325,7 +326,7 @@ class Loader(Data):
         self.__convertFieldToDatetime(column, table)
 
   def __convertFieldToDatetime(self, field, table):
-    table[field] = [datetime(*x) for x in table[field]]
+    table[field] = [datetime(*x) if x is not None else x for x in table[field]]
 
   def _getZipLoader(self, zf):
     try:
@@ -1077,6 +1078,8 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
 
 
 class ZipLoader_v_IntelliCage_Plus_3_1(ZipLoader_v_IntelliCage_Plus_3):
+  DATETIME_FIELDS = (ZipLoader_v_IntelliCage_Plus_3.DATETIME_FIELDS
+                     + {"Np": ZipLoader_v_IntelliCage_Plus_3.DATETIME_FIELDS["Np"] + ["LickStartTime"]})
   NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
                      'SideCondition', 'SideError',
                      'TimeError', 'ConditionError',
