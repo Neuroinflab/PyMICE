@@ -165,7 +165,7 @@ class Loader(Data):
                                     },
                 }
 
-  __timepointTables = ["Hw", "Env", "Log"]
+  __optionalTables = ["Np"] + _LOG_ENV_HW
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
                verbose=False, **kwargs):
@@ -228,8 +228,8 @@ class Loader(Data):
   def _loadZip(self, zf, source=None):
     loader = self.__getLoader(zf, source)
 
-    tables = self.__getVisitsNosepokes(zf, source, loader)
-    tables += self.__getLogEnvHw(zf, source, loader)
+    tables = self.__getTables(zf, source, loader)
+    self.__warnAboutOrphanedNosepokes(tables, loader)
     self.__makeDatetimeFieldsTimezoneAware(tables, loader, zf)
     self._insertNewVisits(loader.loadVisits(tables["Visits"],
                                             tables.get("Np")))
@@ -243,28 +243,26 @@ class Loader(Data):
                        self._makeTagToAnimalDict())
     return loader
 
-  def __getVisitsNosepokes(self, zf, source, loader):
-    visits = self._fromZipCSV(zf,
-                              loader.KEY_TO_STEM["Visits"],
-                              source=source)
-    visitsNosepokes = AdditiveDict(Visits=visits)
-    vids = visits[loader.VISIT_ID_FIELD]
-    if self._requested("Np"):
-      nosepokes = self._fromZipCSV(zf,
-                                   loader.KEY_TO_STEM["Np"],
-                                   source=source)
-      visitsNosepokes["Np"] = nosepokes
+  def __getTables(self, zf, source, loader):
+    return (AdditiveDict(
+              Visits=self._fromZipCSV(zf,
+                                      loader.KEY_TO_STEM["Visits"],
+                                      source=source))
+            + self.__getOptionalTables(zf, source, loader))
 
-      npVids = nosepokes['VisitID']
+  def __warnAboutOrphanedNosepokes(self, tables, loader):
+    try:
+      nosepokes = tables["Np"]
 
-      if len(npVids) > 0:  # disables annoying warning on comparison of empty array
-        vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
+    except KeyError:
+      return
 
-        for vid in npVids:
-          if vid not in vid2tag:
-            warn.warn('Unmatched nosepokes: %s' % vid)
+    visits = tables["Visits"]
+    vids = set(visits[loader.VISIT_ID_FIELD])
 
-    return visitsNosepokes
+    for vid in nosepokes['VisitID']:
+      if vid not in vids:
+        warn.warn("Orphaned nosepoke with VisitID = {}".format(vid))
 
   def __insertLogEnvHw(self, tables, loader):
     for name in _LOG_ENV_HW:
@@ -275,17 +273,16 @@ class Loader(Data):
       table = tables[name]
 
     except KeyError:
-      pass
+      return
 
-    else:
-      getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
+    getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
 
-  def __getLogEnvHw(self, zf, source, loader):
-    for name in self.__timepointTables:
-      table =self.__tryToLoadTableIfRequested(name,
-                                              zf,
-                                              source,
-                                              loader)
+  def __getOptionalTables(self, zf, source, loader):
+    for name in self.__optionalTables:
+      table = self.__tryToLoadTableIfRequested(name,
+                                               zf,
+                                               source,
+                                               loader)
       if table is not None:
         yield name, table
 
