@@ -65,7 +65,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       UnknownHardwareEvent, Session)
 
 from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
-                     isString, mapAsList)
+                     isString, mapAsList, MissingIdentityDict)
 from ._Analysis import Aggregator
 
 # dependence tracking
@@ -170,10 +170,7 @@ class Loader(Data):
                                     },
                 }
 
-  __tableNameMapping = {"Hw": "HardwareEvents",
-                        "Env": "Environment",
-                        "Log": "Log",
-                        }
+  __timepointTables = ["Hw", "Env", "Log"]
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
                verbose=False, **kwargs):
@@ -237,7 +234,7 @@ class Loader(Data):
     loader = self.__getLoader(zf, source)
 
     visitsNosepokes = self.__getVisitsNosepokes(zf, source, loader)
-    logEnvHw = self.__getLogEnvHw(zf, source)
+    logEnvHw = self.__getLogEnvHw(zf, source, loader)
     self.__makeDatetimeFieldsTimezoneAware(visitsNosepokes,
                                            logEnvHw,
                                            loader, zf)
@@ -253,11 +250,15 @@ class Loader(Data):
     return loader
 
   def __getVisitsNosepokes(self, zf, source, loader):
-    visits = self._fromZipCSV(zf, 'Visits', source=source)
+    visits = self._fromZipCSV(zf,
+                              loader.KEY_TO_STEM["Visits"],
+                              source=source)
     visitsNosepokes = [visits]
     vids = visits[loader.VISIT_ID_FIELD]
-    if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'Nosepokes', source=source)
+    if self._requested("Np"):
+      nosepokes = self._fromZipCSV(zf,
+                                   loader.KEY_TO_STEM["Np"],
+                                   source=source)
       visitsNosepokes.append(nosepokes)
 
       npVids = nosepokes['VisitID']
@@ -268,6 +269,7 @@ class Loader(Data):
         for vid in npVids:
           if vid not in vid2tag:
             warn.warn('Unmatched nosepokes: %s' % vid)
+
     return visitsNosepokes
 
   def __insertLogEnvHw(self, logEnvHw, loader):
@@ -275,17 +277,18 @@ class Loader(Data):
       getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
 
   @trimNoneValues
-  def __getLogEnvHw(self, zf, source):
+  def __getLogEnvHw(self, zf, source, loader):
     return {name: self.__tryToLoadTableIfRequested(name,
                                                    zf,
-                                                   source)
-            for name in self.__tableNameMapping}
+                                                   source,
+                                                   loader)
+            for name in self.__timepointTables}
 
-  def __tryToLoadTableIfRequested(self, name, zf, source):
+  def __tryToLoadTableIfRequested(self, name, zf, source, loader):
     if self._requested(name):
       try:
         return self._fromZipCSV(zf,
-                                self.__tableNameMapping[name],
+                                loader.KEY_TO_STEM[name],
                                 source=source)
 
       except KeyError:
@@ -791,6 +794,11 @@ class ICCageManager(object):
 
 
 class _ZipLoaderBase(object):
+  KEY_TO_STEM = MissingIdentityDict(
+    Np="Nosepokes",
+    Hw="HardwareEvents",
+    Env="Environment")
+
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
     self._cageManager = cageManager
