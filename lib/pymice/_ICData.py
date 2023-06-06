@@ -44,10 +44,8 @@ except ImportError:
 import dateutil.parser
 import pytz
 
-import numpy as np
 from xml.dom import minidom
 
-import functools
 from operator import methodcaller, attrgetter, itemgetter
 try:
   from itertools import izip, repeat, count, chain
