@@ -1999,9 +1999,8 @@ class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegration
                      self.data.getHardwareEvents())
 
 
-class LoadIntelliCagePlus31DataTest(LoaderIntegrationTest):
+class LoadIntelliCagePlus31DataTest(LoadIntelliCagePlus3DataTest):
   DATA_FILE = 'icp31_data.zip'
-
 
 class LoadRetaggedDataTest(LoaderIntegrationTest):
   DATA_FILE = 'retagged_data.zip'
