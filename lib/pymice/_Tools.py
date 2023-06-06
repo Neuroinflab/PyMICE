@@ -34,8 +34,6 @@ from operator import attrgetter
 import pytz
 import zipfile
 
-from ._FixTimezones import LatticeOrderer
-
 # XXX: imported objects are imported from elsewhere
 if sys.version_info.major >= 3:
   from ._Python3.Tools import isString, mapAsList
@@ -57,7 +55,7 @@ else:
   from ._Python2 import Tools
 
 # dependence tracking
-from . import _FixTimezones, _dependencies
+from . import _dependencies
 import types
 __dependencies__ = _dependencies.moduleDependencies(*[x for x in globals().values()
                                                       if isinstance(x, types.ModuleType)])
@@ -178,11 +176,11 @@ def timeToList(tStr):
 
   if len(tokens) == 5:
     #return map(int, tokens) + [0, 0]
-    return LatticeOrderer.Node(map(int, tokens + [0, 0]))
+    return list(map(int, tokens + [0, 0]))
 
   decimal, seconds = modf(float(tokens[5]))
   #return map(int, tokens[:5] + [seconds, round(decimal * 1000000)])
-  return LatticeOrderer.Node(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
+  return list(map(int, tokens[:5] + [seconds, round(decimal * 1000000)]))
 
 
 class timeListList(list):
