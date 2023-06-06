@@ -44,10 +44,8 @@ except ImportError:
 import dateutil.parser
 import pytz
 
-import numpy as np
 from xml.dom import minidom
 
-import functools
 from operator import methodcaller, attrgetter, itemgetter
 try:
   from itertools import izip, repeat, count, chain
@@ -65,7 +63,7 @@ from .ICNodes import (Animal, Visit, Nosepoke, LogEntry,
                       UnknownHardwareEvent, Session)
 
 from ._Tools import (timeToList, ArchiveZipFile, DirectoryZipFile, warn, groupBy,
-                     isString, mapAsList)
+                     isString, mapAsList, MissingIdentityDict, AdditiveDict)
 from ._Analysis import Aggregator
 
 # dependence tracking
@@ -103,12 +101,7 @@ logger = logging.getLogger(__name__)
 convertFloat = methodcaller('replace', ',', '.')
 
 
-def trimNoneValues(f):
-  @functools.wraps(f)
-  def wrapper(*args, **kwargs):
-    return {k: v for k, v in f(*args, **kwargs).items() if v is not None}
-
-  return wrapper
+_LOG_ENV_HW = ["Log", "Env", "Hw"]
 
 
 class Loader(Data):
@@ -170,10 +163,7 @@ class Loader(Data):
                                     },
                 }
 
-  __tableNameMapping = {"Hw": "HardwareEvents",
-                        "Env": "Environment",
-                        "Log": "Log",
-                        }
+  __optionalTables = ["Np"] + _LOG_ENV_HW
 
   def __init__(self, fname, getNp=True, getLog=False, getEnv=False, getHw=False,
                verbose=False, **kwargs):
@@ -236,13 +226,12 @@ class Loader(Data):
   def _loadZip(self, zf, source=None):
     loader = self.__getLoader(zf, source)
 
-    visitsNosepokes = self.__getVisitsNosepokes(zf, source, loader)
-    logEnvHw = self.__getLogEnvHw(zf, source)
-    self.__makeDatetimeFieldsTimezoneAware(visitsNosepokes,
-                                           logEnvHw,
-                                           loader, zf)
-    self._insertNewVisits(loader.loadVisits(*visitsNosepokes))
-    self.__insertLogEnvHw(logEnvHw, loader)
+    tables = self.__getTables(zf, source, loader)
+    self.__warnAboutOrphanedNosepokes(tables, loader)
+    self.__makeDatetimeFieldsTimezoneAware(tables, loader, zf)
+    self._insertNewVisits(loader.loadVisits(tables["Visits"],
+                                            tables.get("Np")))
+    self.__insertLogEnvHw(tables, loader)
 
   def __getLoader(self, zf, source):
     ZipLoader = self._getZipLoader(zf)
@@ -252,40 +241,54 @@ class Loader(Data):
                        self._makeTagToAnimalDict())
     return loader
 
-  def __getVisitsNosepokes(self, zf, source, loader):
-    visits = self._fromZipCSV(zf, 'Visits', source=source)
-    visitsNosepokes = [visits]
-    vids = visits[loader.VISIT_ID_FIELD]
-    if self._getNp:
-      nosepokes = self._fromZipCSV(zf, 'Nosepokes', source=source)
-      visitsNosepokes.append(nosepokes)
+  def __getTables(self, zf, source, loader):
+    return (AdditiveDict(
+              Visits=self._fromZipCSV(zf,
+                                      loader.KEY_TO_STEM["Visits"],
+                                      source=source))
+            + self.__getOptionalTables(zf, source, loader))
 
-      npVids = nosepokes['VisitID']
+  def __warnAboutOrphanedNosepokes(self, tables, loader):
+    try:
+      nosepokes = tables["Np"]
 
-      if len(npVids) > 0:  # disables annoying warning on comparison of empty array
-        vid2tag = dict(izip(vids, visits[loader.VISIT_TAG_FIELD]))
+    except KeyError:
+      return
 
-        for vid in npVids:
-          if vid not in vid2tag:
-            warn.warn('Unmatched nosepokes: %s' % vid)
-    return visitsNosepokes
+    visits = tables["Visits"]
+    vids = set(visits[loader.VISIT_ID_FIELD])
 
-  def __insertLogEnvHw(self, logEnvHw, loader):
-    for name, table in logEnvHw.items():
-      getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
+    for vid in nosepokes['VisitID']:
+      if vid not in vids:
+        warn.warn("Orphaned nosepoke with VisitID = {}".format(vid))
 
-  @trimNoneValues
-  def __getLogEnvHw(self, zf, source):
-    return {name: self.__tryToLoadTableIfRequested(name,
-                                                   zf,
-                                                   source)
-            for name in self.__tableNameMapping}
+  def __insertLogEnvHw(self, tables, loader):
+    for name in _LOG_ENV_HW:
+      self.__tryToInsertTable(tables, name, loader)
 
-  def __tryToLoadTableIfRequested(self, name, zf, source):
+  def __tryToInsertTable(self, tables, name, loader):
+    try:
+      table = tables[name]
+
+    except KeyError:
+      return
+
+    getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
+
+  def __getOptionalTables(self, zf, source, loader):
+    for name in self.__optionalTables:
+      table = self.__tryToLoadTableIfRequested(name,
+                                               zf,
+                                               source,
+                                               loader)
+      if table is not None:
+        yield name, table
+
+  def __tryToLoadTableIfRequested(self, name, zf, source, loader):
     if self._requested(name):
       try:
         return self._fromZipCSV(zf,
-                                self.__tableNameMapping[name],
+                                loader.KEY_TO_STEM[name],
                                 source=source)
 
       except KeyError:
@@ -294,19 +297,17 @@ class Loader(Data):
   def _requested(self, name):
     return getattr(self, "_get" + name)
 
-  def __makeDatetimeFieldsTimezoneAware(self, timespans, timepoints, loader, zf):
+  def __makeDatetimeFieldsTimezoneAware(self, tables, loader, zf):
     tzinfo = self.__get_timezone(loader, zf)
-    for t in self.__extractDatetimeFields(timespans, timepoints, loader):
-      t.append(tzinfo)
-    self.__convertNecessaryFieldsToDatetime(timespans, timepoints, loader)
+    for t in self.__extractDatetimeFields(tables, loader):
+      if t is not None:
+        t.append(tzinfo)
+    self.__convertNecessaryFieldsToDatetime(tables, loader)
 
-  def __extractDatetimeFields(self, timespans, timepoints, loader):
-    datetimes = [table[name]
-                 for table in timespans
-                 for name in ["Start", "End"]]
-
-    for table in timepoints.values():
-      datetimes.append(table[loader.DATETIME_KEY])
+  def __extractDatetimeFields(self, tables, loader):
+    datetimes = [table[column]
+                 for name, table in tables.items()
+                 for column in loader.DATETIME_FIELDS[name]]
 
     return chain(*datetimes)
 
@@ -319,19 +320,13 @@ class Loader(Data):
     session = sessions[0]
     return session.Start.tzinfo
 
-  def __convertNecessaryFieldsToDatetime(self, timespans, timepoints, loader):
-    for table in timespans:
-      self.__convertTimespansToDatetime(table)
-
-    for table in timepoints.values():
-      self.__convertFieldToDatetime(loader.DATETIME_KEY, table)
-
-  def __convertTimespansToDatetime(self, visits):
-    self.__convertFieldToDatetime('Start', visits)
-    self.__convertFieldToDatetime('End', visits)
+  def __convertNecessaryFieldsToDatetime(self, tables, loader):
+    for name, table in tables.items():
+      for column in loader.DATETIME_FIELDS[name]:
+        self.__convertFieldToDatetime(column, table)
 
   def __convertFieldToDatetime(self, field, table):
-    table[field] = [datetime(*x) for x in table[field]]
+    table[field] = [datetime(*x) if x is not None else x for x in table[field]]
 
   def _getZipLoader(self, zf):
     try:
@@ -791,6 +786,15 @@ class ICCageManager(object):
 
 
 class _ZipLoaderBase(object):
+  KEY_TO_STEM = MissingIdentityDict(
+    Np="Nosepokes",
+    Hw="HardwareEvents",
+    Env="Environment")
+
+  DATETIME_FIELDS = AdditiveDict(
+    Visits=["Start", "End"],
+    Np=["Start", "End"])
+
   def __init__(self, source, cageManager, animalManager):
     self.__animalManager = animalManager
     self._cageManager = cageManager
@@ -1001,7 +1005,8 @@ class _ZipLoaderBase(object):
 
 
 class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
-  DATETIME_KEY = 'DateTime'
+  DATETIME_FIELDS = (_ZipLoaderBase.DATETIME_FIELDS
+                     + {k: ["DateTime"] for k in _LOG_ENV_HW})
 
   VISIT_FIELDS = ['Cage', 'Corner',
                   'AnimalTag', 'Start', 'End', 'ModuleName',
@@ -1073,6 +1078,8 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
 
 
 class ZipLoader_v_IntelliCage_Plus_3_1(ZipLoader_v_IntelliCage_Plus_3):
+  DATETIME_FIELDS = (ZipLoader_v_IntelliCage_Plus_3.DATETIME_FIELDS
+                     + {"Np": ZipLoader_v_IntelliCage_Plus_3.DATETIME_FIELDS["Np"] + ["LickStartTime"]})
   NOSEPOKE_FIELDS = ['Start', 'End', 'Side',
                      'SideCondition', 'SideError',
                      'TimeError', 'ConditionError',
@@ -1098,7 +1105,8 @@ class ZipLoader_v_IntelliCage_Plus_3_1(ZipLoader_v_IntelliCage_Plus_3):
 
 
 class ZipLoader_v_version_2_2(_ZipLoaderBase):
-  DATETIME_KEY = 'Time'
+  DATETIME_FIELDS = (_ZipLoaderBase.DATETIME_FIELDS
+                     + {k: ["Time"] for k in _LOG_ENV_HW})
 
   VISIT_FIELDS = ['Cage', 'Corner',
                   'AnimalTag', 'Start', 'End', 'ModuleName',
@@ -1185,7 +1193,8 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
 
 
 class ZipLoader_v_version1(_ZipLoaderBase):
-  DATETIME_KEY = 'DateTime'
+  DATETIME_FIELDS = (_ZipLoaderBase.DATETIME_FIELDS
+                     + {k: ["DateTime"] for k in _LOG_ENV_HW})
 
   def _getCageCornerSide(self, Cage, Corner, Side):
     if Cage is None:

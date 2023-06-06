@@ -1830,8 +1830,8 @@ class LoaderIntegrationTest(BaseTest, MockNodesProvider):
 
   def assertSameDT(self, reference, times):
     self.assertEqual(reference, times)
-    self.assertEqual([t.hour for t in reference],
-                     [t.hour for t in times])
+    self.assertEqual([t.hour if t is not None else t for t in reference],
+                     [t.hour if t is not None else t for t in times])
 
 
 class LoadLegacyDataTest(LoaderIntegrationTest):
@@ -1999,8 +1999,18 @@ class GivenArchiveMissingEnvAndHwDataLoadedRequestingThoseData(LoaderIntegration
                      self.data.getHardwareEvents())
 
 
-class LoadIntelliCagePlus31DataTest(LoaderIntegrationTest):
+class LoadIntelliCagePlus31DataTest(LoadIntelliCagePlus3DataTest):
   DATA_FILE = 'icp31_data.zip'
+
+  def testLickStartTimeNosepokeAttribute(self):
+    CET = timezone('Etc/GMT-1')
+    expected = [[],
+                [datetime(2012, 12, 18, 12, 18, 57, 0, CET)],
+                [datetime(2012, 12, 18, 12, 19, 57, 125000, CET), None]]
+    for visit, lickStartTimes in zip(self.data.getVisits(order="Start"),
+                                     expected):
+      self.assertSameDT(lickStartTimes,
+                        [n.LickStartTime for n in visit.Nosepokes])
 
 
 class LoadRetaggedDataTest(LoaderIntegrationTest):
