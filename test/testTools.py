@@ -28,7 +28,7 @@ import datetime
 import operator
 import unittest
 
-from pymice._Tools import groupBy, convertTime
+from pymice._Tools import groupBy, convertTime, AdditiveDict, MissingIdentityDict
 
 Pair = collections.namedtuple('Pair', ['a', 'b'])
 
@@ -95,6 +95,61 @@ class TestConvertTime(unittest.TestCase):
                           ('microsecond', 700000),
                           ('tzinfo', None)]:
       self.assertEqual(value, getattr(time, attr))
+
+
+class TestAdditiveDict(unittest.TestCase):
+  DictClass = AdditiveDict
+
+  def testClassIsDict(self):
+    self.assertIsInstance(self.DictClass(), dict)
+
+  def testAddingTwoEmptyDictYieldsAnEmptyDict(self):
+    self.checkSumOfDicts({}, {}, {})
+
+  def testAddingSupportsIterables(self):
+    self.checkSumOfDicts({},
+                         [('a', 'a')],
+                         {'a': 'a'})
+
+  def testAddingDictReturnsNewSummedDict(self):
+    self.checkSumOfDicts({'a': 'a'},
+                         {'b': 'b'},
+                         {'a': 'a',
+                          'b': 'b'})
+
+  def testAddingConflictingKeysResultsInRightValues(self):
+    self.checkSumOfDicts({'a': 'a'},
+                         {'a': 'b'},
+                         {'a': 'b'})
+
+  def checkSumOfDicts(self, a, b, expected):
+    test_a = self.DictClass(a)
+    test_b = self.DictClass(b)
+    ab = test_a + test_b
+    self.assertEqual(expected, ab)
+    self.assertIsInstance(ab, self.DictClass)
+    for d, test_d in zip([a, b], [test_a, test_b]):
+      if isinstance(d, dict):
+        self.assertEqual(d, test_d)
+
+
+class TestIdentityDict(TestAdditiveDict):
+  DictClass = MissingIdentityDict
+
+  def testClassIsAdditiveDict(self):
+    self.assertIsInstance(self.DictClass(), AdditiveDict)
+
+  def testUndefinedKeysMappedToThemselves(self):
+    d = self.DictClass()
+    self.checkMissingKey(d)
+
+  def checkMissingKey(self, d, missingKey="missing"):
+    self.assertEqual(missingKey, d[missingKey])
+
+  def testDefinedKeysMappedProperly(self):
+    d = self.DictClass(a='b')
+    self.assertEqual('b', d['a'])
+    self.checkMissingKey(d)
 
 
 if __name__ == '__main__':

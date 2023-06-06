@@ -310,3 +310,18 @@ def mergeIntervalsValues(objects, getData, overlap=False, mergeWindow=None):
 
   result.append((lastStart, lastEnd, lastValue))
   return result
+
+
+class AdditiveDict(dict):
+  def copy(self):
+    return self.__class__(self)
+
+  def __add__(self, other):
+    result = self.copy()
+    result.update(other)
+    return result
+
+
+class MissingIdentityDict(AdditiveDict):
+  def __missing__(self, key):
+    return key
