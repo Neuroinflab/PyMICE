@@ -195,51 +195,54 @@ class Loader(Data):
 
     self._fnames = (fname,)
 
-    self._appendData(fname)
+    self._loadData(fname)
 
     self._setIcSessionAttributes()
     self.freeze()
 
 
-  def _appendData(self, fname):
-    """
-    Process one input file and append data to self.data
-    """
+  def _loadData(self, fname):
+    self.__reportDataLoading(fname)
+
+    if fname.endswith('.zip') or os.path.isdir(fname):
+      zf = self._openData(fname)
+
+      self._load(zf, source=fname)
+
+    self._buildCache()
+
+  def _openData(self, fname):
+    if isString(fname) and os.path.isdir(fname):
+      zf = DirectoryZipFile(fname)
+
+    else:
+      zf = ArchiveZipFile(fname)
+    return zf
+
+  def __reportDataLoading(self, fname):
     if self.__verbose:
-      if isinstance(fname, str): #XXX: Python3
+      if isinstance(fname, str):  # XXX: Python3
         print('loading data from {}'.format(fname))
 
       else:
         print('loading data from {}'.format(fname.encode('utf-8')))
 
-    if fname.endswith('.zip') or os.path.isdir(fname):
-      if isString(fname) and os.path.isdir(fname):
-        zf = DirectoryZipFile(fname)
-
-      else:
-        zf = ArchiveZipFile(fname)
-
-      self._loadZip(zf, source=fname)
-
-    self._buildCache()
-
-  def _loadZip(self, zf, source=None):
+  def _load(self, zf, source=None):
     loader = self.__getLoader(zf, source)
 
     tables = self.__getTables(zf, source, loader)
     self.__warnAboutOrphanedNosepokes(tables, loader)
     self.__makeDatetimeFieldsTimezoneAware(tables, loader, zf)
-    self._insertNewVisits(loader.loadVisits(tables["Visits"],
+    self._insertNewVisits(loader.wrapVisits(tables["Visits"],
                                             tables.get("Np")))
     self.__insertLogEnvHw(tables, loader)
 
   def __getLoader(self, zf, source):
-    ZipLoader = self._getZipLoader(zf)
+    ZipLoader = self._getZipLoaderClass(zf)
     self._loadAnimals(zf, ZipLoader)
-    loader = ZipLoader(source,
-                       self._cageManager,
-                       self._makeTagToAnimalDict())
-    return loader
+    return ZipLoader(source,
+                     self._cageManager,
+                     self._makeTagToAnimalDict())
 
   def __getTables(self, zf, source, loader):
     return (AdditiveDict(
@@ -273,7 +276,7 @@ class Loader(Data):
     except KeyError:
       return
 
-    getattr(self, "_insertNew" + name)(getattr(loader, "load" + name)(table))
+    getattr(self, "_insertNew" + name)(getattr(loader, "wrap" + name)(table))
 
   def __getOptionalTables(self, zf, source, loader):
     for name in self.__optionalTables:
@@ -328,7 +331,7 @@ class Loader(Data):
   def __convertFieldToDatetime(self, field, table):
     table[field] = [datetime(*x) if x is not None else x for x in table[field]]
 
-  def _getZipLoader(self, zf):
+  def _getZipLoaderClass(self, zf):
     try:
       version = self._checkVersion(zf)
 
@@ -431,12 +434,12 @@ class Loader(Data):
   def _loadAnimals(self, zf, loader):
     animalData = self._fromZipCSV(zf, 'Animals')
 
-    animals = loader.loadAnimals(animalData)
+    animals = loader.extractAndWrapAnimals(animalData)
 
     for animal in animals:
       self._registerAnimal(animal)
 
-    groups = loader.loadGroups(animalData)
+    groups = loader.extractAndWrapGroups(animalData)
     for name in groups:
       if name is not None:
         self._registerGroup(name, groups[name])
@@ -850,7 +853,7 @@ class _ZipLoaderBase(object):
                     LickStartTime if LickStartTime is not None else None,
                     self._source, _line)
 
-  def loadVisits(self, visitsCollumns, nosepokesCollumns=None):
+  def wrapVisits(self, visitsCollumns, nosepokesCollumns=None):
     vIDs = visitsCollumns[self.VISIT_ID_FIELD]
     if nosepokesCollumns is not None:
       vNosepokes = self._assignNosepokesToVisits(nosepokesCollumns,
@@ -1029,7 +1032,7 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                      'LickStartTime',  # Only IC+ v. 3.1
                      ]
 
-  def loadLog(self, columns):
+  def wrapLog(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'LogCategory',
@@ -1048,13 +1051,13 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                                    self._cageManager[Cage] if Cage is not None else None,
                                    self._source, _line)
 
-  def loadEnv(self, columns):
+  def wrapEnv(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime', 'Temperature',
                                    'Illumination', 'Cage'],
                                   self._makeEnv)
 
-  def loadHw(self, columns):
+  def wrapHw(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'HardwareType',
@@ -1065,14 +1068,14 @@ class ZipLoader_v_IntelliCage_Plus_3(_ZipLoaderBase):
                                   self._makeHw)
 
   @classmethod
-  def loadAnimals(cls, columns):
+  def extractAndWrapAnimals(cls, columns):
     return cls._columnsToObjects(columns,
                                  ['AnimalName', 'AnimalTag','Sex',
                                   'AnimalNotes'],
                                  cls._makeAnimal)
 
   @classmethod
-  def loadGroups(cls, columns):
+  def extractAndWrapGroups(cls, columns):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
@@ -1144,7 +1147,7 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
 
     return cage, corner, (corner[int(Side) + 1])
 
-  def loadLog(self, columns):
+  def wrapLog(self, columns):
     return self._columnsToObjects(columns,
                                   ['Time',
                                    'LogCategory',
@@ -1163,13 +1166,13 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                    None,
                                    self._source, _line)
 
-  def loadEnv(self, columns):
+  def wrapEnv(self, columns):
      return self._columnsToObjects(columns,
                                   ['Time', 'Temperature',
                                    'Illumination'],
                                   self._makeEnv)
 
-  def loadHw(self, columns):
+  def wrapHw(self, columns):
     return self._columnsToObjects(columns,
                                   ['Time',
                                    'HardwareType',
@@ -1180,14 +1183,14 @@ class ZipLoader_v_version_2_2(_ZipLoaderBase):
                                   self._makeHw)
 
   @classmethod
-  def loadAnimals(cls, columns):
+  def extractAndWrapAnimals(cls, columns):
     return cls._columnsToObjects(columns,
                                  ['AnimalName', 'AnimalTag','Sex',
                                   'AnimalNotes'],
                                  cls._makeAnimal)
 
   @classmethod
-  def loadGroups(cls, columns):
+  def extractAndWrapGroups(cls, columns):
     return cls.group(columns['AnimalName'],
                      columns['GroupName'])
 
@@ -1218,12 +1221,12 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                                    None,
                                    self._source, _line)
 
-  def loadEnv(self, columns):
+  def wrapEnv(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime', 'Temperature', 'Illumination'],
                                   self._makeEnv)
 
-  def loadLog(self, columns):
+  def wrapLog(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'Category',
@@ -1234,7 +1237,7 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                                    'Notes'],
                                   self._makeLog)
 
-  def loadHw(self, columns):
+  def wrapHw(self, columns):
     return self._columnsToObjects(columns,
                                   ['DateTime',
                                    'Type',
@@ -1266,13 +1269,13 @@ class ZipLoader_v_version1(_ZipLoaderBase):
                      ]
 
   @classmethod
-  def loadAnimals(cls, columns):
+  def extractAndWrapAnimals(cls, columns):
     return cls._columnsToObjects(columns,
                                  ['Name', 'Tag','Sex', 'Notes'],
                                  cls._makeAnimal)
 
   @classmethod
-  def loadGroups(cls, columns):
+  def extractAndWrapGroups(cls, columns):
     return cls.group(columns['Name'],
                      columns['Group'])
 

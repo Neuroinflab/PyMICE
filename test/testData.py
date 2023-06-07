@@ -148,44 +148,44 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     self.assertEqual(self.SESSION_START, sessions[0].Start)
     self.assertEqual(self.SESSION_END, sessions[0].End)
 
-  INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
+  INPUT_WRAP_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],
                         'Sex': ['Female', 'Male', 'Male'],
                         'GroupName': ['Disney', 'Disney', 'HannaBarbera'],
                         'AnimalNotes': [None, None, 'Likes Tom']}
-  OUTPUT_LOAD_ANIMALS = {'Name': [u'Minie', u'Mickey', u'Jerry'],
+  OUTPUT_WRAP_ANIMALS = {'Name': [u'Minie', u'Mickey', u'Jerry'],
                          'Tag': [{'1337'}, {'42'}, {'69'}],
                          'Sex': ['Female', 'Male', 'Male'],
                          'Notes': [set(), set(), {'Likes Tom'}]}
-  OUTPUT_LOAD_GROUPS = {'Disney': {'Minie', 'Mickey'},
+  OUTPUT_WRAP_GROUPS = {'Disney': {'Minie', 'Mickey'},
                         'HannaBarbera': {'Jerry'}}
 
-  def testLoadEmptyAnimals(self):
-    self.checkMethodWithEmptyData(self.loaderClass.loadAnimals,
-                                  self.INPUT_LOAD_ANIMALS)
+  def testExtractAndWrapEmptyAnimals(self):
+    self.checkMethodWithEmptyData(self.loaderClass.extractAndWrapAnimals,
+                                  self.INPUT_WRAP_ANIMALS)
 
-  def testLoadAnimals(self):
-    animals = self.loaderClass.loadAnimals(self.INPUT_LOAD_ANIMALS)
-    for name, tests in self.OUTPUT_LOAD_ANIMALS.items():
+  def testExtractAndWrapAnimals(self):
+    animals = self.loaderClass.extractAndWrapAnimals(self.INPUT_WRAP_ANIMALS)
+    for name, tests in self.OUTPUT_WRAP_ANIMALS.items():
       self.checkAttributeSeq(animals, name, tests)
 
-  def testLoadEmptyGroups(self):
+  def testExtractAndWrapEmptyGroups(self):
       self.assertEqual({},
-                       self.loaderClass.loadGroups(
-                           self.makeEmptyColumns(self.INPUT_LOAD_ANIMALS)))
+                       self.loaderClass.extractAndWrapGroups(
+                           self.makeEmptyColumns(self.INPUT_WRAP_ANIMALS)))
 
   def makeEmptyColumns(self, keys):
       return {key: [] for key in keys}
 
-  def testLoadGroups(self):
-    groups = self.loaderClass.loadGroups(self.INPUT_LOAD_ANIMALS)
-    self.assertEqual(self.OUTPUT_LOAD_GROUPS, groups)
+  def testExtractAndWrapGroups(self):
+    groups = self.loaderClass.extractAndWrapGroups(self.INPUT_WRAP_ANIMALS)
+    self.assertEqual(self.OUTPUT_WRAP_GROUPS, groups)
 
-  def testLoadEmptyVisits(self):
-    self.checkMethodWithEmptyData(self.loader.loadVisits,
-                                  self.INPUT_LOAD_ONE_VISIT)
+  def testWrapEmptyVisits(self):
+    self.checkMethodWithEmptyData(self.loader.wrapVisits,
+                                  self.INPUT_WRAP_ONE_VISIT)
 
-  INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_VISIT = {'VisitID': ['1'],
                           'AnimalTag': ['10'],
                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
@@ -200,7 +200,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                           'PresenceDuration': ['2.250'],
                           'VisitSolution': ['0'],
                           }
-  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+  OUTPUT_WRAP_ONE_VISIT = {'Animal': ['10'],
                            'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                            'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
                            'Module': [u'Default'],
@@ -218,10 +218,10 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                            'Nosepokes': [None],
                            }
 
-  def testLoadOneVisit(self):
-    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT)
+  def testWrapOneVisit(self):
+    visits = self.loader.wrapVisits(self.INPUT_WRAP_ONE_VISIT)
 
-    expected = self.OUTPUT_LOAD_ONE_VISIT
+    expected = self.OUTPUT_WRAP_ONE_VISIT
     self.basicNodeCheck(expected, visits)
 
     for visit in visits:
@@ -234,6 +234,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
   VISIT_INT_ATTRIBUTES = ['CornerCondition', 'PlaceError',
                           'AntennaNumber', 'PresenceNumber',
                           'VisitSolution']
+
   def checkVisitAttributeTypes(self, visit):
     self.checkAttrsAreInt(visit,
                           *self.VISIT_INT_ATTRIBUTES)
@@ -264,7 +265,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                             'Attribute: {}'.format(attr))
 
 
-  INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  INPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'VisitID': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
     'AnimalTag': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
@@ -298,7 +299,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     'PresenceDuration': ['0.125', '0.25', '0.375', '0', '0.125', '0.250', '0.375', None, '0.125', '0.250'],
     'VisitSolution': ['1', '2', '3', '0', '1', '2', '3', '0', None, '2'],
   }
-  OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  OUTPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
               datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
@@ -334,7 +335,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_WITH_MISSING_VALUES = [None,
                                                          'End',
                                                          ('ModuleName', 'Module'),
                                                          'CornerCondition',
@@ -344,24 +345,24 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                                          'PresenceNumber',
                                                          'PresenceDuration',
                                                          'VisitSolution']
-  def testLoadManyVisitsWithMissingValues(self):
-    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES:
-      inCols = dict(self.INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES)
-      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES)
+  def testWrapManyVisitsWithMissingValues(self):
+    for descCol in self.MISSING_FIELDS_WRAP_MANY_VISITS_WITH_MISSING_VALUES:
+      inCols = dict(self.INPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES)
+      outCols = dict(self.OUTPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES)
       if descCol is not None:
         inCol, outCol = (descCol, descCol) if isString(descCol) else descCol
         inCols.pop(inCol)
         outCols.pop(outCol)
 
-      visits = self.loader.loadVisits(inCols)
+      visits = self.loader.wrapVisits(inCols)
       self.basicNodeCheck(outCols, visits)
 
-  def testLoadOneVisitNoNosepokes(self):
-    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
-                                    {key: [] for key in self.INPUT_LOAD_ONE_NOSEPOKE})
+  def testWrapOneVisitNoNosepokes(self):
+    visits = self.loader.wrapVisits(self.INPUT_WRAP_ONE_VISIT,
+                                    {key: [] for key in self.INPUT_WRAP_ONE_NOSEPOKE})
     self.assertEqual(visits[0].Nosepokes, ())
 
-  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_NOSEPOKE = {'VisitID': ['1'],
                              'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                              'Side': ['4'],
@@ -378,7 +379,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                              'LED2State': ['1'],
                              'LED3State': ['0']
                              }
-  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  OUTPUT_WRAP_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                               'Side': [4],
                               'SideCondition': [1],
@@ -396,16 +397,16 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                               '_line': [1],
                               }
 
-  def testLoadOneVisitOneNosepoke(self):
-    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
-                                    self.INPUT_LOAD_ONE_NOSEPOKE)
+  def testWrapOneVisitOneNosepoke(self):
+    visits = self.loader.wrapVisits(self.INPUT_WRAP_ONE_VISIT,
+                                    self.INPUT_WRAP_ONE_NOSEPOKE)
     visit = visits[0]
-    self.basicNodeCheck(self.OUTPUT_LOAD_ONE_NOSEPOKE, visit.Nosepokes)
+    self.basicNodeCheck(self.OUTPUT_WRAP_ONE_NOSEPOKE, visit.Nosepokes)
     self.checkNosepokeAttributeTypes(visit.Nosepokes[0], 1, 2)
     self.assertEqual(self.cageManager.items[1].items[2].sequence, [('__getitem__', '4')])
 
 
-  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Visits': {'VisitID': ['1', '2', '3', '4'],
                'AnimalTag': ['1', '2', '3', '4'],
                'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
@@ -448,7 +449,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                      'LED3State': ['0', '0', '1', '1', '1', '0'],
                      }
   }
-  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Nosepokes':
         {
           'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
@@ -480,7 +481,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
         },
     'NosepokeLen': [0, 1, 2, 3],
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES = [None,
                                                     'End',
                                                     'Side',
                                                     'SideCondition',
@@ -496,11 +497,11 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                                     'LED2State',
                                                     'LED3State',]
   def testManyVisitsManyNosepokes(self):
-    inputVColumns = self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Visits']
+    inputVColumns = self.INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Visits']
 
-    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES:
-      inCols = dict(self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
-      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+    for descCol in self.MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES:
+      inCols = dict(self.INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      outCols = dict(self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
       if descCol is not None:
         if isinstance(descCol, str):
           inCol, outCol = descCol, descCol
@@ -509,22 +510,22 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
         inCols.pop(inCol)
         outCols.pop(outCol)
 
-      visits = self.loader.loadVisits(inputVColumns, inCols)
+      visits = self.loader.wrapVisits(inputVColumns, inCols)
       self.assertEqual([len(v.Nosepokes) for v in visits],
-                       self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
+                       self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
 
       nosepokes = [n for v in visits for n in v.Nosepokes]
       self.basicNodeCheck(outCols, nosepokes)
 
       # self.assertEqual([n._line for v in visits for n in v.Nosepokes],
-      #                  self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
+      #                  self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
 
 
-  def testLoadEmptyLog(self):
-    self.checkMethodWithEmptyData(self.loader.loadLog,
-                                  self.INPUT_LOAD_LOG)
+  def testWrapEmptyLog(self):
+    self.checkMethodWithEmptyData(self.loader.wrapLog,
+                                  self.INPUT_WRAP_LOG)
 
-  INPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+  INPUT_WRAP_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
                                  datetime(1970, 1, 1, 1, tzinfo=utc),
                                  datetime(1970, 1, 1, 2, tzinfo=utc),
                                  datetime(1970, 1, 1, 3, tzinfo=utc),
@@ -539,12 +540,12 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                                  'Lickometer is active but nosepoke is inactive',
                                  'Fake note',
                                  None],
-                     }
-  OUTPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
-                                 datetime(1970, 1, 1, 1, tzinfo=utc),
-                                 datetime(1970, 1, 1, 2, tzinfo=utc),
-                                 datetime(1970, 1, 1, 3, tzinfo=utc),
-                                 datetime(1970, 1, 1, 4, tzinfo=utc)],
+                    }
+  OUTPUT_WRAP_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+                                  datetime(1970, 1, 1, 1, tzinfo=utc),
+                                  datetime(1970, 1, 1, 2, tzinfo=utc),
+                                  datetime(1970, 1, 1, 3, tzinfo=utc),
+                                  datetime(1970, 1, 1, 4, tzinfo=utc)],
                      'Category': [u'Info', u'Warning', u'Warning', u'Fake', u'Fake'],
                      'Type': [u'Application', u'Presence', u'Lickometer', u'Fake', u'Fake'],
                      'Cage': [None, 2, 3, 1, 1],
@@ -558,15 +559,15 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
                      '_line': [1, 2, 3, 4, 5],
                      }
 
-  def testLoadLog(self):
-    log = self.loader.loadLog(self.INPUT_LOAD_LOG)
+  def testWrapLog(self):
+    log = self.loader.wrapLog(self.INPUT_WRAP_LOG)
 
-    self.basicNodeCheck(self.OUTPUT_LOAD_LOG, log)
+    self.basicNodeCheck(self.OUTPUT_WRAP_LOG, log)
 
     for entry, cage, corner, side in zip(log,
-                                         self.OUTPUT_LOAD_LOG['Cage'],
-                                         self.OUTPUT_LOAD_LOG['Corner'],
-                                         self.OUTPUT_LOAD_LOG['Side']):
+                                         self.OUTPUT_WRAP_LOG['Cage'],
+                                         self.OUTPUT_WRAP_LOG['Corner'],
+                                         self.OUTPUT_WRAP_LOG['Side']):
       if cage is not None:
         self.assertIs(entry.Cage, self.cageManager.items[cage])
         if corner is not None:
@@ -574,15 +575,15 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
           if side is not None:
             self.assertIs(entry.Side, entry.Corner.items[side])
 
-  def testLoadEmptyEnv(self):
-    self.checkMethodWithEmptyData(self.loader.loadEnv,
-                                  self.INPUT_LOAD_ENV)
+  def testWrapEmptyEnv(self):
+    self.checkMethodWithEmptyData(self.loader.wrapEnv,
+                                  self.INPUT_WRAP_ENV)
 
   def checkMethodWithEmptyData(self, method, keys):
     self.assertEqual([],
                      method(self.makeEmptyColumns(keys)))
 
-  INPUT_LOAD_ENV = {
+  INPUT_WRAP_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': ['20.0', '20.5'],
@@ -590,7 +591,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     'Cage': ['1', '2'],
     }
 
-  OUTPUT_LOAD_ENV = {
+  OUTPUT_WRAP_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': [20.0, 20.5],
@@ -599,22 +600,22 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     '_line': [1, 2],
     }
 
-  def testLoadEnv(self):
-    for e in self._testLoadEnv():
+  def testWrapEnv(self):
+    for e in self._testWrapEnv():
       self.assertIs(e.Cage, self.cageManager.items[e.Cage])
 
-  def _testLoadEnv(self):
-    envs = self.loader.loadEnv(self.INPUT_LOAD_ENV)
+  def _testWrapEnv(self):
+    envs = self.loader.wrapEnv(self.INPUT_WRAP_ENV)
 
-    self.basicNodeCheck(self.OUTPUT_LOAD_ENV, envs)
+    self.basicNodeCheck(self.OUTPUT_WRAP_ENV, envs)
 
     return envs
 
-  def testLoadEmptyHw(self):
-    self.checkMethodWithEmptyData(self.loader.loadHw,
-                                  self.INPUT_LOAD_HW)
+  def testWrapEmptyHw(self):
+    self.checkMethodWithEmptyData(self.loader.wrapHw,
+                                  self.INPUT_WRAP_HW)
 
-  INPUT_LOAD_HW = {
+  INPUT_WRAP_HW = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
@@ -625,7 +626,7 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     'Side': [None, '3', '6', '7'],
     'State': ['0', '1', '0', '1'],
     }
-  OUTPUT_LOAD_HW = {
+  OUTPUT_WRAP_HW = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
@@ -637,18 +638,18 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
     'State': [0, 1, 0, 1],
     '_line': [1, 2, 3, 4]
     }
-  OUTPUT_LOAD_HW_TYPE = [AirHardwareEvent,
+  OUTPUT_WRAP_HW_TYPE = [AirHardwareEvent,
                          DoorHardwareEvent,
                          LedHardwareEvent,
                          UnknownHardwareEvent]
 
-  def testLoadHw(self):
-    hws = self.loader.loadHw(self.INPUT_LOAD_HW)
+  def testWrapHw(self):
+    hws = self.loader.wrapHw(self.INPUT_WRAP_HW)
 
-    expected = self.OUTPUT_LOAD_HW
+    expected = self.OUTPUT_WRAP_HW
     self.basicNodeCheck(expected, hws)
 
-    for hw, hwType in zip(hws, self.OUTPUT_LOAD_HW_TYPE):
+    for hw, hwType in zip(hws, self.OUTPUT_WRAP_HW_TYPE):
         self.assertIsInstance(hw, hwType)
 
     for hw in hws:
@@ -668,13 +669,13 @@ class TestZipLoader_v_IntelliCage_Plus_3(BaseTest):
 class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
   loaderClass = ZipLoader_v_version1
 
-  INPUT_LOAD_ANIMALS = {'Name': ['Minie', 'Mickey', 'Jerry'],
+  INPUT_WRAP_ANIMALS = {'Name': ['Minie', 'Mickey', 'Jerry'],
                         'Tag': ['1337', '42', '69'],
                         'Sex': ['Female', 'Male', 'Male'],
                         'Group': ['Disney', 'Disney', 'HannaBarbera'],
                         'Notes': [None, None, 'Likes Tom']}
 
-  INPUT_LOAD_HW = {
+  INPUT_WRAP_HW = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc),
@@ -686,14 +687,14 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
     'State': ['0', '1', '0', '1'],
     }
 
-  INPUT_LOAD_ENV = {
+  INPUT_WRAP_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': ['20.0', '20.5'],
     'Illumination': ['255', '0'],
     }
 
-  OUTPUT_LOAD_ENV = {
+  OUTPUT_WRAP_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
                  datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': [20.0, 20.5],
@@ -702,11 +703,11 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
     '_line': [1, 2],
     }
 
-  def testLoadEnv(self):
-    for e in self._testLoadEnv():
+  def testWrapEnv(self):
+    for e in self._testWrapEnv():
       self.assertIs(e.Cage, None)
 
-  INPUT_LOAD_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
+  INPUT_WRAP_LOG = {'DateTime': [datetime(1970, 1, 1, 0, tzinfo=utc),
                                  datetime(1970, 1, 1, 1, tzinfo=utc),
                                  datetime(1970, 1, 1, 2, tzinfo=utc),
                                  datetime(1970, 1, 1, 3, tzinfo=utc),
@@ -721,12 +722,12 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                               'Lickometer is active but nosepoke is inactive',
                               'Fake note',
                               None],
-                     }
+                    }
 
   VISIT_INT_ATTRIBUTES = ['CornerCondition', 'PlaceError',
                           'AntennaNumber', 'PresenceNumber',]
 
-  INPUT_LOAD_ONE_VISIT = {'ID': ['1'],
+  INPUT_WRAP_ONE_VISIT = {'ID': ['1'],
                           'Animal': ['10'],
                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
@@ -740,7 +741,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                           'PresenceNumber': ['2'],
                           'PresenceDuration': ['2.250']
                           }
-  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+  OUTPUT_WRAP_ONE_VISIT = {'Animal': ['10'],
                            'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                            'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
                            'Module': [u'Default'],
@@ -758,7 +759,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                            'Nosepokes': [None],
                            }
 
-  INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  INPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'ID': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
     'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
@@ -791,7 +792,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
     'PresenceNumber': ['1', '2', '3', '0', '1', '2', None, '0', '1', '2'],
     'PresenceDuration': ['0.125', '0.25', '0.375', '0', '0.125', '0.250', '0.375', None, '0.125', '0.250'],
   }
-  OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  OUTPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
               datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
@@ -827,7 +828,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
     '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_WITH_MISSING_VALUES = [None,
                                                          'End',
                                                          ('ModuleName', 'Module'),
                                                          'CornerCondition',
@@ -837,7 +838,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                                                          'PresenceNumber',
                                                          'PresenceDuration']
 
-  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_NOSEPOKE = {'VisitID': ['1'],
                              'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                              'Side': ['4'],
@@ -853,7 +854,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                              'LED2State': ['1'],
                              'LED3State': ['0']
                              }
-  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  OUTPUT_WRAP_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                               'Side': [4],
                               'SideCondition': [1],
@@ -871,7 +872,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                               '_line': [1],
                               }
 
-  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Visits': {'ID': ['1', '2', '3', '4'],
                'Animal': ['1', '2', '3', '4'],
                'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
@@ -913,7 +914,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
                      'LED3State': ['0', '0', '1', '1', '1', '0'],
                      }
   }
-  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Nosepokes':
         {
           'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
@@ -945,7 +946,7 @@ class TestZipLoader_v_Version1(TestZipLoader_v_IntelliCage_Plus_3):
         },
     'NosepokeLen': [0, 1, 2, 3],
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES = [None,
                                                     'End',
                                                     'Side',
                                                     'SideCondition',
@@ -1022,7 +1023,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
     self.assertEqual(self.SESSION_START, sessions[0].Start)
     self.assertEqual(self.SESSION_END, sessions[0].End)
 
-  INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_VISIT = {'VisitID': ['1'],
                           'AnimalTag': ['10'],
                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
@@ -1037,7 +1038,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                           'PresenceDuration': ['2.250'],
                           'VisitSolution': ['0'],
                           }
-  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+  OUTPUT_WRAP_ONE_VISIT = {'Animal': ['10'],
                            'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                            'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
                            'Module': [u'Default'],
@@ -1063,7 +1064,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
     self.assertIsInstance(nosepoke.Side, self.cageManager.items[cage].items[corner].Cls,
                           'Attribute: Side')
 
-  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_NOSEPOKE = {'VisitID': ['1'],
                              'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                              'Side': ['4'],
@@ -1081,7 +1082,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                              'LED3State': ['0'],
                              'LickStartTime': [None],
                              }
-  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  OUTPUT_WRAP_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                               'Side': [4],
                               'SideCondition': [1],
@@ -1100,15 +1101,15 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                               '_line': [1],
                               }
 
-  def testLoadOneVisitOneNosepoke(self):
-    visits = self.loader.loadVisits(self.INPUT_LOAD_ONE_VISIT,
-                                    self.INPUT_LOAD_ONE_NOSEPOKE)
+  def testWrapOneVisitOneNosepoke(self):
+    visits = self.loader.wrapVisits(self.INPUT_WRAP_ONE_VISIT,
+                                    self.INPUT_WRAP_ONE_NOSEPOKE)
     visit = visits[0]
-    self.basicNodeCheck(self.OUTPUT_LOAD_ONE_NOSEPOKE, visit.Nosepokes)
+    self.basicNodeCheck(self.OUTPUT_WRAP_ONE_NOSEPOKE, visit.Nosepokes)
     self.checkNosepokeAttributeTypes(visit.Nosepokes[0], 1, 2)
     self.assertEqual(self.cageManager.items[1].items[2].sequence, [('__getitem__', '4')])
 
-  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Visits': {'VisitID': ['1', '2', '3', '4'],
                'AnimalTag': ['1', '2', '3', '4'],
                'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
@@ -1157,7 +1158,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                                        datetime(1970, 1, 1, 0, 32, 25, tzinfo=utc)],
                      }
   }
-  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Nosepokes':
         {
           'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
@@ -1195,7 +1196,7 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
         },
     'NosepokeLen': [0, 1, 2, 3],
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES = [None,
                                                     'End',
                                                     'Side',
                                                     'SideCondition',
@@ -1213,11 +1214,11 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
                                                     'LickStartTime',
                                                     ]
   def testManyVisitsManyNosepokes(self):
-    inputVColumns = self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Visits']
+    inputVColumns = self.INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Visits']
 
-    for descCol in self.MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES:
-      inCols = dict(self.INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
-      outCols = dict(self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+    for descCol in self.MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES:
+      inCols = dict(self.INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
+      outCols = dict(self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['Nosepokes'])
       if descCol is not None:
         if isinstance(descCol, str):
           inCol, outCol = descCol, descCol
@@ -1226,27 +1227,27 @@ class TestZipLoader_v_IntelliCage_Plus_3_1(TestZipLoader_v_IntelliCage_Plus_3):
         inCols.pop(inCol)
         outCols.pop(outCol)
 
-      visits = self.loader.loadVisits(inputVColumns, inCols)
+      visits = self.loader.wrapVisits(inputVColumns, inCols)
       self.assertEqual([len(v.Nosepokes) for v in visits],
-                       self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
+                       self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['NosepokeLen'])
 
       nosepokes = [n for v in visits for n in v.Nosepokes]
       self.basicNodeCheck(outCols, nosepokes)
 
       # self.assertEqual([n._line for v in visits for n in v.Nosepokes],
-      #                  self.OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
+      #                  self.OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES['NosepokeOrder'])
 
 
 class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
   loaderClass = ZipLoader_v_version_2_2
 
-  INPUT_LOAD_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
+  INPUT_WRAP_ANIMALS = {'AnimalName': ['Minie', 'Mickey', 'Jerry'],
                         'AnimalTag': ['1337', '42', '69'],
                         'Sex': ['Female', 'Male', 'Male'],
                         'GroupName': ['Disney', 'Disney', 'HannaBarbera'],
                         'AnimalNotes': [None, None, 'Likes Tom']}
 
-  INPUT_LOAD_HW = {
+  INPUT_WRAP_HW = {
     'Time': [datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc),
@@ -1258,14 +1259,14 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
     'State': ['0', '1', '0', '1'],
     }
 
-  INPUT_LOAD_ENV = {
+  INPUT_WRAP_ENV = {
     'Time': [datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': ['20.0', '20.5'],
     'Illumination': ['255', '0'],
     }
 
-  OUTPUT_LOAD_ENV = {
+  OUTPUT_WRAP_ENV = {
     'DateTime': [datetime(1970, 1, 1, tzinfo=utc),
              datetime(1970, 1, 1, tzinfo=utc)],
     'Temperature': [20.0, 20.5],
@@ -1274,15 +1275,15 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
     '_line': [1, 2],
     }
 
-  def testLoadEnv(self):
-    for e in self._testLoadEnv():
+  def testWrapEnv(self):
+    for e in self._testWrapEnv():
       self.assertIs(e.Cage, None)
 
-  INPUT_LOAD_LOG = {'Time': [datetime(1970, 1, 1, 0, tzinfo=utc),
-                                 datetime(1970, 1, 1, 1, tzinfo=utc),
-                                 datetime(1970, 1, 1, 2, tzinfo=utc),
-                                 datetime(1970, 1, 1, 3, tzinfo=utc),
-                                 datetime(1970, 1, 1, 4, tzinfo=utc)],
+  INPUT_WRAP_LOG = {'Time': [datetime(1970, 1, 1, 0, tzinfo=utc),
+                             datetime(1970, 1, 1, 1, tzinfo=utc),
+                             datetime(1970, 1, 1, 2, tzinfo=utc),
+                             datetime(1970, 1, 1, 3, tzinfo=utc),
+                             datetime(1970, 1, 1, 4, tzinfo=utc)],
                     'LogCategory': ['Info', 'Warning', 'Warning', 'Fake', 'Fake'],
                     'LogType': ['Application', 'Presence', 'Lickometer', 'Fake', 'Fake'],
                     'Cage': [None, '1', '2', '0', '0'],
@@ -1293,12 +1294,12 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                                  'Lickometer is active but nosepoke is inactive',
                                  'Fake note',
                                  None],
-                     }
+                    }
 
   VISIT_INT_ATTRIBUTES = ['CornerCondition', 'PlaceError',
                           'AntennaNumber', 'PresenceNumber',]
 
-  INPUT_LOAD_ONE_VISIT = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_VISIT = {'VisitID': ['1'],
                           'AnimalTag': ['10'],
                           'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                           'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
@@ -1312,7 +1313,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                           'PresenceNumber': ['2'],
                           'PresenceDuration': ['2.250']
                           }
-  OUTPUT_LOAD_ONE_VISIT = {'Animal': ['10'],
+  OUTPUT_WRAP_ONE_VISIT = {'Animal': ['10'],
                            'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                            'End': [datetime(1970, 1, 1, 0, 0, 15, tzinfo=utc)],
                            'Module': [u'Default'],
@@ -1330,7 +1331,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                            'Nosepokes': [None],
                            }
 
-  INPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  INPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'VisitID': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
     'AnimalTag': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
@@ -1363,7 +1364,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
     'PresenceNumber': ['1', '2', '3', '0', '1', '2', None, '0', '1', '2'],
     'PresenceDuration': ['0.125', '0.25', '0.375', '0', '0.125', '0.250', '0.375', None, '0.125', '0.250'],
   }
-  OUTPUT_LOAD_MANY_VISITS_WITH_MISSING_VALUES = {
+  OUTPUT_WRAP_MANY_VISITS_WITH_MISSING_VALUES = {
     'Animal': ['2', '1', '2', '1', '2', '1', '2', '1', '2', '1'],
     'Start': [datetime(1970, 1, 1, 0, 0, 10, tzinfo=utc),
               datetime(1970, 1, 1, 0, 0, 20, tzinfo=utc),
@@ -1399,7 +1400,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
     '_id': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     'Nosepokes': [None, None, None, None, None, None, None, None, None, None]
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_WITH_MISSING_VALUES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_WITH_MISSING_VALUES = [None,
                                                          'End',
                                                          ('ModuleName', 'Module'),
                                                          'CornerCondition',
@@ -1409,7 +1410,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                                                          'PresenceNumber',
                                                          'PresenceDuration']
 
-  INPUT_LOAD_ONE_NOSEPOKE = {'VisitID': ['1'],
+  INPUT_WRAP_ONE_NOSEPOKE = {'VisitID': ['1'],
                              'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                              'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                              'Side': ['4'],
@@ -1425,7 +1426,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                              'LED2State': ['1'],
                              'LED3State': ['0']
                              }
-  OUTPUT_LOAD_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
+  OUTPUT_WRAP_ONE_NOSEPOKE = {'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc)],
                               'End': [datetime(1970, 1, 1, 0, 0, 12, tzinfo=utc)],
                               'Side': [4],
                               'SideCondition': [1],
@@ -1443,7 +1444,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                               '_line': [1],
                               }
 
-  INPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  INPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Visits': {'VisitID': ['1', '2', '3', '4'],
                'AnimalTag': ['1', '2', '3', '4'],
                'Start': [datetime(1970, 1, 1, 0, 0, 0, tzinfo=utc),
@@ -1485,7 +1486,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
                   'LED3State': ['0', '0', '1', '1', '1', '0'],
     }
   }
-  OUTPUT_LOAD_MANY_VISITS_MANY_NOSEPOKES = {
+  OUTPUT_WRAP_MANY_VISITS_MANY_NOSEPOKES = {
     'Nosepokes':
         {
           'Start': [datetime(1970, 1, 1, 0, 33, 12, tzinfo=utc),
@@ -1517,7 +1518,7 @@ class TestZipLoader_v_Version2(TestZipLoader_v_IntelliCage_Plus_3):
         },
     'NosepokeLen': [0, 1, 2, 3],
   }
-  MISSING_FIELDS_LOAD_MANY_VISITS_MANY_NOSEPOKES = [None,
+  MISSING_FIELDS_WRAP_MANY_VISITS_MANY_NOSEPOKES = [None,
                                                     'End',
                                                     'Side',
                                                     'SideCondition',
