@@ -37,7 +37,11 @@ except ImportError:
   import io
 
 from operator import methodcaller, attrgetter
-from collections import Container
+if sys.version_info >= (3, 3):
+  from collections.abc import Container
+else:
+  from collections import Container
+
 
 from .ICNodes import Group # XXX: unnecessary dependency
 

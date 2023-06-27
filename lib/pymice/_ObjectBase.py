@@ -25,7 +25,11 @@
 
 import numpy as np
 from operator import attrgetter
-from collections import Sequence
+import sys
+if sys.version_info >= (3, 3):
+  from collections.abc import Sequence
+else:
+  from collections import Sequence
 
 # dependence tracking
 from . import _dependencies

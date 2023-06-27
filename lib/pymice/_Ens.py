@@ -22,8 +22,11 @@
 #    along with this software.  If not, see http://www.gnu.org/licenses/.     #
 #                                                                             #
 ###############################################################################
-
-import collections
+import sys
+if sys.version_info >= (3, 3):
+  import collections.abc as collections
+else:
+  import collections
 
 # dependence tracking
 from . import _dependencies
