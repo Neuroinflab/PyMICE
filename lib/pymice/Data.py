@@ -37,7 +37,7 @@ except ImportError:
   import io
 
 from operator import methodcaller, attrgetter
-from collections import Container
+from collections.abc import Container
 
 from .ICNodes import Group # XXX: unnecessary dependency
 
