@@ -23,7 +23,7 @@
 #                                                                             #
 ###############################################################################
 
-import collections
+from collections.abc import Mapping
 
 # dependence tracking
 from . import _dependencies
@@ -209,7 +209,7 @@ class Ens(object):
   def __fromPairs(cls, pairs):
     return cls(dict(pairs))
 
-  class Mapping(collections.Mapping):
+  class Mapping(Mapping):
     def __init__(self, ens):
       self.__ens = ens
 

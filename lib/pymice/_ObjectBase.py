@@ -25,7 +25,7 @@
 
 import numpy as np
 from operator import attrgetter
-from collections import Sequence
+from collections.abc import Sequence
 
 # dependence tracking
 from . import _dependencies

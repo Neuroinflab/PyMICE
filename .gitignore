@@ -9,3 +9,5 @@
 /build
 .coverage
 coverage.xml
+dist/*
+lib/PyMICE.egg-info/*
